@@ -6,8 +6,10 @@ their hashes in `design/APPROVALS.md`; never overwrite approved images.
 
 The current first slice includes onboarding, shop naming, a $500 starting
 balance, Build with Tables/Shelves, a $50 one-cell Basic Display Table, a $150
-two-cell wall-adjacent Simple Shelf, a modular 11x11 floor and a persistent
-hitmap. Stock, Open and monetization are intentionally future scope.
+two-cell wall-adjacent Simple Shelf, the approved clean shop image rendered
+directly and a persistent invisible 11x11 hitmap. Do not draw a visible grid or
+assemble the modular environment in the current slice. Stock, Open and
+monetization are intentionally future scope.
 
 Before changing code, read `README.md`, `docs/TECHNICAL-FOUNDATION.md`,
 `design/APPROVALS.md` and `design/ASSET-INVENTORY.md`. Keep domain logic under

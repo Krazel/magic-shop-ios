@@ -61,7 +61,7 @@ struct ShopSceneContainer: UIViewRepresentable {
         let scene = ShopScene(size: UIScreen.main.bounds.size)
         var onGridTap: ((GridPoint) -> Void)?
         var acceptsPlacementTaps = false
-        private var cameraState = WorldCameraState(zoom: 1.18)
+        private var cameraState = WorldCameraState(zoom: 1.0)
 
         @objc func handlePinch(_ recognizer: UIPinchGestureRecognizer) {
             guard recognizer.state == .began || recognizer.state == .changed else { return }

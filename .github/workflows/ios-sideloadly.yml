@@ -24,17 +24,17 @@ jobs:
 
       - name: Build unsigned device IPA
         env:
-          MAGIC_SHOP_IPA_OUTPUT: ${{ runner.temp }}/MagicShop-Sideloadly/MagicShop-0.1-build-1-unsigned.ipa
+          MAGIC_SHOP_IPA_OUTPUT: ${{ runner.temp }}/MagicShop-Sideloadly/MagicShop-0.1-build-2-unsigned.ipa
         run: bash scripts/build-sideloadly-ipa.sh
 
       - name: Record build manifest and checksum
         run: |
           ARTIFACT_ROOT="$RUNNER_TEMP/MagicShop-Sideloadly"
-          shasum -a 256 "$ARTIFACT_ROOT/MagicShop-0.1-build-1-unsigned.ipa" > "$ARTIFACT_ROOT/SHA256SUMS.txt"
+          shasum -a 256 "$ARTIFACT_ROOT/MagicShop-0.1-build-2-unsigned.ipa" > "$ARTIFACT_ROOT/SHA256SUMS.txt"
           cat > "$ARTIFACT_ROOT/build-manifest.txt" <<EOF
           App: Magic Shop
           Marketing version: 0.1
-          Build: 1
+          Build: 2
           Commit: $GITHUB_SHA
           CI run: $GITHUB_RUN_ID
           Platform: physical iPhone (iphoneos)
@@ -45,7 +45,7 @@ jobs:
       - name: Upload Sideloadly IPA
         uses: actions/upload-artifact@v4
         with:
-          name: MagicShop-0.1-build-1-${{ github.sha }}-Sideloadly
+          name: MagicShop-0.1-build-2-${{ github.sha }}-Sideloadly
           path: ${{ runner.temp }}/MagicShop-Sideloadly/
           if-no-files-found: error
           retention-days: 14

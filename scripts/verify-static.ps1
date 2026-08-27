@@ -39,6 +39,7 @@ $requiredFiles = @(
     'design\approved\first-slice-onboarding-name.png',
     'design\approved\first-slice-build-catalog-v3.png',
     'design\approved\first-slice-basic-table-placement-v2.png',
+    'MagicShop\Resources\Assets.xcassets\StarterShopBackground.imageset\starter-shop-background.png',
     'MagicShop\Resources\Assets.xcassets\BasicDisplayTable.imageset\basic-display-table-1x1.png',
     'MagicShop\Resources\Assets.xcassets\SimpleShelf.imageset\simple-shelf.png',
     'scripts\build-sideloadly-ipa.sh'
@@ -49,7 +50,7 @@ foreach ($relativePath in $requiredFiles) {
 }
 
 Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot '.git')) 'Git repository is required for GitHub CI and Codex Cloud handoff.'
-Assert-True (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'MagicShop\Resources\Assets.xcassets\StarterShopBackground.imageset'))) 'Legacy starter background must not ship in Assets.xcassets.'
+Assert-True (Test-Path -LiteralPath (Join-Path $projectRoot 'MagicShop\Resources\Assets.xcassets\StarterShopBackground.imageset')) 'Approved clean starter background must ship in Assets.xcassets.'
 
 $package = Get-Content -LiteralPath (Join-Path $projectRoot 'Package.swift') -Raw
 Assert-True ($package.Contains('path: "MagicShop/Core"')) 'Package.swift must compile only MagicShop/Core.'
@@ -59,7 +60,7 @@ Assert-True (-not $package.Contains('MagicShop/World')) 'Package.swift must not 
 $project = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop.xcodeproj\project.pbxproj') -Raw
 Assert-True ($project.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0;')) 'iOS deployment target must be 16.0.'
 Assert-True ($project.Contains('MARKETING_VERSION = 0.1;')) 'Marketing version must be 0.1.'
-Assert-True ($project.Contains('CURRENT_PROJECT_VERSION = 1;')) 'Build number must be 1.'
+Assert-True ($project.Contains('CURRENT_PROJECT_VERSION = 2;')) 'Build number must be 2.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.application";')) 'App target is missing.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.bundle.unit-test";')) 'Unit-test target is missing.'
 
@@ -76,7 +77,7 @@ Assert-True (-not $sideloadWorkflow.Contains('pull_request:')) 'Sideloadly IPA w
 Assert-True (-not $sideloadWorkflow.Contains('push:')) 'Sideloadly IPA workflow must not run on push.'
 Assert-True ($sideloadWorkflow.Contains('runs-on: macos-15')) 'Sideloadly IPA workflow must use a macOS runner.'
 Assert-True ($sideloadWorkflow.Contains('build-sideloadly-ipa.sh')) 'Sideloadly IPA workflow must use the reviewed build script.'
-Assert-True ($sideloadWorkflow.Contains('MagicShop-0.1-build-1-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
+Assert-True ($sideloadWorkflow.Contains('MagicShop-0.1-build-2-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
 Assert-True ($sideloadWorkflow.Contains('actions/upload-artifact@v4')) 'Sideloadly IPA artifact is not retained.'
 
 $sideloadScript = Get-Content -LiteralPath (Join-Path $projectRoot 'scripts\build-sideloadly-ipa.sh') -Raw
@@ -153,24 +154,14 @@ Assert-True ($gameState.Contains('currentSchemaVersion = 2')) 'GameState schema 
 Assert-True ($gameState.Contains('public var world: ShopWorldState')) 'GameState must persist ShopWorldState.'
 
 $shopScene = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop\World\ShopScene.swift') -Raw
-Assert-True (-not ($shopScene -match 'StarterShopBackground|starter-shop-background')) 'ShopScene must not use the legacy flattened background.'
-$sceneAssetNames = @(
-    'WornTerracottaTile', 'WornTerracottaVariantA', 'WornTerracottaVariantB',
-    'TerracottaCrackDecal', 'TerracottaStainDecal', 'RearPlasterPanel',
-    'SideWallLeft', 'SideWallRight', 'TealBaseboardRear', 'CutawayCapLeft',
-    'CutawayCapRear', 'CutawayCapRight', 'FacadeWindowBay',
-    'FacadeEntranceBay', 'FacadeCornerPost', 'DebrisPapers',
-    'DebrisPlaster', 'DebrisWoodSlats', 'HangingLamp'
-)
-foreach ($assetName in $sceneAssetNames) {
-    Assert-True ($shopScene.Contains($assetName) -or $worldMap.Contains($assetName)) "Runtime modular asset is not referenced: $assetName"
-}
+Assert-True ($shopScene.Contains('StarterShopBackground')) 'ShopScene must render the approved clean background directly.'
+Assert-True (-not $shopScene.Contains('addPlacementGrid')) 'ShopScene must not draw a visible placement grid.'
+Assert-True (-not ($shopScene -match 'RearPlasterPanel|WornTerracottaTile|FacadeEntranceBay|HangingLamp')) 'ShopScene must not assemble the modular environment.'
 
 $implementationText = ($allProjectSwift | ForEach-Object {
     Get-Content -LiteralPath $_.FullName -Raw
 }) -join [Environment]::NewLine
 Assert-True (-not ($implementationText -match 'Basic Display Table[^\r\n]*\$100')) 'Legacy $100 Basic Display Table copy remains in implementation.'
-Assert-True (-not ($implementationText -match 'StarterShopBackground|starter-shop-background')) 'Legacy flattened background remains referenced by runtime code.'
 
 $approvalHashes = @{
     'design\approved\starter-shop-overview.png' = 'F109DED9C96B1DDFD5B64039A86526AD7593ABC8F874C7385FD211FCE09F3006'
@@ -186,6 +177,7 @@ foreach ($entry in $approvalHashes.GetEnumerator()) {
 }
 
 $assetPairs = @(
+    @('design\assets\first-slice\starter-shop-background.png', 'MagicShop\Resources\Assets.xcassets\StarterShopBackground.imageset\starter-shop-background.png'),
     @('design\assets\first-slice\basic-display-table-1x1.png', 'MagicShop\Resources\Assets.xcassets\BasicDisplayTable.imageset\basic-display-table-1x1.png'),
     @('design\assets\first-slice\simple-shelf.png', 'MagicShop\Resources\Assets.xcassets\SimpleShelf.imageset\simple-shelf.png'),
     @('design\assets\first-slice\modular\floor\terracotta-tile-base.png', 'MagicShop\Resources\Assets.xcassets\WornTerracottaTile.imageset\terracotta-tile-base.png'),
@@ -257,6 +249,7 @@ function Test-PngHasTransparentPixels {
 }
 
 $pinnedAssetSpecifications = @(
+    @{ Path = 'design\assets\first-slice\starter-shop-background.png'; Hash = 'CBB8A68B876CF8B1EBF9D0FD64A3672195594B6271BD9DA342FC29A7DDF073B3'; Width = 853; Height = 1844; ColorType = 2 },
     @{ Path = 'design\assets\first-slice\basic-display-table-1x1.png'; Hash = 'E840C4B750D915F6F197F7759DFDE579AA20B7978D7E75CF247BF618FF796B0A'; Width = 802; Height = 849; ColorType = 6 },
     @{ Path = 'design\assets\first-slice\simple-shelf.png'; Hash = 'B232233FA16FF816B9C0C1AB3C9F0CAC91B65A4F61D6BDF9659E108516384D0E'; Width = 762; Height = 1036; ColorType = 6 },
     @{ Path = 'design\assets\first-slice\modular\floor\terracotta-tile-base.png'; Hash = 'CF0B041D3620395A8CAD82B87D85D5FAC84E3777C9484B543217795615158FF7'; Width = 256; Height = 256; ColorType = 2 },
@@ -309,11 +302,11 @@ Write-Output "- Required files: $($requiredFiles.Count)"
 Write-Output "- Core Swift files: $($coreSwift.Count)"
 Write-Output "- XCTest methods declared: $testCount"
 Write-Output '- Package.swift excludes SwiftUI/SpriteKit sources'
-Write-Output '- iOS 16.0, version 0.1, build 1'
+Write-Output '- iOS 16.0, version 0.1, build 2'
 Write-Output '- Git repository and unsigned macOS iOS CI workflow verified'
 Write-Output '- Manual unsigned iphoneos IPA workflow for Sideloadly verified'
 Write-Output '- Four current approval hashes verified'
-Write-Output '- 19 modular environment assets and two furniture assets match pinned hashes, dimensions, color types and runtime copies'
-Write-Output '- Legacy starter background is absent from runtime assets and code'
+Write-Output '- Approved clean background, 19 preserved modular assets and two furniture assets match pinned hashes and runtime copies'
+Write-Output '- Runtime scene uses the clean background directly without a visible grid or modular assembly'
 Write-Output '- Persistent floor/hitmap structures and declared test coverage verified statically; XCTest execution still requires macOS/Xcode'
 Write-Output '- Basic Display Table is $50 with a 1x1 footprint'

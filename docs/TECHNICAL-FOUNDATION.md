@@ -6,22 +6,22 @@ The starter shop, onboarding/name, Build catalog v3 and Basic Display Table
 placement v2 references are current and approved. The SwiftUI layer follows
 their native text, keyboard, Dynamic Type, VoiceOver and fixed-HUD requirements.
 
-The world no longer uses `starter-shop-background` as a runtime plate. SpriteKit
-assembles the approved family from the 19 modular assets: 121 square floor
-tiles, restrained decals, eleven mirrored-alternating rear plaster panels,
-side-wall/cap pairs, rear teal layers, facade bays, lamp and authored debris.
-Mounting ratios are centralized in `ShopScene.MountingCalibration`.
+The visible world uses the clean `starter-shop-background` composition directly,
+as explicitly corrected by the owner after reviewing the modular runtime build.
+SpriteKit does not redraw the floor, walls, facade, lamp, debris or a placement
+grid. The 19-piece modular kit remains preserved for later selective replacement
+work, but it is not assembled in the current scene.
 
 ## Architecture
 
 - SwiftUI owns app lifecycle and fixed overlays.
-- SpriteKit owns layered rendering of the 11×11 square world.
+- SpriteKit owns the approved background plate plus furniture and placement overlays.
 - `WorldGridGeometry` and `CameraViewportTransform` provide platform-neutral,
   testable world/screen conversion. Runtime taps use that same transform.
 - `WorldCameraState` keeps zoom within `0.65...1.25` and vertical pan within
   `-220...220` points. Horizontal world pan is intentionally absent.
-- `ShopFloorState` stores one `FloorStyleID` per cell. `FloorStyleCatalog`
-  currently supplies `wornTerracotta` with base/variant/overlay asset metadata.
+- `ShopFloorState` stores one `FloorStyleID` per invisible logical cell for the
+  future flooring phase; those tiles are not currently rendered.
 - `WorldHitMap` persists cell zones, static blockers and wall adjacency. Dynamic
   fixture occupancy is derived from the persisted fixture list.
 - Swift/Foundation owns all rules and persistence so it can be tested without

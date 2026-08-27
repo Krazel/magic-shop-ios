@@ -1,28 +1,30 @@
 # Magic Shop — First-slice asset inventory
 
-Status: modular runtime kit prepared on 2026-08-27. Catalog v3 and placement
-v2 were explicitly approved by the owner. The approved visual family remains
-the elevated cutaway camera, compact square starter room, worn teal/cream
-architecture, terracotta floor and dim recoverable atmosphere.
+Status: clean background plate selected for current runtime on 2026-08-27 after
+the owner rejected the assembled modular result. Catalog v3 and placement v2
+remain approved. The approved visual family remains the elevated cutaway camera,
+compact square starter room, worn teal/cream architecture, terracotta floor and
+dim recoverable atmosphere.
 
-Full-screen reference images and output previews are visual QA only. They must
-not be shipped as flattened UI.
+The current runtime plate contains only the environment; HUD, controls, text,
+grid logic and furniture remain native or separate overlays.
 
 ## Runtime asset roots
 
 - Existing furniture: `design/assets/first-slice/`.
-- Modular environment: `design/assets/first-slice/modular/`.
+- Current visible environment: `design/assets/first-slice/starter-shop-background.png`.
+- Preserved dormant modular environment: `design/assets/first-slice/modular/`.
 - Visual QA sheets: `outputs/magic-shop-runtime-kit-*.png`.
 
 ## Existing reusable assets
 
 | Asset | File | Pixels | Format | SHA-256 | Runtime role |
 | --- | --- | ---: | --- | --- | --- |
-| Legacy clean composition | `design/assets/first-slice/starter-shop-background.png` | 853 x 1844 | RGB PNG | `CBB8A68B876CF8B1EBF9D0FD64A3672195594B6271BD9DA342FC29A7DDF073B3` | Visual fallback/reference only after the modular kit is integrated. Do not place UI over it as the production world. |
+| Current clean environment plate | `design/assets/first-slice/starter-shop-background.png` | 853 x 1844 | RGB PNG | `CBB8A68B876CF8B1EBF9D0FD64A3672195594B6271BD9DA342FC29A7DDF073B3` | Current visible runtime environment. It contains no HUD or controls; furniture and interaction remain separate overlays. |
 | Basic Display Table 1x1 | `design/assets/first-slice/basic-display-table-1x1.png` | 802 x 849 | RGBA PNG | `E840C4B750D915F6F197F7759DFDE579AA20B7978D7E75CF247BF618FF796B0A` | Approved `$50` one-product display unit; logical footprint exactly one cell. |
 | Simple Shelf | `design/assets/first-slice/simple-shelf.png` | 762 x 1036 | RGBA PNG | `B232233FA16FF816B9C0C1AB3C9F0CAC91B65A4F61D6BDF9659E108516384D0E` | Approved vertical two-compartment shelf; `$150`, capacity two, logical footprint 2x1 against a wall. |
 
-## Modular floor
+## Preserved modular floor (not currently rendered)
 
 Each opaque tile represents one logical cell. Assemble an 11 x 11 square
 before adding walls or furniture.
@@ -77,7 +79,7 @@ Keep the entrance centered on the square floor and both windows symmetric.
 | `modular/props/debris-papers.png` | 466 x 512 | RGBA | `D3FB0C60F804B6A4298C19AEBD53F4D3C4A78DC4FE602BD2C7697E6177EF5BC3` | One cluster of unreadable dusty paper scraps. |
 | `modular/props/debris-wood-slats.png` | 512 x 310 | RGBA | `2AA7EC29501AAC715C7B61C2545F4E52681F81AB0909B21A4D464FC040FAE934` | One short diagonal bundle of deteriorated slats. |
 
-## Mounting order
+## Dormant modular mounting reference
 
 1. Create the square 11 x 11 floor from the three terracotta tiles.
 2. Add crack/stain decals inside selected cells, below furniture and grid UI.

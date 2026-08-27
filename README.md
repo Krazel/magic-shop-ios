@@ -4,10 +4,10 @@ Local iPhone-first implementation of the Magic Shop first slice.
 
 ## Current scope
 
-- Version `0.1`, build `1`, iOS 16+.
+- Version `0.1`, build `2`, iOS 16+.
 - Approved first-run story, validated shop naming and persistent HUD name.
 - SwiftUI fixed HUD, native Build controls and accessible placement actions.
-- SpriteKit square 11×11 modular shop world with pinch zoom, vertical pan, fixture sprites and placement preview.
+- SpriteKit shop world using the approved clean shop image directly, with pinch zoom, vertical pan, fixture sprites and placement preview.
 - Persistent per-cell floor styles and a testable hitmap for entrance, walls, static debris and dynamic fixture occupancy.
 - Pure Swift/Foundation game state, fixture catalog, placement rules and JSON persistence.
 - Starting balance: `$500`.
@@ -16,10 +16,11 @@ Local iPhone-first implementation of the Magic Shop first slice.
 - No backend, accounts, ads, analytics, tracking or third-party dependencies.
 
 Onboarding, Build catalog v3 and Basic Display Table placement v2 are approved
-and implemented. The environment is assembled at runtime from the 19-piece
-modular kit in `design/ASSET-INVENTORY.md`; the legacy starter background is
-kept only as a design reference and is not shipped or referenced by runtime
-code. Final 1:1 comparison still requires an iPhone simulator capture on macOS.
+and implemented. Following the owner's runtime correction, the clean
+`starter-shop-background` composition is displayed directly as the visible
+environment. The logical 11×11 hitmap remains invisible beneath it for fixture
+placement and future floor changes; no runtime grid or modular floor tiles are
+drawn. Final 1:1 comparison still requires an iPhone simulator capture on macOS.
 
 ## Project layout
 
@@ -39,9 +40,9 @@ Windows cannot compile the iOS target. Run:
 powershell -ExecutionPolicy Bypass -File scripts/verify-static.ps1
 ```
 
-This checks project references, the four current approval hashes, all modular
-asset copies, floor/hitmap invariants, absence of the legacy runtime plate and
-the corrected table economy. It is not a substitute for Xcode.
+This checks project references, the four current approval hashes, the clean
+runtime background and modular source copies, floor/hitmap invariants and the
+corrected table economy. It is not a substitute for Xcode.
 
 ## Build and test on macOS
 
