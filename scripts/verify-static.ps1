@@ -14,6 +14,7 @@ $requiredFiles = @(
     '.gitignore',
     '.gitattributes',
     '.github\workflows\ios-ci.yml',
+    '.github\workflows\ios-sideloadly.yml',
     'AGENTS.md',
     'Package.swift',
     'MagicShop.xcodeproj\project.pbxproj',
@@ -39,7 +40,8 @@ $requiredFiles = @(
     'design\approved\first-slice-build-catalog-v3.png',
     'design\approved\first-slice-basic-table-placement-v2.png',
     'MagicShop\Resources\Assets.xcassets\BasicDisplayTable.imageset\basic-display-table-1x1.png',
-    'MagicShop\Resources\Assets.xcassets\SimpleShelf.imageset\simple-shelf.png'
+    'MagicShop\Resources\Assets.xcassets\SimpleShelf.imageset\simple-shelf.png',
+    'scripts\build-sideloadly-ipa.sh'
 )
 
 foreach ($relativePath in $requiredFiles) {
@@ -67,6 +69,21 @@ Assert-True ($workflow.Contains('xcodebuild build')) 'iOS CI build step is missi
 Assert-True ($workflow.Contains('xcodebuild test')) 'iOS CI XCTest step is missing.'
 Assert-True ($workflow.Contains('CODE_SIGNING_ALLOWED=NO')) 'Simulator CI must remain unsigned.'
 Assert-True ($workflow.Contains('actions/upload-artifact@v4')) 'CI build/test artifacts are not retained.'
+
+$sideloadWorkflow = Get-Content -LiteralPath (Join-Path $projectRoot '.github\workflows\ios-sideloadly.yml') -Raw
+Assert-True ($sideloadWorkflow.Contains('workflow_dispatch:')) 'Sideloadly IPA workflow must be manually dispatched.'
+Assert-True (-not $sideloadWorkflow.Contains('pull_request:')) 'Sideloadly IPA workflow must not run on pull requests.'
+Assert-True (-not $sideloadWorkflow.Contains('push:')) 'Sideloadly IPA workflow must not run on push.'
+Assert-True ($sideloadWorkflow.Contains('runs-on: macos-15')) 'Sideloadly IPA workflow must use a macOS runner.'
+Assert-True ($sideloadWorkflow.Contains('build-sideloadly-ipa.sh')) 'Sideloadly IPA workflow must use the reviewed build script.'
+Assert-True ($sideloadWorkflow.Contains('MagicShop-0.1-build-1-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
+Assert-True ($sideloadWorkflow.Contains('actions/upload-artifact@v4')) 'Sideloadly IPA artifact is not retained.'
+
+$sideloadScript = Get-Content -LiteralPath (Join-Path $projectRoot 'scripts\build-sideloadly-ipa.sh') -Raw
+Assert-True ($sideloadScript.Contains('-sdk iphoneos')) 'Sideloadly build must target the physical iPhone SDK.'
+Assert-True ($sideloadScript.Contains('-destination "generic/platform=iOS"')) 'Sideloadly build must target a generic iOS device.'
+Assert-True ($sideloadScript.Contains('CODE_SIGNING_ALLOWED=NO')) 'Sideloadly build must remain unsigned in GitHub Actions.'
+Assert-True ($sideloadScript.Contains('Payload/MagicShop.app')) 'Sideloadly IPA must contain Payload/MagicShop.app.'
 
 $identifierMatches = [regex]::Matches($project, '\b[A-Za-z0-9]{24}\b(?=\s*(?:/\*|[,;]))')
 foreach ($identifier in $identifierMatches.Value) {
@@ -294,6 +311,7 @@ Write-Output "- XCTest methods declared: $testCount"
 Write-Output '- Package.swift excludes SwiftUI/SpriteKit sources'
 Write-Output '- iOS 16.0, version 0.1, build 1'
 Write-Output '- Git repository and unsigned macOS iOS CI workflow verified'
+Write-Output '- Manual unsigned iphoneos IPA workflow for Sideloadly verified'
 Write-Output '- Four current approval hashes verified'
 Write-Output '- 19 modular environment assets and two furniture assets match pinned hashes, dimensions, color types and runtime copies'
 Write-Output '- Legacy starter background is absent from runtime assets and code'

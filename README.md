@@ -74,3 +74,15 @@ This regular CI workflow contains no Apple credentials and cannot upload to
 TestFlight or the App Store. Codex Cloud can work against the GitHub repository;
 GitHub Actions remains the authoritative iOS compiler because Xcode requires a
 macOS runner.
+
+## Physical iPhone build for Sideloadly
+
+Run the manual `iOS Sideloadly IPA` workflow in GitHub Actions to create an
+unsigned device `.ipa`. It compiles the Release app against `iphoneos`, packages
+the required `Payload/MagicShop.app` structure and uploads the IPA, checksum and
+build manifest as a 14-day artifact. The workflow contains no Apple credentials
+and does not upload to TestFlight or the App Store.
+
+Download the artifact, extract it and drag the `.ipa` into Sideloadly. Sideloadly
+re-signs it with the tester's Apple ID before installing it on the connected
+iPhone. On iOS 16 or later, Developer Mode must be enabled on the device.

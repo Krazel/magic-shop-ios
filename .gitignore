@@ -23,3 +23,5 @@ DerivedData/
 
 # Local scratch files; approved design and outputs remain tracked
 work/
+outputs/MagicShop-*-Simulator-QA/
+outputs/MagicShop-*-Sideloadly/
