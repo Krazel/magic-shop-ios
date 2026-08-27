@@ -1,0 +1,25 @@
+# Xcode user state
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+
+# Build products
+build/
+DerivedData/
+*.xcarchive
+*.ipa
+*.dSYM
+*.dSYM.zip
+
+# Swift Package Manager local state
+.build/
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+
+# macOS and editor noise
+.DS_Store
+*.swp
+*.swo
+
+# Local scratch files; approved design and outputs remain tracked
+work/
