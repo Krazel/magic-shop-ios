@@ -100,3 +100,30 @@ pending-approval wording, not the preservation of the existing masters.
 All: current, owner-approved 2026-09-05, portrait 853x1844, English iPhone.
 Runtime comparison pending the complete 0.2 candidate. Prompts and independent
 scenario arithmetic remain in `design/proposals/commerce-v1/MANIFEST.md`.
+
+## Complete game direction selected under delegated authority
+
+- Status: current visual direction selected by the director under the owner's
+  explicit instruction to finish all design decisions without further questions.
+  It is not a claim that the owner individually reviewed this additional image.
+- Image: `design/approved/complete-game-director-v1.png`
+- Canvas: 853x1844, portrait iPhone, English.
+- Selection date: 2026-09-05.
+- SHA-256: 32100A1AB80E3B6A850B4325C05B848FF4840E0AD55FC5AF2858A77F7E9F61CB
+- State: restored/decorated shop, neighboring room, trading calendar.
+- Governs: coherent restored materials, six decoration designs, customer scale,
+  compact adjoining-room silhouette and the native day/time presentation family.
+- Runtime product rules remain authoritative: Lucky Charms use tables only;
+  the mockup's small charm-like shelf ornament must not create an exception.
+- Runtime permits the same compact room on left, right or rear; the pictured
+  right-side room is one example. Native safe areas and accessible text adapt.
+- Runtime comparison: pending the complete asset integration and CI capture.
+
+### Complete-game direction v2 — current
+Selected by the director under the same delegated authority on2026-09-05.
+`design/approved/complete-game-director-v2.png` (863x1823, portrait, English),
+SHA-256 `B8BA06DDE38BDBCF65608F11E9B2660F52092A8348A895A6D697067B3E6B98D2`.
+It replaces v1 as current and corrects the shelf product to a potion; v1 remains
+historical. Same direction, native accessibility and expansion options apply.
+App icon source selected under delegated authority: door, warm light and cyan
+potion; archived with prompt and packaging provenance in COMPLETE-GAME-ART.md.

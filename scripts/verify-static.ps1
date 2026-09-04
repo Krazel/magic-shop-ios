@@ -297,6 +297,38 @@ foreach ($specification in $pinnedAssetSpecifications) {
 $modularSourceCount = (Get-ChildItem -LiteralPath (Join-Path $projectRoot 'design\assets\first-slice\modular') -Filter '*.png' -File -Recurse).Count
 Assert-True ($modularSourceCount -eq 19) "Expected 19 modular source PNGs, found $modularSourceCount."
 
+# Complete-game runtime assets must exist; missing SKTexture names otherwise
+# compile successfully but produce placeholder art at runtime.
+$completeAssets = @('OrnatePanel','GlowPotion','LuckyCharm','PocketSpellbook',
+    'CustomerPlum','CustomerGreen','CustomerPlumFront','CustomerGreenFront',
+    'RepairedShopBackground','AnnexRoomBackground','AnnexRoomRearBackground',
+    'AnnexFloorPatch','SimpleShelfSide','PottedFern','StarRug','CrystalDisplay',
+    'WallClock','MoonPainting','BrassLantern')
+foreach ($assetName in $completeAssets) {
+    $setPath = Join-Path $projectRoot "MagicShop\Resources\Assets.xcassets\$assetName.imageset"
+    $pngPath = Join-Path $setPath "$assetName.png"
+    Assert-True (Test-Path -LiteralPath $pngPath) "Missing complete-game runtime image: $assetName"
+    if (Test-Path -LiteralPath $pngPath) {
+        $png = Get-PngHeaderInfo -Path $pngPath
+        Assert-True ($null -ne $png) "Invalid complete-game PNG: $assetName"
+        if ($assetName -notin @('RepairedShopBackground','AnnexFloorPatch')) {
+            Assert-True ($png.ColorType -eq 6 -and (Test-PngHasTransparentPixels -Path $pngPath)) "Sprite needs real alpha: $assetName"
+        }
+        $sources = @(Get-ChildItem -LiteralPath (Join-Path $projectRoot 'design\assets\complete-game') -Recurse -Filter "$assetName.png" -File)
+        $runtimeHash = (Get-FileHash -LiteralPath $pngPath -Algorithm SHA256).Hash
+        $matches = @($sources | Where-Object { (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash -eq $runtimeHash })
+        Assert-True ($matches.Count -ge 1) "Missing identical archived source for $assetName"
+    }
+}
+$commerceApprovals = @{
+ 'commerce-01-stock-v1.png'='1A8B322FB60558034866E76A72E502423DFA29355D2D1B02670149F643922ACF'
+ 'commerce-02-open-v1.png'='68C77294B3F31E5B396E1535049DD6E03283403DF82B35EE9730C52D459FC9C4'
+ 'commerce-03-day-complete-v1.png'='1EF68E66FEE8787BC8EDD541A3C20C2F865D83001BF0B1FAB92AF2D136E65617'
+}
+foreach ($entry in $commerceApprovals.GetEnumerator()) {
+ $path = Join-Path $projectRoot "design\approved\$($entry.Key)"
+ Assert-True ((Test-Path -LiteralPath $path) -and (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -eq $entry.Value) "Commerce master changed or missing: $($entry.Key)"
+}
 if ($failures.Count -gt 0) {
     Write-Output 'STATIC VERIFICATION: FAIL'
     foreach ($failure in $failures) { Write-Output "- $failure" }
@@ -311,7 +343,7 @@ Write-Output '- Package.swift excludes SwiftUI/SpriteKit sources'
 Write-Output '- iOS 16.0, version 0.2, build 1'
 Write-Output '- Git repository and unsigned macOS iOS CI workflow verified'
 Write-Output '- Manual unsigned iphoneos IPA workflow for Sideloadly verified'
-Write-Output '- Four current approval hashes verified'
+Write-Output '- Seven owner approval hashes verified; complete-game runtime images have archived sources and real sprite alpha'
 Write-Output '- Approved clean background, 19 preserved modular assets and two furniture assets match pinned hashes and runtime copies'
 Write-Output '- Runtime scene uses the clean background directly without a visible grid or modular assembly'
 Write-Output '- Persistent floor/hitmap structures and declared test coverage verified statically; XCTest execution still requires macOS/Xcode'

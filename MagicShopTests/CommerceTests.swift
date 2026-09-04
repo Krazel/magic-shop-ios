@@ -261,7 +261,7 @@ final class CommerceTests: XCTestCase {
     func testAllMoneySpentOnFurnitureIsRecoverableWithoutResetOrGift() throws {
         var engine = newShop()
         for x in 0..<10 {
-            try place(.basicDisplayTable, at: GridPoint(x: x, y: 5), in: &engine)
+            try place(.basicDisplayTable, at: GridPoint(x: x, y: 6), in: &engine)
         }
         XCTAssertEqual(engine.state.balance, 0)
         let furniture = engine.state.fixtures

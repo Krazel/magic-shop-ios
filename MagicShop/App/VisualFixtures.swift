@@ -30,7 +30,10 @@ extension AppModel {
                     }
                 }
             }
-            if name == "restored" { engine = try restoredVisualEngine() }
+            if name.hasPrefix("restored") {
+                let direction: ExpansionDirection = name == "restored-right" ? .right : name == "restored-rear" ? .rear : .left
+                engine = try restoredVisualEngine(direction: direction)
+            }
             let model = AppModel(store: InMemoryGameStateStore(initialState: engine.state))
             switch name {
             case "build": model.openBuild()
@@ -53,7 +56,7 @@ extension AppModel {
         }
     }
 
-    private static func restoredVisualEngine() throws -> GameEngine {
+    private static func restoredVisualEngine(direction: ExpansionDirection) throws -> GameEngine {
         var engine = GameEngine()
         try engine.completeOnboarding(shopName: "Moon & Mortar")
         var tables: [PlacedFixture] = []
@@ -71,10 +74,13 @@ extension AppModel {
             _ = try engine.acknowledgeDaySummary(dayID: day.id)
         }
         for repair in RestorationGroupID.allCases { _ = try engine.repair(repair) }
-        for (kind, point) in [(FixtureKind.pottedFern, GridPoint(x: 2, y: 7)), (.starRug, GridPoint(x: 5, y: 6)), (.crystalDisplay, GridPoint(x: 8, y: 5))] {
+        for (kind, point) in [(FixtureKind.pottedFern, GridPoint(x: 2, y: 7)), (.starRug, GridPoint(x: 5, y: 6)), (.crystalDisplay, GridPoint(x: 8, y: 5)), (.wallClock, GridPoint(x: 0, y: 10)), (.moonPainting, GridPoint(x: 8, y: 10)), (.brassLantern, GridPoint(x: 9, y: 7))] {
             _ = try engine.confirm(engine.makePlacementDraft(kind: kind, origin: point))
         }
-        _ = try engine.expandShop(toward: .left)
+        if direction == .rear {
+            try engine.moveFixture(fixtureID: shelf.id, origin: GridPoint(x: 0, y: 7), rotation: .east)
+        }
+        _ = try engine.expandShop(toward: direction)
         return engine
     }
     #endif

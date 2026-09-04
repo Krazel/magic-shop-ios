@@ -1,0 +1,10 @@
+Use case: precise-object-edit. Edit the attached EXACT Magic Shop environment plate to create its repaired state, without moving or deforming ANY geometry. Preserve original 853×1844 canvas, camera, scale, framing, plain brown surround and ALL architectural landmarks pixel-for-pixel as far as possible. This is an environment-only runtime replacement, no UI.
+
+Change ONLY visible wear/damage and debris:
+- Remove the three floor debris groups (plaster pile left, wood slats right, paper scraps lower right) and seamlessly restore the existing underlying terracotta tile texture.
+- Repair major plaster cracks and peeling areas into smooth warm cream plaster while preserving subtle hand-painted age/texture.
+- Restore teal paint on wood trims and facade, reducing severe chips but retaining the same exact teal hue, edges, panel grooves, proportions and warm cozy atmosphere.
+- Sweep the floor and lightly clean glass. Keep ALL terracotta tile divisions, ornaments, floor perspective and existing colors aligned; do not retile, brighten into orange neon or change pattern.
+Do not add plants, rugs, furniture, merchandise, customers, decor or lights. Keep exactly the existing hanging lamp, windows, centered door and doorstep with unchanged dimensions/location.
+
+Critical geometry anchors in source853×1844: floor far edge from(143,629)to(701,629); floor near edge from(106,1172)to(749,1172). These exact quadrilateral corners MUST remain unchanged. Rear top outer wall begins around y405. Door/window facade and sidewalk stay exactly in place. The 11×11 logical floor must remain the same small square world room. No expansion, no visible grid overlay, no text, no HUD/buttons, no dynamic shadows, no new wall opening, no shape/camera/pan/zoom change. Repaired shop is simply the same existing room cared for, not a redesign or a new room. Output one complete portrait RGB environment plate at original dimensions.

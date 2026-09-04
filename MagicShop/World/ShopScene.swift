@@ -7,12 +7,12 @@ final class ShopScene: SKScene {
         // Source: 853x1844 StarterShopBackground. Coordinates are normalized
         // image positions, with image Y increasing downward. This slight
         // trapezoid is the projection of the persistent square 11x11 floor.
-        static let nearY: CGFloat = 1172 / 1844
-        static let farY: CGFloat = 629 / 1844
-        static let nearLeft: CGFloat = 106 / 853
-        static let nearRight: CGFloat = 749 / 853
-        static let farLeft: CGFloat = 143 / 853
-        static let farRight: CGFloat = 701 / 853
+        static let nearY: CGFloat = 1172.0 / 1844.0
+        static let farY: CGFloat = 629.0 / 1844.0
+        static let nearLeft: CGFloat = 106.0 / 853.0
+        static let nearRight: CGFloat = 749.0 / 853.0
+        static let farLeft: CGFloat = 143.0 / 853.0
+        static let farRight: CGFloat = 701.0 / 853.0
     }
 
     private struct VisitPlan {
@@ -43,6 +43,7 @@ final class ShopScene: SKScene {
     private var currentOutcome: VisitOutcome?
     private var displayedOutcomeID: VisitID?
     private var customerSprite: SKSpriteNode?
+    private var customerFacingOut = false
     private var customerShadow: SKShapeNode?
     private var thoughtNode: SKNode?
     private var carriedProduct: SKSpriteNode?
@@ -308,16 +309,7 @@ final class ShopScene: SKScene {
     }
 
     private func addAnnex(_ expansion: ExpansionState) {
-        let room = expansion.roomOrigin
-        let corners = footprintCorners(origin: room, footprint: GridFootprint(width: 5, depth: 5))
-        let rect = bounds(of: corners)
-        let asset = expansion.direction == .rear ? "AnnexRoomRearBackground" : "AnnexRoomBackground"
-        let annex = SKSpriteNode(texture: texture(asset))
-        // The annex asset is authored as a compact room with low walls. Its
-        // floor, rather than the transparent outer bounds, defines its size.
-        annex.size = CGSize(width: rect.width / 0.82, height: rect.height / 0.74)
-        annex.position = CGPoint(x: rect.midX, y: rect.midY + rect.height * 0.075)
-        if expansion.direction == .left { annex.xScale = -1 }
+        let annex = makeProjectedAnnex(expansion)
         annex.zPosition = -92
         environmentRoot.addChild(annex)
 
@@ -341,7 +333,14 @@ final class ShopScene: SKScene {
         }
         let crop = SKCropNode()
         let rectOfJoin = bounds(of: join)
-        let floor = SKSpriteNode(texture: texture("AnnexFloorPatch"))
+        let cropWidth = min(1, rectOfJoin.width / (tileWidth * 5))
+        let cropHeight = min(1, rectOfJoin.height / (tileHeight * 5))
+        let floorTexture = SKTexture(
+            rect: CGRect(x: (1 - cropWidth) * 0.5, y: (1 - cropHeight) * 0.5,
+                         width: cropWidth, height: cropHeight),
+            in: texture("AnnexFloorPatch")
+        )
+        let floor = SKSpriteNode(texture: floorTexture)
         floor.size = CGSize(width: rectOfJoin.width, height: rectOfJoin.height)
         floor.position = CGPoint(x: rectOfJoin.midX, y: rectOfJoin.midY)
         crop.addChild(floor)
@@ -351,6 +350,54 @@ final class ShopScene: SKScene {
         crop.maskNode = mask
         crop.zPosition = -90
         environmentRoot.addChild(crop)
+    }
+
+    private func makeProjectedAnnex(_ expansion: ExpansionState) -> SKSpriteNode {
+        let isRear = expansion.direction == .rear
+        let asset = isRear ? "AnnexRoomRearBackground" : "AnnexRoomBackground"
+        let image = texture(asset)
+        let sourceSize = image.size()
+        // Pixel landmarks measured on the final transparent annex sources.
+        let nearY: CGFloat = isRear ? 1125 : 1108
+        let farY: CGFloat = isRear ? 338 : 355
+        let nearLeft: CGFloat = isRear ? 142 : 98
+        let nearRight: CGFloat = isRear ? 1140 : 1094
+        let farLeft: CGFloat = isRear ? 218 : 158
+        let farRight: CGFloat = isRear ? 1070 : 1010
+        let divisions = 8
+        var source: [SIMD2<Float>] = []
+        var projected: [CGPoint] = []
+        for row in 0...divisions {
+            for column in 0...divisions {
+                let u = CGFloat(column) / CGFloat(divisions)
+                let v = CGFloat(row) / CGFloat(divisions)
+                let imageX = u * sourceSize.width
+                let imageY = (1 - v) * sourceSize.height
+                let depth = (nearY - imageY) / (nearY - farY)
+                let left = nearLeft + (farLeft - nearLeft) * depth
+                let right = nearRight + (farRight - nearRight) * depth
+                var floorX = (imageX - left) / (right - left) * 5
+                if expansion.direction == .left { floorX = 5 - floorX }
+                source.append(SIMD2(Float(u), Float(v)))
+                projected.append(project(x: CGFloat(expansion.roomOrigin.x) + floorX,
+                                         y: CGFloat(expansion.roomOrigin.y) + depth * 5))
+            }
+        }
+        let rect = bounds(of: projected)
+        let destination = projected.map { point in
+            SIMD2<Float>(Float((point.x - rect.minX) / rect.width),
+                         Float((point.y - rect.minY) / rect.height))
+        }
+        let annex = SKSpriteNode(texture: image)
+        annex.size = rect.size
+        annex.position = CGPoint(x: rect.midX, y: rect.midY)
+        annex.warpGeometry = SKWarpGeometryGrid(columns: divisions, rows: divisions,
+                                                 sourcePositions: source,
+                                                 destinationPositions: destination)
+        // Match the starter room's warm, shaded terracotta at its seam.
+        annex.color = SKColor(red: 0.74, green: 0.64, blue: 0.53, alpha: 1)
+        annex.colorBlendFactor = 0.12
+        return annex
     }
 
     // MARK: - Furniture, decorations and physical stock
@@ -419,6 +466,11 @@ final class ShopScene: SKScene {
         }
         let sprite = SKSpriteNode(texture: texture(assetName))
         setUniformWidth(desiredWidth, on: sprite)
+        if kind == .simpleShelf, rotation.swapsAxes {
+            // Side art has a narrower silhouette and transparent margins.
+            // Keep the upright shelf the same height as its rear-wall view.
+            setUniformHeight(tileHeight * 2.8, on: sprite)
+        }
         sprite.anchorPoint = CGPoint(x: 0.5, y: kind == .starRug ? 0.5 : 0.06)
         sprite.position = .zero
         sprite.zPosition = 1
@@ -429,7 +481,7 @@ final class ShopScene: SKScene {
             sprite.xScale = -1
         }
         if kind == .wallClock || kind == .moonPainting {
-            sprite.position.y = tileHeight * 1.05
+            mountWallDecoration(sprite, origin: origin, rotation: rotation, base: base)
         }
         if kind == .starRug {
             sprite.position.y = tileHeight * 0.2
@@ -457,12 +509,75 @@ final class ShopScene: SKScene {
                     setUniformHeight(tileHeight * 0.59, on: product)
                 }
                 product.anchorPoint = CGPoint(x: 0.5, y: 0)
-                product.position = CGPoint(x: 0, y: sprite.size.height * (kind == .basicDisplayTable ? 0.67 : (unit.slotIndex == 0 ? 0.57 : 0.22)))
+                let sideShelf = kind == .simpleShelf && rotation.swapsAxes
+                let productX = sideShelf ? sprite.size.width * 0.08 * sprite.xScale : 0
+                product.position = CGPoint(x: productX, y: sprite.size.height
+                    * (kind == .basicDisplayTable ? 0.67 : (unit.slotIndex == 0 ? 0.45 : 0.15)))
                 product.zPosition = 2
                 group.addChild(product)
+                if insertedStockIDs.contains(unit.id), !reducedMotion {
+                    product.setScale(0.65)
+                    product.alpha = 0
+                    let settle = SKAction.scale(to: 1, duration: 0.20)
+                    settle.timingMode = .easeOut
+                    product.run(.group([settle, .fadeIn(withDuration: 0.15)]))
+                }
             }
         }
         return group
+    }
+
+    private func mountWallDecoration(_ sprite: SKSpriteNode, origin: GridPoint,
+                                     rotation: FixtureRotation, base: CGPoint) {
+        let walls = renderedState.world.hitMap.cell(at: origin)?.adjacentWalls ?? []
+        let preferred: WallSide
+        switch rotation {
+        case .north: preferred = .rear
+        case .east: preferred = .right
+        case .south: preferred = .front
+        case .west: preferred = .left
+        }
+        // At corners rotation chooses the wall; away from corners the actual
+        // adjacent wall takes precedence over a stored generic orientation.
+        guard let wall = walls.contains(preferred) ? preferred
+            : [WallSide.rear, .left, .right, .front].first(where: walls.contains) else { return }
+        let x = CGFloat(origin.x), y = CGFloat(origin.y)
+        var position: CGPoint
+        sprite.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+        switch wall {
+        case .rear:
+            position = project(x: x + 0.5, y: y + 1)
+            position.y += tileHeight * 1.15
+        case .front:
+            position = project(x: x + 0.5, y: y)
+            if let expansion = renderedState.restoration.expansion,
+               origin.x >= expansion.roomOrigin.x,
+               origin.x < expansion.roomOrigin.x + ExpansionState.roomSize,
+               origin.y >= expansion.roomOrigin.y,
+               origin.y < expansion.roomOrigin.y + ExpansionState.roomSize {
+                // The annex has a low cutaway cap, not the tall shop facade.
+                setUniformHeight(tileHeight * 0.35, on: sprite)
+                position.y -= tileHeight * 0.18
+            } else {
+                position.y -= tileHeight * 0.83
+            }
+        case .left, .right:
+            position = project(x: wall == .left ? x : x + 1, y: y + 0.5)
+            position.x += tileWidth * (wall == .left ? -0.24 : 0.24)
+            position.y += tileHeight * 0.30
+            // A shallow, upright quadrilateral lies on the painted side wall.
+            // Pixel art is never rotated onto its side or turned upside down.
+            let source: [SIMD2<Float>] = [
+                SIMD2(0, 0), SIMD2(1, 0), SIMD2(0, 1), SIMD2(1, 1)
+            ]
+            let destination: [SIMD2<Float>] = wall == .left
+                ? [SIMD2(0.29, 0), SIMD2(0.71, 0.20), SIMD2(0.29, 0.80), SIMD2(0.71, 1)]
+                : [SIMD2(0.29, 0.20), SIMD2(0.71, 0), SIMD2(0.29, 1), SIMD2(0.71, 0.80)]
+            sprite.warpGeometry = SKWarpGeometryGrid(columns: 1, rows: 1,
+                                                     sourcePositions: source,
+                                                     destinationPositions: destination)
+        }
+        sprite.position = CGPoint(x: position.x - base.x, y: position.y - base.y)
     }
 
     // MARK: - One paced, replay-safe customer presentation
@@ -491,6 +606,7 @@ final class ShopScene: SKScene {
     private func rebuildCustomer() {
         customerRoot.removeAllChildren()
         customerSprite = nil
+        customerFacingOut = false
         customerShadow = nil
         thoughtNode = nil
         carriedProduct = nil
@@ -531,6 +647,12 @@ final class ShopScene: SKScene {
         let progress = max(0, min(1, rawProgress))
         let walkingIn = progress < 0.55
         let walkingOut = progress > 0.73
+        if customerFacingOut != walkingOut {
+            customerFacingOut = walkingOut
+            let name = plan.id.index.isMultiple(of: 2) ? "CustomerPlum" : "CustomerGreen"
+            sprite.texture = texture(walkingOut ? name + "Front" : name)
+            setUniformHeight(tileHeight * 1.38, on: sprite)
+        }
         let routeFraction: Double
         if reducedMotion { routeFraction = 1 }
         else if walkingIn { routeFraction = progress / 0.55 }

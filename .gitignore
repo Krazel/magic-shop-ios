@@ -39,3 +39,5 @@ outputs/MagicShop-*-Sideloadly/
 
 # Downloaded validation evidence
 outputs/ci/
+# Local project setup helper
+outputs/add-ui-test-target.py

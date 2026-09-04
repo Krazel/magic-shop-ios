@@ -46,6 +46,7 @@ struct ProvisionalRootView: View {
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: model.panel)
         }
         .preferredColorScheme(.dark)
+        .modifier(SimulatorTextSize())
         .task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 50_000_000)
@@ -242,7 +243,7 @@ private struct BuildCatalogPanel: View {
             }
             Text("Pay only when you place. Move or sell later.").font(.caption).foregroundStyle(MagicPalette.parchment)
             InlineMessage()
-        }.padding(14).magicPanel().accessibilityIdentifier("build-catalog")
+        }.padding(14).magicPanel()
     }
 }
 
@@ -271,7 +272,7 @@ private struct PlacementPanel: View {
                         .accessibilityIdentifier("confirm-placement")
                 }
                 InlineMessage()
-            }.foregroundStyle(MagicPalette.parchment).padding(15).magicPanel().accessibilityIdentifier("placement-panel")
+            }.foregroundStyle(MagicPalette.parchment).padding(15).magicPanel()
         }
     }
     private func moveButton(_ icon: String, _ label: String, _ x: Int, _ y: Int) -> some View {
@@ -314,7 +315,7 @@ private struct StockPanel: View {
                 }
             }
             InlineMessage()
-        }.foregroundStyle(MagicPalette.parchment).padding(14).magicPanel().accessibilityIdentifier("stock-panel")
+        }.foregroundStyle(MagicPalette.parchment).padding(14).magicPanel()
     }
     private var fixturePicker: some View {
         Picker("Display", selection: Binding(get: { model.selectedFixtureID }, set: { model.chooseFixture($0) })) {
@@ -409,7 +410,7 @@ private struct SummaryPanel: View {
                 Button("Prepare Day \(summary.dayNumber + 1)", action: model.prepareNextDay)
                     .buttonStyle(GoldButtonStyle()).accessibilityIdentifier("prepare-next-day")
                 InlineMessage()
-            }.foregroundStyle(MagicPalette.parchment).padding(22).magicPanel(corner: 32).accessibilityIdentifier("day-summary")
+            }.foregroundStyle(MagicPalette.parchment).padding(22).magicPanel(corner: 32)
         }
     }
     private func summaryRow(_ name: String, _ value: Int) -> some View { HStack { Text(name); Spacer(); Text("$\(value)").monospacedDigit() } }
@@ -508,7 +509,7 @@ private extension View {
         self.background {
             ZStack {
                 LinearGradient(colors: [MagicPalette.deepTeal, MagicPalette.teal.opacity(0.85), MagicPalette.deepTeal], startPoint: .topLeading, endPoint: .bottomTrailing)
-                Image("OrnatePanel").resizable(capInsets: EdgeInsets(top: 90, leading: 65, bottom: 65, trailing: 65)).opacity(0.8)
+                Image("OrnatePanel").resizable(capInsets: EdgeInsets(top: 90, leading: 65, bottom: 65, trailing: 65)).opacity(0.8).accessibilityHidden(true)
             }.clipShape(RoundedRectangle(cornerRadius: corner))
         }
         .overlay(RoundedRectangle(cornerRadius: corner).stroke(MagicPalette.goldGradient, lineWidth: 2.5))
@@ -606,7 +607,7 @@ private struct ImprovementsPanel: View {
                     InlineMessage()
                 }.padding(.bottom, 8)
             }
-        }.foregroundStyle(MagicPalette.parchment).padding(16).magicPanel().accessibilityIdentifier("improvements-panel")
+        }.foregroundStyle(MagicPalette.parchment).padding(16).magicPanel()
     }
 }
 
@@ -649,7 +650,7 @@ private struct JournalPanel: View {
                     Text("Saved on this iPhone · No internet needed").font(.caption).foregroundStyle(MagicPalette.gold).padding(.top, 4)
                 }.padding(.bottom, 8)
             }
-        }.foregroundStyle(MagicPalette.parchment).padding(16).magicPanel().accessibilityIdentifier("journal-panel")
+        }.foregroundStyle(MagicPalette.parchment).padding(16).magicPanel()
     }
     private func goal(_ title: String, _ count: Int, _ target: Int) -> some View {
         HStack(spacing: 8) {
@@ -658,5 +659,17 @@ private struct JournalPanel: View {
             Spacer(minLength: 3)
             Text("\(min(count, target))/\(target)").font(.caption.bold()).monospacedDigit()
         }
+    }
+}
+
+private struct SimulatorTextSize: ViewModifier {
+    @ViewBuilder func body(content: Content) -> some View {
+        #if targetEnvironment(simulator)
+        if ProcessInfo.processInfo.arguments.contains("--large-text") {
+            content.dynamicTypeSize(.accessibility2)
+        } else { content }
+        #else
+        content
+        #endif
     }
 }

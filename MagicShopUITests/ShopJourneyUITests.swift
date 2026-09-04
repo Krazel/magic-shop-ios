@@ -39,6 +39,17 @@ final class ShopJourneyUITests: XCTestCase {
     }
 
     @MainActor
+    func testStockConfirmationRemainsReachableWithLargeText() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "stock", "--large-text"]
+        app.launch()
+        let confirm = app.buttons["confirm-stock"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 10))
+        XCTAssertTrue(confirm.isHittable)
+        confirm.tap()
+        XCTAssertTrue(app.buttons["Return for $10"].waitForExistence(timeout: 5))
+    }
+    @MainActor
     func testRestoredShopOpensItsCompletionJournal() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--visual-state", "restored"]

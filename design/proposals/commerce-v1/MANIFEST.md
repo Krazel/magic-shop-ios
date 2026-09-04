@@ -146,3 +146,9 @@ All selected deliverables are copied into this repository, independent of the de
 ## Next action
 
 Project brain reviews the three selected images and presents one concrete approval gate to the owner: approve this Stock/Open/Day complete family, or request a focused visual correction. Until explicit approval, continue domain, persistence, tests and architecture only. Do not promote these proposals to `design/approved/` or implement their final UI.
+
+## Approval update — 2026-09-05
+The owner approved all three images. The immutable current copies now live in
+`design/approved/commerce-01-stock-v1.png`, `commerce-02-open-v1.png` and
+`commerce-03-day-complete-v1.png`; hashes and authority are recorded in
+`design/APPROVALS.md`. Earlier proposed/pending labels are historical.

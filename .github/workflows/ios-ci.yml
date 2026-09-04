@@ -52,6 +52,7 @@ jobs:
           xcrun simctl bootstatus "$SIMULATOR_UDID" -b
 
       - name: Build unsigned simulator app
+        id: simulator_build
         run: |
           set -o pipefail
           xcodebuild build \
@@ -76,7 +77,22 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
+      - name: Export XCTest diagnostics
+        if: always() && steps.simulator_build.outcome == 'success'
+        run: |
+          mkdir -p "$RUNNER_TEMP/TestDiagnostics"
+          xcrun xcresulttool get test-results summary --path "$RUNNER_TEMP/MagicShopTests.xcresult" > "$RUNNER_TEMP/TestDiagnostics/summary.json" || true
+          cat "$RUNNER_TEMP/TestDiagnostics/summary.json"
+          xcrun xcresulttool export attachments --path "$RUNNER_TEMP/MagicShopTests.xcresult" --output-path "$RUNNER_TEMP/TestDiagnostics/attachments" || true
+      - name: Upload XCTest diagnostics
+        if: always() && steps.simulator_build.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: MagicShop-TestDiagnostics-${{ github.sha }}
+          path: ${{ runner.temp }}/TestDiagnostics/
+          retention-days: 14
       - name: Capture playable states on iPhone
+        if: always() && steps.simulator_build.outcome == 'success'
         run: |
           set -euo pipefail
           APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
@@ -85,14 +101,43 @@ jobs:
           xcrun simctl bootstatus "$SIMULATOR_UDID" -b
           xcrun simctl status_bar "$SIMULATOR_UDID" override --time '9:41' --batteryState charged --batteryLevel 100
           xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
-          for STATE in onboarding overview build placement stock open summary improvements decor journal restored; do
+          for STATE in onboarding overview build placement stock open summary improvements decor journal restored restored-right restored-rear; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE"
             sleep 3
             xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/$STATE-runtime.png"
           done
+          xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
+          xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state stock --large-text
+          sleep 3
+          xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/stock-large-text-runtime.png"
           printf 'Commit: %s\nRun: %s\nSimulator: %s\nSource: real simulator app with isolated deterministic game-state fixtures\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$SIMULATOR_UDID" > "$RUNNER_TEMP/VisualQA/capture-manifest.txt"
+      - name: Capture compact iPhone layout
+        if: always() && steps.simulator_build.outcome == 'success'
+        run: |
+          set -euo pipefail
+          SMALL_UDID="$(xcrun simctl list devices available -j | python3 -c '
+          import json,sys
+          devices=[d for group in json.load(sys.stdin)["devices"].values() for d in group if d.get("isAvailable")]
+          names=["iPhone SE (3rd generation)","iPhone 13 mini","iPhone 12 mini","iPhone 16e"]
+          match=next((d for name in names for d in devices if d["name"]==name),None)
+          print(match["udid"] if match else "")')"
+          if [ -z "$SMALL_UDID" ]; then
+            echo 'Compact simulator unavailable on this runner' >> "$RUNNER_TEMP/VisualQA/capture-manifest.txt"
+            exit 0
+          fi
+          xcrun simctl boot "$SMALL_UDID" || true
+          xcrun simctl bootstatus "$SMALL_UDID" -b
+          xcrun simctl install "$SMALL_UDID" "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
+          for STATE in onboarding stock placement; do
+            xcrun simctl terminate "$SMALL_UDID" com.example.MagicShop || true
+            xcrun simctl launch "$SMALL_UDID" com.example.MagicShop --visual-state "$STATE"
+            sleep 3
+            xcrun simctl io "$SMALL_UDID" screenshot "$RUNNER_TEMP/VisualQA/$STATE-compact-runtime.png"
+          done
+          printf 'Compact simulator: %s\n' "$SMALL_UDID" >> "$RUNNER_TEMP/VisualQA/capture-manifest.txt"
       - name: Upload runtime capture
+        if: always() && steps.simulator_build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: MagicShop-VisualQA-${{ github.sha }}

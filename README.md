@@ -1,110 +1,71 @@
 # Magic Shop
 
-Local iPhone-first implementation of the Magic Shop first slice.
+A small offline iPhone game about bringing a forgotten magic shop back to life.
+English only. SwiftUI, SpriteKit and Foundation; no external dependencies.
 
-## Active development — 2026-09-04
+## Play
 
-The owner has authorized completing the game. See
-[the product roadmap](docs/PRODUCT-ROADMAP.md) and
-[commerce architecture](docs/COMMERCE-ARCHITECTURE.md).
+Name your shop and start with $500. Build a display, put one physical item in
+each slot, and open the doors. Each day runs from 09:00 to 18:00 with six visitors,
+two looking for each product. Preparation is untimed. Pause or use 2× speed;
+leaving the app pauses the game rather than skipping hours or earning money.
 
-M1 adds a tested commerce domain behind the existing approved shell: three
-single-unit products, compatible display slots, automatic resumable trading
-days, summaries, reachable displays and reversible stock/furniture investment.
-Stock/Open controls remain disabled until their complete images are approved.
-The current 0.1.1 (1) delivery fixes failed-save transactions, protects unreadable
-saves and corrects pan speed under zoom. It is technical QA, not yet the 0.2
-playable commerce vertical.
+Sell potions, charms and spellbooks, then reinvest in repairs and decorations.
+Clear three worn areas, place three different decorations, complete three days
+with sales and add a compact neighboring room to finish the restoration.
+Afterward the shop stays playable. Six decorations and three expansion
+positions let you make it your own. The room expands once, by a 5×5 module.
 
-New domain/API and JSON migration tests run through both SwiftPM and Xcode.
-AppModel failure/recovery tests run in Xcode. CI also captures the actual
-onboarding shell; a captured image is evidence for comparison, not an approval.
-Remaining shelf projection and plate/hitmap alignment findings are tracked in
-[the audit](docs/AUDIT-2026-09-04.md) and must close before M2 acceptance.
-Executed M1 evidence: [Release, 71 XCTest, IPA and visual gaps](docs/MILESTONE-001.md).
+Furniture and decoration can be moved for free. Return unsold stock for its
+recorded cost; sell empty furniture at its purchase price. No absence penalties,
+loans, crafting, accounts, ads, tracking, purchases or network calls.
 
-## Current scope
+## Controls and accessibility
 
-- Version `0.1.1`, build `1`, iOS 16+.
-- Approved first-run story, validated shop naming and persistent HUD name.
-- SwiftUI fixed HUD, native Build controls and accessible placement actions.
-- SpriteKit shop world using the approved clean shop image directly, with pinch zoom, vertical pan, fixture sprites and placement preview.
-- Persistent per-cell floor styles and a testable hitmap for entrance, walls, static debris and dynamic fixture occupancy.
-- Pure Swift/Foundation game state, fixture catalog, placement rules and JSON persistence.
-- Starting balance: `$500`.
-- `Basic Display Table`: `$50`, 1×1 footprint, stock capacity 1.
-- `Simple Shelf`: `$150`, 2×1 footprint, stock capacity 2, wall-adjacent placement.
-- No backend, accounts, ads, analytics, tracking or third-party dependencies.
+- BUILD: tables, shelves, six decorations, or shop improvements.
+- STOCK: choose a display and slot; confirm to buy one item.
+- OPEN: start a trading day; pause or change presentation speed.
+- Arrange: choose any furniture or decoration from a list to move or sell it.
+- Floor: pinch to zoom and drag to explore; placement also has directional
+  buttons. VoiceOver offers camera actions and named native controls.
+- Journal: restoration goals, calendar rules and recent trading results.
+- Dynamic Type and Reduce Motion use the device's accessibility preferences.
 
-Onboarding, Build catalog v3 and Basic Display Table placement v2 are approved
-and implemented. Following the owner's runtime correction, the clean
-`starter-shop-background` composition is displayed directly as the visible
-environment. The logical 11×11 hitmap remains invisible beneath it for fixture
-placement and future floor changes; no runtime grid or modular floor tiles are
-drawn. Final 1:1 comparison still requires an iPhone simulator capture on macOS.
+## Candidate 0.2 (build 1)
 
-## Project layout
+The current delivery joins commerce, the simulated calendar, restoration,
+decoration and expansion. The full candidate still requires final CI and visual
+verification; see `docs/COMPLETE-GAME-VERIFICATION.md` for recorded evidence.
+This is a local testing build, not a public store release.
 
-- `MagicShop/Core/`: platform-neutral domain and persistence.
-- `MagicShop/App/`: SwiftUI onboarding, HUD, Build catalog and placement controls.
-- `MagicShop/World/`: layered SpriteKit environment, square-grid hit testing, camera input and furniture rendering.
-- `MagicShopTests/`: XCTest coverage shared by Xcode and SwiftPM.
-- `MagicShop.xcodeproj/`: local iPhone app and unit-test targets.
-- `Package.swift`: core-only package; it does not compile SwiftUI/SpriteKit.
-- `scripts/`: reproducible verification commands.
+Approved masters and the director's delegated visual choices are retained in
+`design/approved/` with hashes and authority in `design/APPROVALS.md`.
+Runtime captures remain separate. New asset provenance is recorded in
+`docs/COMPLETE-GAME-ART.md` and `docs/DECOR-ART.md`.
 
-## Verify on Windows
+## Architecture and saves
 
-Windows cannot compile the iOS target. Run:
+`MagicShop/Core` contains platform-neutral rules, a versioned save model and
+atomic persistence. `GameSession` commits a copied engine only after the save
+succeeds. Sales use visitor tokens; retries and relaunches cannot award the same
+sale twice. Schema 1–3 saves migrate to schema 4 while preserving the shop.
+Unreadable or inconsistent saves are kept intact and surfaced as a retry error.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/verify-static.ps1
-```
+`MagicShop/App` owns native controls and presentation pacing. `MagicShop/World`
+projects the invisible hitmap onto the painted room and renders independent
+furniture, stock, customers and decoration. No visible placement grid is drawn.
+The original starter background and historical approved art are preserved.
 
-This checks project references, the four current approval hashes, the clean
-runtime background and modular source copies, floor/hitmap invariants and the
-corrected table economy. It is not a substitute for Xcode.
+## Verification and local iPhone artifact
 
-## Build and test on macOS
+On Windows: `powershell -ExecutionPolicy Bypass -File scripts/verify-static.ps1`.
+On macOS: `bash scripts/build-macos.sh` and `bash scripts/test-macos.sh`.
+The public GitHub iOS CI is the authoritative Xcode check from Windows: Release
+simulator build, domain/model/UI XCTest, and real simulator state captures.
+Simulator-only fixtures use in-memory saves and are absent from device builds.
 
-Requirements: Xcode 16 or a compatible Xcode with the iOS 16 SDK support and
-an installed iPhone simulator.
-
-```bash
-bash scripts/build-macos.sh
-bash scripts/test-macos.sh
-```
-
-`test-macos.sh` defaults to `platform=iOS Simulator,name=iPhone 16 Pro`. Override
-that when necessary:
-
-```bash
-MAGIC_SHOP_DESTINATION='platform=iOS Simulator,name=iPhone 15' bash scripts/test-macos.sh
-```
-
-The app bundle identifier is the explicit local placeholder
-`com.example.MagicShop`; replace it only when signing is authorized.
-
-## GitHub CI and Codex Cloud
-
-`.github/workflows/ios-ci.yml` runs on every push to `main`, on pull requests
-and by manual dispatch. It selects an available iPhone simulator, builds the
-Release simulator app without signing, runs the XCTest suite and retains both
-the zipped `.app` and `.xcresult` evidence for 14 days.
-
-This regular CI workflow contains no Apple credentials and cannot upload to
-TestFlight or the App Store. Codex Cloud can work against the GitHub repository;
-GitHub Actions remains the authoritative iOS compiler because Xcode requires a
-macOS runner.
-
-## Physical iPhone build for Sideloadly
-
-Run the manual `iOS Sideloadly IPA` workflow in GitHub Actions to create an
-unsigned device `.ipa`. It compiles the Release app against `iphoneos`, packages
-the required `Payload/MagicShop.app` structure and uploads the IPA, checksum and
-build manifest as a 14-day artifact. The workflow contains no Apple credentials
-and does not upload to TestFlight or the App Store.
-
-Download the artifact, extract it and drag the `.ipa` into Sideloadly. Sideloadly
-re-signs it with the tester's Apple ID before installing it on the connected
-iPhone. On iOS 16 or later, Developer Mode must be enabled on the device.
+The manual `iOS Sideloadly IPA` workflow builds unsigned arm64 iphoneos and
+packages `Payload/MagicShop.app`, checksum and source manifest. It has no Apple
+credentials and cannot upload to TestFlight or App Store. The IPA must be
+re-signed by Sideloadly to install on a physical iPhone. `scripts/verify-ipa.py`
+checks the exact version, build, commit, checksum and device architecture.
