@@ -37,6 +37,7 @@ jobs:
           Build: 1
           Commit: $GITHUB_SHA
           CI run: $GITHUB_RUN_ID
+          Purpose: Local-QA
           Platform: physical iPhone (iphoneos)
           Signing: unsigned; Sideloadly must re-sign before installation
           Minimum iOS: 16.0
