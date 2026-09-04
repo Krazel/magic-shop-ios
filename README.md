@@ -21,6 +21,8 @@ AppModel failure/recovery tests run in Xcode. CI also captures the actual
 onboarding shell; a captured image is evidence for comparison, not an approval.
 Remaining shelf projection and plate/hitmap alignment findings are tracked in
 [the audit](docs/AUDIT-2026-09-04.md) and must close before M2 acceptance.
+Executed M1 evidence: [Release, 71 XCTest, IPA and visual gaps](docs/MILESTONE-001.md).
+
 ## Current scope
 
 - Version `0.1.1`, build `1`, iOS 16+.

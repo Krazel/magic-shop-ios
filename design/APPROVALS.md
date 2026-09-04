@@ -26,7 +26,7 @@ are governed independently by the approvals below.
 - SHA-256: `3337E2D279E5D5CE74CB35F15A169E2EAF82D582AE2C079C201A2D334E9D857A`
 - Owner notes: approve as part of the three-screen first-slice sequence; starting balance is $500 and the chosen name replaces `My Shop`.
 - Adaptable: native text field, keyboard avoidance, safe-area spacing, Dynamic Type and VoiceOver labels.
-- Runtime capture: pending implementation
+- Runtime capture: `design/runtime/0.1.1/onboarding-runtime.png`, 1206x2622, CI 33925351640, SHA-256 `607E6F635A3F759C7C2E9DE85E63E909E49FA08F50561660272B407C51CDBC64`. Visual fidelity FAIL: see `docs/MILESTONE-001.md`; reference remains current.
 
 ## Build catalog
 
