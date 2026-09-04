@@ -370,6 +370,11 @@ private struct FixturePanel: View {
     var body: some View {
         VStack(spacing: 10) {
             PanelHeading(title: "Arrange", icon: "hand.draw.fill")
+            Picker("Furniture and decorations", selection: Binding(get: { model.selectedFixtureID }, set: { model.chooseFixture($0) })) {
+                ForEach(Array(model.state.fixtures.enumerated()), id: \.element.id) { index, fixture in
+                    Text("\(FixtureCatalog.definition(for: fixture.kind).displayName) \(index + 1)").tag(Optional(fixture.id))
+                }
+            }.pickerStyle(.menu).tint(MagicPalette.parchment).accessibilityLabel("Choose furniture or decoration")
             if let fixture = model.selectedFixture, let definition = model.selectedFixtureDefinition {
                 Image(fixture.kind.assetName).resizable().scaledToFit().frame(height: 85)
                 Text(definition.displayName).font(.system(.headline, design: .serif))
@@ -421,6 +426,10 @@ private struct PreparationHint: View {
             HStack {
                 Button("Improve the shop") { model.showPanel(.improvements) }.frame(minHeight: 44)
                 Spacer()
+                if !model.state.fixtures.isEmpty {
+                    Button("Arrange") { model.showPanel(.fixture) }.frame(minHeight: 44)
+                    Spacer()
+                }
                 Button("Journal") { model.showPanel(.journal) }.frame(minHeight: 44)
             }.font(.caption.bold()).foregroundStyle(MagicPalette.gold)
             InlineMessage()

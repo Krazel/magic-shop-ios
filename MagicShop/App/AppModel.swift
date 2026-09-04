@@ -136,6 +136,7 @@ final class AppModel: ObservableObject {
     func showPanel(_ next: ShopPanel) {
         guard state.phase == .preparing else { return }
         flow.closeBuild(); movingFixtureID = nil; panel = next; inlineMessage = nil
+        if next == .fixture, selectedFixtureID == nil { selectedFixtureID = state.fixtures.first?.id }
         if next == .stock {
             if (selectedFixtureDefinition?.stockCapacity ?? 0) == 0 { selectedFixtureID = stockFixtures.first?.id }
             chooseFixture(selectedFixtureID)

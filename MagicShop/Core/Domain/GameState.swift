@@ -91,8 +91,9 @@ public struct GameState: Codable, Equatable, Sendable {
         }
         if savedVersion < 4 {
             RestorationWorld.migrateCalibration(&world, fixtures: fixtures)
+            let calibratedCells = world.hitMap.cells
             let repaired = RepairCatalog.all.filter { repair in
-                !world.hitMap.cells.contains { $0.staticBlocker == repair.blocker }
+                !calibratedCells.contains { $0.staticBlocker == repair.blocker }
             }.map(\.id)
             restoration = ShopRestorationState(repairedGroups: Set(repaired))
         } else {

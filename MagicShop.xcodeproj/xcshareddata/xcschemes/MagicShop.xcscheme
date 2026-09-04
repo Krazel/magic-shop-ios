@@ -34,7 +34,8 @@
                ReferencedContainer = "container:MagicShop.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
-      </BuildActionEntries>
+      <BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="F00000000000000000000050" BuildableName="MagicShopUITests.xctest" BlueprintName="MagicShopUITests" ReferencedContainer="container:MagicShop.xcodeproj" /></BuildActionEntry>
+</BuildActionEntries>
    </BuildAction>
    <TestAction
       buildConfiguration = "Debug"
@@ -51,7 +52,8 @@
                ReferencedContainer = "container:MagicShop.xcodeproj">
             </BuildableReference>
          </TestableReference>
-      </Testables>
+      <TestableReference skipped="NO" parallelizable="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="F00000000000000000000050" BuildableName="MagicShopUITests.xctest" BlueprintName="MagicShopUITests" ReferencedContainer="container:MagicShop.xcodeproj" /></TestableReference>
+</Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

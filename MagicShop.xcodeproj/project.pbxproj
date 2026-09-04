@@ -42,6 +42,8 @@
 		D00000000000000000000032 /* ShopRestoration.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000032 /* ShopRestoration.swift */; };
 		D00000000000000000000033 /* CompleteAppModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000033 /* CompleteAppModelTests.swift */; };
 		D00000000000000000000034 /* RestorationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000034 /* RestorationTests.swift */; };
+D00000000000000000000050 /* ShopJourneyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000050 /* ShopJourneyUITests.swift */; };
+D00000000000000000000051 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C00000000000000000000018 /* XCTest.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -52,6 +54,7 @@
 			remoteGlobalIDString = F00000000000000000000001;
 			remoteInfo = MagicShop;
 		};
+300000000000000000000050 /* PBXContainerItemProxy */ = {isa = PBXContainerItemProxy; containerPortal = A00000000000000000000001 /* Project object */; proxyType = 1; remoteGlobalIDString = F00000000000000000000001; remoteInfo = MagicShop; };
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -92,6 +95,8 @@
 		C00000000000000000000032 /* ShopRestoration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopRestoration.swift; sourceTree = "<group>"; };
 		C00000000000000000000033 /* CompleteAppModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteAppModelTests.swift; sourceTree = "<group>"; };
 		C00000000000000000000034 /* RestorationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorationTests.swift; sourceTree = "<group>"; };
+C00000000000000000000050 /* ShopJourneyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopJourneyUITests.swift; sourceTree = "<group>"; };
+C00000000000000000000051 /* MagicShopUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MagicShopUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -112,6 +117,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+E00000000000000000000051 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (D00000000000000000000051 /* XCTest.framework in Frameworks */,); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -120,6 +126,7 @@
 			children = (
 				B00000000000000000000003 /* MagicShop */,
 				B0000000000000000000000A /* MagicShopTests */,
+B00000000000000000000050 /* MagicShopUITests */,
 				B0000000000000000000000B /* Frameworks */,
 				B00000000000000000000002 /* Products */,
 			);
@@ -130,6 +137,7 @@
 			children = (
 				C00000000000000000000014 /* MagicShop.app */,
 				C00000000000000000000015 /* MagicShopTests.xctest */,
+C00000000000000000000051 /* MagicShopUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -238,6 +246,7 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+B00000000000000000000050 /* MagicShopUITests */ = {isa = PBXGroup; children = (C00000000000000000000050 /* ShopJourneyUITests.swift */,); path = MagicShopUITests; sourceTree = "<group>"; };
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -276,6 +285,7 @@
 			productReference = C00000000000000000000015 /* MagicShopTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+F00000000000000000000050 /* MagicShopUITests */ = {isa = PBXNativeTarget; buildConfigurationList = 200000000000000000000050 /* Build configuration list for PBXNativeTarget "MagicShopUITests" */; buildPhases = (E00000000000000000000050 /* Sources */, E00000000000000000000051 /* Frameworks */, E00000000000000000000052 /* Resources */,); buildRules = (); dependencies = (400000000000000000000050 /* PBXTargetDependency */,); name = MagicShopUITests; productName = MagicShopUITests; productReference = C00000000000000000000051 /* MagicShopUITests.xctest */; productType = "com.apple.product-type.bundle.ui-testing"; };
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -310,6 +320,7 @@
 			targets = (
 				F00000000000000000000001 /* MagicShop */,
 				F00000000000000000000002 /* MagicShopTests */,
+F00000000000000000000050 /* MagicShopUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -330,6 +341,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+E00000000000000000000052 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -378,6 +390,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+E00000000000000000000050 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (D00000000000000000000050 /* ShopJourneyUITests.swift in Sources */,); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -386,6 +399,7 @@
 			target = F00000000000000000000001 /* MagicShop */;
 			targetProxy = 300000000000000000000001 /* PBXContainerItemProxy */;
 		};
+400000000000000000000050 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = F00000000000000000000001 /* MagicShop */; targetProxy = 300000000000000000000050 /* PBXContainerItemProxy */; };
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -507,6 +521,8 @@
 			};
 			name = Release;
 		};
+100000000000000000000050 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 0.2; PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = MagicShop; }; name = Debug; };
+100000000000000000000051 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 0.2; PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = MagicShop; }; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -537,6 +553,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+200000000000000000000050 /* Build configuration list for PBXNativeTarget "MagicShopUITests" */ = {isa = XCConfigurationList; buildConfigurations = (100000000000000000000050 /* Debug */,100000000000000000000051 /* Release */,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 	};
 	rootObject = A00000000000000000000001 /* Project object */;

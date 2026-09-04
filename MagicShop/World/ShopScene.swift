@@ -35,6 +35,8 @@ final class ShopScene: SKScene {
     private var selectedFixtureID: UUID?
     private var reducedMotion = false
     private var needsFirstRender = true
+    private var insertedFixtureIDs = Set<UUID>()
+    private var insertedStockIDs = Set<UUID>()
     private var visitPlan: VisitPlan?
     private var targetProgress = 0.0
     private var displayedProgress = 0.0
@@ -127,6 +129,8 @@ final class ShopScene: SKScene {
         lastOutcome: VisitOutcome?,
         reduceMotion: Bool
     ) {
+        insertedFixtureIDs = needsFirstRender ? [] : Set(state.fixtures.map(\.id)).subtracting(Set(renderedState.fixtures.map(\.id)))
+        insertedStockIDs = needsFirstRender ? [] : Set(state.stock.map(\.id)).subtracting(Set(renderedState.stock.map(\.id)))
         let environmentChanged = needsFirstRender || state.world != renderedState.world
             || state.restoration != renderedState.restoration
         let furnitureChanged = environmentChanged || state.fixtures != renderedState.fixtures
@@ -358,6 +362,12 @@ final class ShopScene: SKScene {
             let node = makeFixture(kind: fixture.kind, origin: fixture.origin, rotation: fixture.rotation,
                                    fixtureID: fixture.id, preview: false, valid: true)
             furnitureRoot.addChild(node)
+            if insertedFixtureIDs.contains(fixture.id), !reducedMotion {
+                node.setScale(0.92)
+                let settle = SKAction.scale(to: 1, duration: 0.18)
+                settle.timingMode = .easeOut
+                node.run(settle)
+            }
         }
     }
 
@@ -378,7 +388,7 @@ final class ShopScene: SKScene {
         let group = SKNode()
         if let fixtureID { group.name = "fixture:\(fixtureID.uuidString)" }
         group.position = base
-        group.zPosition = kind == .starRug ? -20 : 500 - base.y * 0.2
+        group.zPosition = preview ? 1000 : (kind == .starRug ? -20 : 500 - base.y * 0.2)
         group.alpha = preview ? 0.78 : 1
 
         if preview || fixtureID == selectedFixtureID {

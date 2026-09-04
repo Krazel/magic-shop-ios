@@ -180,8 +180,9 @@ final class RestorationTests: XCTestCase {
         XCTAssertFalse(map.cell(at: GridPoint(x: 10, y: 5))!.adjacentWalls.contains(.right))
         XCTAssertFalse(map.cell(at: GridPoint(x: 11, y: 5))!.adjacentWalls.contains(.left))
         XCTAssertTrue(map.cell(at: GridPoint(x: 15, y: 5))!.adjacentWalls.contains(.right))
-        XCTAssertThrowsError(try place(.simpleShelf, at: GridPoint(x: 10, y: 4), in: &engine,
-                                        rotation: .east))
+        XCTAssertThrowsError(try place(.wallClock, at: GridPoint(x: 10, y: 5), in: &engine)) {
+            XCTAssertEqual($0 as? PlacementError, .shelfMustBeAdjacentToWall)
+        }
         XCTAssertNoThrow(try place(.wallClock, at: GridPoint(x: 15, y: 5), in: &engine))
     }
 
