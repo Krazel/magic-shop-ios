@@ -16,7 +16,7 @@ struct ProvisionalRootView: View {
                     activeVisit: model.activeVisit, visitProgress: model.visitProgress,
                     lastOutcome: model.lastOutcome, reduceMotion: reduceMotion,
                     isPaused: model.isPaused || !model.isAppActive,
-                    contentLift: model.panel == .stock || model.flow.route == .buildCatalog ? 105 : 0,
+                    contentLift: model.panel == .stock || model.flow.route == .buildCatalog || model.placementDraft != nil ? 105 : 0,
                     onGridTap: model.setPlacementOrigin, onFixtureTap: model.selectFixture
                 )
                 .ignoresSafeArea()
@@ -24,15 +24,15 @@ struct ProvisionalRootView: View {
                 .accessibilityHint("Pinch to zoom or drag to explore. Select furniture using the Stock list or Build controls.")
 
                 VStack(spacing: 8) {
-                    ShopHUD()
+                    ShopHUD().dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     if model.state.onboardingCompleted {
-                        CalendarBar()
+                        CalendarBar().dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                         if model.isTrading { TradingStatus() }
                     }
                     Spacer(minLength: 6)
                     if model.state.onboardingCompleted {
                         bottomPanel(maxHeight: geometry.size.height * 0.60)
-                        BottomNavigation()
+                        BottomNavigation().dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     }
                 }
                 .padding(.horizontal, 12).padding(.vertical, 6)
@@ -74,7 +74,7 @@ struct ProvisionalRootView: View {
                 }
             }
         }
-        .frame(maxWidth: 600, maxHeight: maxHeight)
+        .frame(maxWidth: 600, maxHeight: maxHeight, alignment: .bottom)
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 }
@@ -290,14 +290,14 @@ private struct StockPanel: View {
                 Text("Build a $50 table, then stock your first Glow Potion for $10.").font(.callout).multilineTextAlignment(.center)
                 Button("Choose a display", action: model.openBuild).buttonStyle(GoldButtonStyle())
             } else {
-                fixturePicker
+                fixturePicker.dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 if let definition = model.selectedFixtureDefinition {
                     HStack {
                         ForEach(0..<definition.stockCapacity, id: \.self) { index in
                             Button { model.selectedSlot = index } label: {
                                 let item = model.state.stock.first { $0.fixtureID == model.selectedFixtureID && $0.slotIndex == index }
                                 Text("Slot \(index + 1) · \(item == nil ? "Empty" : "Full")")
-                                    .font(.caption.bold()).frame(maxWidth: .infinity, minHeight: 44)
+                                    .font(.caption.bold()).dynamicTypeSize(...DynamicTypeSize.xxxLarge).frame(maxWidth: .infinity, minHeight: 44)
                                     .background(model.selectedSlot == index ? MagicPalette.teal : .black.opacity(0.2), in: Capsule())
                             }.accessibilityValue(model.selectedSlot == index ? "Selected" : "")
                         }
@@ -451,7 +451,7 @@ private struct BottomNavigation: View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: icon).font(.title2)
-                Text(title).font(.system(.headline, design: .serif, weight: .heavy))
+                Text(title).font(.system(.headline, design: .serif, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.75)
             }.foregroundStyle(MagicPalette.parchment).frame(maxWidth: .infinity, minHeight: 62)
                 .background(LinearGradient(colors: [color.opacity(0.8), color, color.opacity(0.65)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 21))
                 .overlay(RoundedRectangle(cornerRadius: 21).stroke(MagicPalette.goldGradient, lineWidth: active ? 3 : 2))
@@ -504,19 +504,75 @@ private struct GoldButtonStyle: ButtonStyle {
             .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1).opacity(enabled ? 1 : 0.45)
     }
 }
+private enum MagicPanelArtwork {
+    // Decode at a logical @3x size; asset-catalog "universal" images otherwise
+    // expose the full 1536-pixel artwork as a point-sized layout preference.
+    static let texture = crop(CGRect(x: 0.25, y: 0.30, width: 0.50, height: 0.40))
+    static let border = crop(CGRect(x: 0.025, y: 0.085, width: 0.95, height: 0.88))
+
+    private static func crop(_ unitRect: CGRect) -> UIImage? {
+        guard let source = UIImage(named: "OrnatePanel")?.cgImage else { return nil }
+        let bounds = CGRect(x: 0, y: 0, width: CGFloat(source.width), height: CGFloat(source.height))
+        let rect = CGRect(
+            x: CGFloat(source.width) * unitRect.minX,
+            y: CGFloat(source.height) * unitRect.minY,
+            width: CGFloat(source.width) * unitRect.width,
+            height: CGFloat(source.height) * unitRect.height
+        ).integral.intersection(bounds)
+        guard let result = source.cropping(to: rect) else { return nil }
+        return UIImage(cgImage: result, scale: 3, orientation: .up)
+    }
+}
+
+private struct MagicPanelBackdrop: View {
+    let corner: CGFloat
+    var compact = false
+
+    var body: some View {
+        GeometryReader { geometry in
+            let width = max(1, geometry.size.width)
+            let height = max(1, geometry.size.height)
+            let isCompact = compact || corner <= 20 || height < 120
+            ZStack {
+                LinearGradient(
+                    colors: [MagicPalette.deepTeal, MagicPalette.teal.opacity(0.85), MagicPalette.deepTeal],
+                    startPoint: .topLeading, endPoint: .bottomTrailing
+                )
+                if let texture = MagicPanelArtwork.texture {
+                    Image(uiImage: texture).resizable().scaledToFill()
+                        .frame(width: width, height: height).clipped().opacity(0.30)
+                }
+                if !isCompact, let border = MagicPanelArtwork.border {
+                    Image(uiImage: border)
+                        .resizable(capInsets: EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14))
+                        .frame(width: width, height: height)
+                        // Keep painted gold in the outer ten points. In
+                        // particular, the original crest cannot cross a title.
+                        .mask(RoundedRectangle(cornerRadius: corner, style: .continuous)
+                            .strokeBorder(lineWidth: 10))
+                        .opacity(0.90)
+                }
+                RoundedRectangle(cornerRadius: corner, style: .continuous)
+                    .strokeBorder(MagicPalette.goldGradient, lineWidth: isCompact ? 1.5 : 2)
+            }
+            .frame(width: width, height: height)
+            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 private extension View {
     func magicPanel(corner: CGFloat = 27) -> some View {
-        self.background {
-            ZStack {
-                LinearGradient(colors: [MagicPalette.deepTeal, MagicPalette.teal.opacity(0.85), MagicPalette.deepTeal], startPoint: .topLeading, endPoint: .bottomTrailing)
-                Image("OrnatePanel").resizable(capInsets: EdgeInsets(top: 90, leading: 65, bottom: 65, trailing: 65)).opacity(0.8).accessibilityHidden(true)
-            }.clipShape(RoundedRectangle(cornerRadius: corner))
-        }
-        .overlay(RoundedRectangle(cornerRadius: corner).stroke(MagicPalette.goldGradient, lineWidth: 2.5))
-        .overlay(RoundedRectangle(cornerRadius: max(1, corner - 4)).stroke(.white.opacity(0.18), lineWidth: 1).padding(4))
-        .shadow(color: .black.opacity(0.55), radius: 8, y: 5)
+        background { MagicPanelBackdrop(corner: corner) }
+            .shadow(color: .black.opacity(0.40), radius: 6, y: 4)
     }
-    func hudCapsule() -> some View { foregroundStyle(MagicPalette.parchment).padding(.horizontal, 12).frame(minHeight: 46).magicPanel(corner: 27) }
+    func hudCapsule() -> some View {
+        foregroundStyle(MagicPalette.parchment).padding(.horizontal, 12).frame(minHeight: 46)
+            .background { MagicPanelBackdrop(corner: 27, compact: true) }
+            .shadow(color: .black.opacity(0.30), radius: 3, y: 2)
+    }
     func parchmentCard() -> some View {
         background(LinearGradient(colors: [MagicPalette.parchment, Color(red: 0.81, green: 0.68, blue: 0.46)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 15))
             .overlay(RoundedRectangle(cornerRadius: 15).stroke(MagicPalette.goldGradient, lineWidth: 1.5))

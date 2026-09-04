@@ -13,7 +13,9 @@ English iPhone UI with native accessible controls and reduced-motion behavior.
 - First Xcode compile exposed a schema-migration initializer closure reading
   self before restoration initialized. Fixed by capturing local calibrated
   cells. This failed run is diagnostic history, not acceptance evidence.
-- Next Release simulator build passed. XCTest and captures are in progress.
+- Integrated source 826ab09d7e857566d73e59d7aabdb08db3af6caf passed Release simulator build and all 90 XCTest (87 domain/model, 3 UI), with no failures or skips, in public CI 33929958252. The complete native controls journey, next-day calendar, completion journal and large-text purchase all executed.
+- The resulting runtime captures exposed over-sized panel backgrounds, obstructed shop hints and undersized world props. Those captures are diagnostic evidence, not final visual acceptance. Corrections constrain panel artwork, anchor controls at the bottom, protect content space under large type and recalibrate the world. The corrected source requires another complete CI/capture pass.
+- A separate read-only AppModel/UI audit found no concrete progression, recovery, calendar or panel-closing blocker. This does not substitute native execution.
 
 ## Final evidence to record
 - Exact source commit, public CI run and executed test count.

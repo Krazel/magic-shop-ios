@@ -101,7 +101,7 @@ jobs:
           xcrun simctl bootstatus "$SIMULATOR_UDID" -b
           xcrun simctl status_bar "$SIMULATOR_UDID" override --time '9:41' --batteryState charged --batteryLevel 100
           xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
-          for STATE in onboarding overview build placement stock open summary improvements decor journal restored restored-right restored-rear; do
+          for STATE in onboarding overview build placement stock open summary improvements decor journal repair-rubble repair-boards repair-papers restored restored-right restored-rear; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE"
             sleep 3
@@ -128,6 +128,7 @@ jobs:
           fi
           xcrun simctl boot "$SMALL_UDID" || true
           xcrun simctl bootstatus "$SMALL_UDID" -b
+          xcrun simctl status_bar "$SMALL_UDID" override --time '9:41' --batteryState charged --batteryLevel 100
           xcrun simctl install "$SMALL_UDID" "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
           for STATE in onboarding stock placement; do
             xcrun simctl terminate "$SMALL_UDID" com.example.MagicShop || true

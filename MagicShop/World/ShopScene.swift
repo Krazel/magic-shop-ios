@@ -22,6 +22,13 @@ final class ShopScene: SKScene {
         let product: ProductKind
     }
 
+    private let plateEdgeShader = SKShader(source: """
+        void main() {
+            vec2 distanceToEdge = min(v_tex_coord, vec2(1.0) - v_tex_coord);
+            vec2 feather = smoothstep(vec2(0.0), vec2(0.025, 0.09), distanceToEdge);
+            gl_FragColor = texture2D(u_texture, v_tex_coord) * feather.x * feather.y;
+        }
+        """)
     private let environmentRoot = SKNode()
     private let furnitureRoot = SKNode()
     private let previewRoot = SKNode()
@@ -183,7 +190,7 @@ final class ShopScene: SKScene {
             displayedProgress += (targetProgress - displayedProgress) * min(1, delta * 24)
         }
         updateCustomer(progress: displayedProgress)
-        let warmth = reducedMotion ? 0.12 : 0.12 + 0.025 * sin(currentTime * 1.8)
+        let warmth = reducedMotion ? 0.035 : 0.035 + 0.009 * sin(currentTime * 1.8)
         for glow in glowNodes { glow.alpha = CGFloat(warmth) }
     }
 
@@ -263,16 +270,27 @@ final class ShopScene: SKScene {
 
     private func rebuildEnvironment() {
         environmentRoot.removeAllChildren()
+        addGroundBackdrop()
         let fullyRepaired = renderedState.restoration.repairedGroups.count == RestorationGroupID.allCases.count
         let background = SKSpriteNode(texture: texture(fullyRepaired ? "RepairedShopBackground" : "StarterShopBackground"))
         background.size = backgroundSize
         background.zPosition = -100
+        background.shader = renderedState.restoration.expansion == nil ? nil : plateEdgeShader
         environmentRoot.addChild(background)
 
         if !fullyRepaired {
             for group in renderedState.restoration.repairedGroups { addRepairPatch(group) }
         }
         if let expansion = renderedState.restoration.expansion { addAnnex(expansion) }
+    }
+
+    private func addGroundBackdrop() {
+        let earth = SKTexture(rect: CGRect(x: 0.05, y: 0.80, width: 0.9, height: 0.18),
+                              in: texture("StarterShopBackground"))
+        let backdrop = SKSpriteNode(texture: earth)
+        backdrop.size = CGSize(width: size.width * 4, height: size.height * 4)
+        backdrop.zPosition = -110
+        environmentRoot.addChild(backdrop)
     }
 
     private func addRepairPatch(_ group: RestorationGroupID) {
@@ -312,6 +330,11 @@ final class ShopScene: SKScene {
         let annex = makeProjectedAnnex(expansion)
         annex.zPosition = -92
         environmentRoot.addChild(annex)
+        let roomCorners = footprintCorners(origin: expansion.roomOrigin,
+                                           footprint: GridFootprint(width: 5, depth: 5))
+        let roomFloor = makeMatchingFloor(roomCorners, expansion: expansion)
+        roomFloor.zPosition = -91
+        environmentRoot.addChild(roomFloor)
 
         // Removing the shared wall is the one selective alteration to the
         // original room. A painted floor patch opens the same five cells that
@@ -331,25 +354,53 @@ final class ShopScene: SKScene {
             join = [project(x: 3, y: 10.45), project(x: 8, y: 10.45),
                     project(x: 8, y: 11.8), project(x: 3, y: 11.8)]
         }
-        let crop = SKCropNode()
-        let rectOfJoin = bounds(of: join)
-        let cropWidth = min(1, rectOfJoin.width / (tileWidth * 5))
-        let cropHeight = min(1, rectOfJoin.height / (tileHeight * 5))
-        let floorTexture = SKTexture(
-            rect: CGRect(x: (1 - cropWidth) * 0.5, y: (1 - cropHeight) * 0.5,
-                         width: cropWidth, height: cropHeight),
-            in: texture("AnnexFloorPatch")
-        )
-        let floor = SKSpriteNode(texture: floorTexture)
-        floor.size = CGSize(width: rectOfJoin.width, height: rectOfJoin.height)
-        floor.position = CGPoint(x: rectOfJoin.midX, y: rectOfJoin.midY)
-        crop.addChild(floor)
-        let mask = SKShapeNode(path: polygon(join))
-        mask.fillColor = .white
-        mask.strokeColor = .clear
-        crop.maskNode = mask
+        let crop = makeMatchingFloor(join, expansion: expansion)
         crop.zPosition = -90
         environmentRoot.addChild(crop)
+    }
+
+    private func makeMatchingFloor(_ corners: [CGPoint], expansion: ExpansionState) -> SKCropNode {
+        // Sample five painted tiles from the repaired shop itself. Their color,
+        // grout and size now continue into the annex instead of introducing a
+        // bright red second material. The source image stays unchanged.
+        let divisions = 16
+        var source: [SIMD2<Float>] = []
+        var projected: [CGPoint] = []
+        for row in 0...divisions {
+            for column in 0...divisions {
+                let u = CGFloat(column) / CGFloat(divisions)
+                let v = CGFloat(row) / CGFloat(divisions)
+                let depth = (1 - v - FloorCalibration.nearY)
+                    / (FloorCalibration.farY - FloorCalibration.nearY)
+                let left = FloorCalibration.nearLeft
+                    + (FloorCalibration.farLeft - FloorCalibration.nearLeft) * depth
+                let right = FloorCalibration.nearRight
+                    + (FloorCalibration.farRight - FloorCalibration.nearRight) * depth
+                let floorX = (u - left) / (right - left) * 11
+                source.append(SIMD2(Float(u), Float(v)))
+                projected.append(project(x: CGFloat(expansion.roomOrigin.x) + floorX - 3,
+                                         y: CGFloat(expansion.roomOrigin.y) + depth * 11 - 3))
+            }
+        }
+        let rect = bounds(of: projected)
+        let destination = projected.map {
+            SIMD2<Float>(Float(($0.x - rect.minX) / rect.width),
+                         Float(($0.y - rect.minY) / rect.height))
+        }
+        let paintedFloor = SKSpriteNode(texture: texture("RepairedShopBackground"))
+        paintedFloor.size = rect.size
+        paintedFloor.position = CGPoint(x: rect.midX, y: rect.midY)
+        paintedFloor.warpGeometry = SKWarpGeometryGrid(columns: divisions, rows: divisions,
+                                                        sourcePositions: source,
+                                                        destinationPositions: destination)
+        let crop = SKCropNode()
+        crop.addChild(paintedFloor)
+        let mask = SKShapeNode(path: polygon(corners))
+        mask.fillColor = .white
+        mask.strokeColor = .white
+        mask.lineWidth = 0.6
+        crop.maskNode = mask
+        return crop
     }
 
     private func makeProjectedAnnex(_ expansion: ExpansionState) -> SKSpriteNode {
@@ -453,16 +504,16 @@ final class ShopScene: SKScene {
         let assetName: String
         let desiredWidth: CGFloat
         switch kind {
-        case .basicDisplayTable: assetName = "BasicDisplayTable"; desiredWidth = floorBounds.width * 0.88
+        case .basicDisplayTable: assetName = "BasicDisplayTable"; desiredWidth = floorBounds.width * 1.16
         case .simpleShelf:
             assetName = rotation.swapsAxes ? "SimpleShelfSide" : "SimpleShelf"
             desiredWidth = floorBounds.width * 0.93
-        case .pottedFern: assetName = "PottedFern"; desiredWidth = tileWidth * 0.78
-        case .starRug: assetName = "StarRug"; desiredWidth = tileWidth * 0.94
-        case .crystalDisplay: assetName = "CrystalDisplay"; desiredWidth = tileWidth * 0.74
-        case .wallClock: assetName = "WallClock"; desiredWidth = tileWidth * 0.62
-        case .moonPainting: assetName = "MoonPainting"; desiredWidth = tileWidth * 0.84
-        case .brassLantern: assetName = "BrassLantern"; desiredWidth = tileWidth * 0.65
+        case .pottedFern: assetName = "PottedFern"; desiredWidth = tileWidth * 1.30
+        case .starRug: assetName = "StarRug"; desiredWidth = tileWidth * 1.82
+        case .crystalDisplay: assetName = "CrystalDisplay"; desiredWidth = tileWidth * 1.38
+        case .wallClock: assetName = "WallClock"; desiredWidth = tileWidth * 1.12
+        case .moonPainting: assetName = "MoonPainting"; desiredWidth = tileWidth * 1.38
+        case .brassLantern: assetName = "BrassLantern"; desiredWidth = tileWidth * 1.72
         }
         let sprite = SKSpriteNode(texture: texture(assetName))
         setUniformWidth(desiredWidth, on: sprite)
@@ -490,12 +541,12 @@ final class ShopScene: SKScene {
         group.addChild(sprite)
 
         if kind == .brassLantern || kind == .crystalDisplay {
-            let glow = SKShapeNode(ellipseOf: CGSize(width: tileWidth * 1.3, height: tileHeight * 0.8))
+            let glow = SKShapeNode(ellipseOf: CGSize(width: tileWidth * 0.82, height: tileHeight * 0.35))
             glow.fillColor = kind == .brassLantern
                 ? SKColor(red: 1, green: 0.67, blue: 0.2, alpha: 1)
                 : SKColor(red: 0.42, green: 0.72, blue: 1, alpha: 1)
             glow.strokeColor = .clear
-            glow.alpha = 0.12
+            glow.alpha = 0.035
             glow.zPosition = -0.5
             group.addChild(glow)
             if !preview { glowNodes.append(glow) }
@@ -504,9 +555,9 @@ final class ShopScene: SKScene {
         if let fixtureID {
             for unit in renderedState.stock where unit.fixtureID == fixtureID {
                 let product = SKSpriteNode(texture: texture(productAsset(unit.product)))
-                setUniformWidth(tileWidth * 0.36, on: product)
-                if product.size.height > tileHeight * 0.59 {
-                    setUniformHeight(tileHeight * 0.59, on: product)
+                setUniformWidth(tileWidth * 0.68, on: product)
+                if product.size.height > tileHeight * 0.82 {
+                    setUniformHeight(tileHeight * 0.82, on: product)
                 }
                 product.anchorPoint = CGPoint(x: 0.5, y: 0)
                 let sideShelf = kind == .simpleShelf && rotation.swapsAxes
@@ -547,7 +598,7 @@ final class ShopScene: SKScene {
         switch wall {
         case .rear:
             position = project(x: x + 0.5, y: y + 1)
-            position.y += tileHeight * 1.15
+            position.y += tileHeight * 2.25
         case .front:
             position = project(x: x + 0.5, y: y)
             if let expansion = renderedState.restoration.expansion,
@@ -618,7 +669,7 @@ final class ShopScene: SKScene {
         customerShadow = shadow
 
         let customer = SKSpriteNode(texture: texture(plan.id.index.isMultiple(of: 2) ? "CustomerPlum" : "CustomerGreen"))
-        setUniformHeight(tileHeight * 1.38, on: customer)
+        setUniformHeight(tileHeight * 1.65, on: customer)
         customer.anchorPoint = CGPoint(x: 0.5, y: 0.045)
         customerRoot.addChild(customer)
         customerSprite = customer
@@ -636,7 +687,7 @@ final class ShopScene: SKScene {
         thoughtNode = thought
 
         let carried = SKSpriteNode(texture: texture(productAsset(plan.product)))
-        setUniformHeight(tileHeight * 0.34, on: carried)
+        setUniformHeight(tileHeight * 0.46, on: carried)
         carried.isHidden = true
         customerRoot.addChild(carried)
         carriedProduct = carried
@@ -651,7 +702,7 @@ final class ShopScene: SKScene {
             customerFacingOut = walkingOut
             let name = plan.id.index.isMultiple(of: 2) ? "CustomerPlum" : "CustomerGreen"
             sprite.texture = texture(walkingOut ? name + "Front" : name)
-            setUniformHeight(tileHeight * 1.38, on: sprite)
+            setUniformHeight(tileHeight * 1.65, on: sprite)
         }
         let routeFraction: Double
         if reducedMotion { routeFraction = 1 }

@@ -30,6 +30,9 @@ extension AppModel {
                     }
                 }
             }
+            if name == "repair-rubble" { _ = try engine.repair(.rubble) }
+            if name == "repair-boards" { _ = try engine.repair(.brokenBoards) }
+            if name == "repair-papers" { _ = try engine.repair(.discardedPapers) }
             if name.hasPrefix("restored") {
                 let direction: ExpansionDirection = name == "restored-right" ? .right : name == "restored-rear" ? .rear : .left
                 engine = try restoredVisualEngine(direction: direction)

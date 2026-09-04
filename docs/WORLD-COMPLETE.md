@@ -96,10 +96,10 @@ uses its own front-open art, without rotating the side image.
 | AnnexRoomRearBackground | 1292 x 1218 | (218,338)-(1070,338) | (142,1125)-(1140,1125) |
 
 These are visually measured outer floor landmarks. The shared wall is opened by
-a masked painted floor patch above the original plate and annex. Its texture is
-cropped to preserve tile scale rather than squeezing all five rows into a thin
-join. The original image file remains intact. Camera framing widens for a side
-room and permits horizontal exploration.
+a masked floor surface above the original plate and annex. The floor and opening
+sample five by five tiles from RepairedShopBackground through a 16 x 16 warp,
+keeping the starter material and tile scale. The original image file remains
+intact. Camera framing widens for a side room and permits horizontal exploration.
 
 ## Asset dependencies
 
@@ -155,3 +155,41 @@ record final CI and actual screenshot evidence in the project integration docs.
 
 SpriteKit's native warp API:
 https://developer.apple.com/documentation/spritekit/skwarpgeometrygrid/init(columns:rows:sourcepositions:destinationpositions:)
+
+## Runtime capture review: 826ab09 (2026-09-05)
+
+Reviewed the real overview, open, placement, restored-left, restored-right and
+restored-rear captures from CI run 33929958252 against
+design/approved/complete-game-director-v2.png. Root reports all 90 executed
+XCTests passing for that snapshot. UI panel sizing is handled in the App lane.
+
+The screenshots exposed these concrete World defects, corrected in the next
+World snapshot:
+
+- Small visible silhouettes: table width increased from 0.88 to 1.16 floor-cell
+  width, keeping its visible body close to one cell. Product width increased
+  from 0.36 to 0.68 tile, with height capped at 0.82 tile. Customer height is now
+  1.65 tiles. Shelf dimensions are retained.
+- Decoration scale now accounts for transparent padding: fern canvas 1.30 tile
+  width, rug 1.82, crystal 1.38, clock 1.12, painting 1.38 and lantern 1.72. The
+  lantern's painted body occupies only 39% of its square source; its base still
+  stays comfortably within a cell. The larger flat rug may extend under adjacent
+  furniture; it remains nonblocking in Core.
+- Rear wall decor was sitting on the baseboard. Mount height is now 2.25 tile
+  heights above the rear floor edge, placing the art within the plaster panel.
+- The crystal's broad flat oval was distracting. Native ambient light is now
+  smaller and very faint (0.035 alpha with 0.009 pulse).
+- The annex's orange floor clashed with the starter and showed a rectangular
+  patch at the join. Both the annex floor and shared opening now sample a five
+  by five tile region from RepairedShopBackground through a 16 x 16 warp and
+  polygon crop. Source tile scale and native floor projection are retained.
+  The dedicated annex artwork still supplies its walls and cutaway edges.
+  AnnexFloorPatch remains an archived asset but is no longer rendered.
+- Shrinking the starter for a side room exposed a flat dark strip beyond the
+  photo. A painted earth backdrop sampled from the original plate fills that
+  area, and a native shader feathers only the plate's outer margins in expanded
+  states. The original building and source files are preserved.
+
+Static verification passes after these corrections, including all seven current
+approval hashes and archived runtime asset sources. The new World snapshot must
+be compiled and recaptured before these visual fixes are considered verified.
