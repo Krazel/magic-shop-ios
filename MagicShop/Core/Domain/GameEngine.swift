@@ -48,11 +48,11 @@ public struct FirstSliceFlow: Equatable, Sendable {
 
 public struct GameEngine: Sendable {
     public private(set) var state: GameState
-    public let layout: ShopLayout
+    public var layout: ShopLayout { state.world.hitMap.layout }
 
     public init(state: GameState = .initial, layout: ShopLayout = .starter) {
         self.state = state
-        self.layout = state.world.hitMap.layout == layout ? layout : state.world.hitMap.layout
+        _ = layout // Persisted world geometry is authoritative, including expansion.
     }
 
     @discardableResult
@@ -97,6 +97,7 @@ public struct GameEngine: Sendable {
 
         state.balance -= definition.price
         state.fixtures.append(fixture)
+        refreshRestorationCompletion()
         return fixture
     }
 
@@ -266,6 +267,7 @@ extension GameEngine {
         state.dayHistory.append(summary)
         state.currentDay = nil
         state.phase = .preparing
+        refreshRestorationCompletion()
         return summary
     }
 
@@ -290,5 +292,84 @@ extension GameEngine {
         let result = state.balance.addingReportingOverflow(amount)
         guard !result.overflow else { throw CommerceError.balanceOverflow }
         return result.partialValue
+    }
+}
+
+extension GameEngine {
+    public func validateRepair(_ group: RestorationGroupID) throws {
+        try requirePreparing()
+        guard !state.restoration.repairedGroups.contains(group) else {
+            throw RestorationError.repairAlreadyCompleted(group)
+        }
+        let definition = RepairCatalog.definition(for: group)
+        guard state.world.hitMap.cells.contains(where: { $0.staticBlocker == definition.blocker }) else {
+            throw RestorationError.noRepairableCells(group)
+        }
+        guard state.balance >= definition.price else {
+            throw CommerceError.insufficientFunds(required: definition.price, available: state.balance)
+        }
+    }
+
+    /// Call only on confirmation. The whole authored blocker group is cleared,
+    /// including a legacy cell preserved during calibration migration.
+    @discardableResult
+    public mutating func repair(_ group: RestorationGroupID) throws -> RepairDefinition {
+        try validateRepair(group)
+        let definition = RepairCatalog.definition(for: group)
+        var candidate = state
+        let cells = candidate.world.hitMap.cells.filter { $0.staticBlocker == definition.blocker }
+        for cell in cells {
+            candidate.world.hitMap.updateCell(at: cell.point) { $0.staticBlocker = nil }
+        }
+        candidate.balance -= definition.price
+        candidate.restoration.repairedGroups.insert(group)
+        try candidate.validateIntegrity()
+        state = candidate
+        refreshRestorationCompletion()
+        return definition
+    }
+
+    public func validateExpansion(toward direction: ExpansionDirection) throws {
+        try requirePreparing()
+        guard state.restoration.expansion == nil else { throw RestorationError.alreadyExpanded }
+        guard state.restoration.repairedGroups.count == RestorationGroupID.allCases.count else {
+            throw RestorationError.repairsRequired
+        }
+        guard state.world.hitMap.layout == .starter else {
+            throw RestorationError.unsupportedStarterLayout
+        }
+        guard state.balance >= ExpansionState.price else {
+            throw CommerceError.insufficientFunds(required: ExpansionState.price, available: state.balance)
+        }
+        let connection = ExpansionState(direction: direction).starterConnectionCells
+        let occupied = state.world.hitMap.dynamicOccupancy(fixtures: state.fixtures)
+        guard connection.allSatisfy({ occupied[$0] == nil }),
+              !connection.isDisjoint(with: ShopAccess.reachableCells(in: state)) else {
+            throw RestorationError.expansionConnectionBlocked
+        }
+    }
+
+    @discardableResult
+    public mutating func expandShop(toward direction: ExpansionDirection) throws -> ExpansionState {
+        try validateExpansion(toward: direction)
+        let expansion = ExpansionState(direction: direction)
+        var candidate = state
+        candidate.world = RestorationWorld.expanded(state.world, using: expansion)
+        if expansion.starterOrigin.x != 0 {
+            for index in candidate.fixtures.indices {
+                candidate.fixtures[index].origin.x += expansion.starterOrigin.x
+            }
+        }
+        candidate.restoration.expansion = expansion
+        candidate.balance -= ExpansionState.price
+        try candidate.validateIntegrity()
+        state = candidate
+        refreshRestorationCompletion()
+        return expansion
+    }
+
+    private mutating func refreshRestorationCompletion() {
+        guard state.restoration.completion == nil, state.restorationProgress.isComplete else { return }
+        state.restoration.completion = RestorationCompletion(completedOnDay: state.calendar.dayNumber)
     }
 }

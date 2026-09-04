@@ -1,6 +1,8 @@
 import Foundation
 import SwiftUI
 
+enum ShopPanel: String { case none, stock, improvements, journal, fixture }
+
 @MainActor
 final class AppModel: ObservableObject {
     @Published private(set) var state: GameState
@@ -8,7 +10,18 @@ final class AppModel: ObservableObject {
     @Published var shopNameInput = ""
     @Published private(set) var selectedCategory: FixtureCategory = .tables
     @Published private(set) var inlineMessage: String?
-
+    @Published var panel: ShopPanel = .none
+    @Published var selectedFixtureID: UUID?
+    @Published var selectedSlot = 0
+    @Published var selectedProduct: ProductKind = .glowPotion
+    @Published private(set) var activeVisit: CustomerVisit?
+    @Published private(set) var visitProgress = 0.0
+    @Published private(set) var lastOutcome: VisitOutcome?
+    @Published private(set) var isPaused = false
+    @Published var isFast = false
+    @Published private(set) var isAppActive = true
+    @Published private(set) var movingFixtureID: UUID?
+    private var visitWasCommitted = false
     private var session: GameSession?
     private let providedStore: (any GameStateStore)?
     private var engine: GameEngine { session?.engine ?? GameEngine() }
@@ -20,8 +33,6 @@ final class AppModel: ObservableObject {
         _ = restoreSavedSession()
     }
 
-    // A load failure must never become a new game that overwrites the original.
-    // Reusing the existing inline error keeps recovery inside the approved UI.
     @discardableResult
     private func restoreSavedSession() -> Bool {
         do {
@@ -40,195 +51,259 @@ final class AppModel: ObservableObject {
         }
     }
 
+    @discardableResult
+    private func transact(_ command: (inout GameEngine) throws -> Void) -> Bool {
+        guard let session else { return false }
+        do {
+            try session.commit(command)
+            state = session.engine.state
+            inlineMessage = nil
+            return true
+        } catch {
+            inlineMessage = userFacingMessage(for: error)
+            return false
+        }
+    }
+
     var placementDraft: PlacementDraft? {
         guard case let .placement(draft) = flow.route else { return nil }
         return draft
     }
-
-    var placementDefinition: FixtureDefinition? {
-        placementDraft.map { FixtureCatalog.definition(for: $0.kind) }
-    }
-
-    var isPlacementValid: Bool {
-        guard session != nil, let draft = placementDraft else { return false }
-        return (try? engine.validate(draft)) != nil
-    }
-
-    var placementMessage: String? {
+    var placementDefinition: FixtureDefinition? { placementDraft.map { FixtureCatalog.definition(for: $0.kind) } }
+    var isPlacementValid: Bool { placementDraft != nil && placementFailure == nil && session != nil }
+    var placementMessage: String? { placementDraft == nil ? nil : placementFailure ?? "Ready to place" }
+    private var placementFailure: String? {
         guard let draft = placementDraft else { return nil }
         do {
-            try engine.validate(draft)
-            return "Valid position"
-        } catch {
-            return userFacingMessage(for: error)
+            if let id = movingFixtureID {
+                var copy = engine
+                try copy.moveFixture(fixtureID: id, origin: draft.origin, rotation: draft.rotation)
+            } else { try engine.validate(draft) }
+            return nil
+        } catch { return userFacingMessage(for: error) }
+    }
+    var selectedFixture: PlacedFixture? { state.fixtures.first { $0.id == selectedFixtureID } }
+    var selectedFixtureDefinition: FixtureDefinition? { selectedFixture.map { FixtureCatalog.definition(for: $0.kind) } }
+    var stockFixtures: [PlacedFixture] { state.fixtures.filter { FixtureCatalog.definition(for: $0.kind).stockCapacity > 0 } }
+    var selectedStock: StockItem? { state.stock.first { $0.fixtureID == selectedFixtureID && $0.slotIndex == selectedSlot } }
+    var stockDraft: StockDraft? {
+        guard let fixture = selectedFixture else { return nil }
+        return engine.makeStockDraft(product: selectedProduct, fixtureID: fixture.id, slotIndex: selectedSlot)
+    }
+    var stockFailure: String? {
+        guard let draft = stockDraft else { return "Build a table or shelf to display your first item." }
+        do { try engine.validate(draft); return nil }
+        catch { return userFacingMessage(for: error) }
+    }
+    var canOpen: Bool {
+        state.phase == .preparing && state.stock.contains { item in
+            state.fixtures.contains { $0.id == item.fixtureID && ShopAccess.isReachable($0, in: state) }
         }
+    }
+    var isTrading: Bool { state.phase == .open || activeVisit != nil }
+    var showsSummary: Bool { state.phase == .summary && activeVisit == nil }
+    var clockText: String {
+        guard let visit = activeVisit else { return state.calendar.timeText }
+        let minutes = min(18 * 60, 9 * 60 + visit.id.index * 90 + Int(visitProgress * 90))
+        return String(format: "%02d:%02d", minutes / 60, minutes % 60)
+    }
+    var visitorText: String {
+        guard let visit = activeVisit else { return isPaused ? "Paused" : "Welcoming your next visitor" }
+        if visitWasCommitted, let outcome = lastOutcome {
+            return outcome.sale.map { "+$\($0.revenue) · Thank you!" } ?? "Nothing today. Maybe tomorrow!"
+        }
+        return "Looking for \(ProductCatalog.definition(for: visit.requestedProduct).displayName)"
     }
 
     @discardableResult
     func submitOnboarding() -> Bool {
-        guard session != nil else {
-            _ = restoreSavedSession()
-            return false
+        guard session != nil else { _ = restoreSavedSession(); return false }
+        if transact({ _ = try $0.completeOnboarding(shopName: shopNameInput) }) {
+            flow.didCompleteOnboarding(); return true
         }
-        do {
-            try session?.commit { try $0.completeOnboarding(shopName: shopNameInput) }
-            state = engine.state
-            var nextFlow = flow
-            nextFlow.didCompleteOnboarding()
-            flow = nextFlow
-            inlineMessage = nil
-            return true
-        } catch {
-            inlineMessage = userFacingMessage(for: error)
-            return false
-        }
+        return false
     }
-
     func openBuild() {
-        guard session != nil else { return }
-        var nextFlow = flow
-        nextFlow.openBuild()
-        flow = nextFlow
-        inlineMessage = nil
+        guard state.phase == .preparing, session != nil else { return }
+        panel = .none; movingFixtureID = nil; flow.openBuild(); inlineMessage = nil
     }
-
-    func closeBuild() {
-        var nextFlow = flow
-        nextFlow.closeBuild()
-        flow = nextFlow
-        inlineMessage = nil
-    }
-
+    func closeBuild() { flow.closeBuild(); panel = .none; movingFixtureID = nil; inlineMessage = nil }
     func selectCategory(_ category: FixtureCategory) {
         selectedCategory = category
-        inlineMessage = category.isAvailableInFirstSlice ? nil : "Coming soon"
+        inlineMessage = nil
+        if category == .walls { flow.closeBuild(); panel = .improvements }
     }
-
-    func beginPlacement(kind: FixtureKind) {
-        guard session != nil else { return }
-        let defaultOrigin: GridPoint
-        switch kind {
-        case .basicDisplayTable:
-            defaultOrigin = GridPoint(x: 5, y: 4)
-        case .simpleShelf:
-            defaultOrigin = GridPoint(x: 4, y: ShopLayout.starter.depth - 1)
+    func showPanel(_ next: ShopPanel) {
+        guard state.phase == .preparing else { return }
+        flow.closeBuild(); movingFixtureID = nil; panel = next; inlineMessage = nil
+        if next == .stock {
+            if (selectedFixtureDefinition?.stockCapacity ?? 0) == 0 { selectedFixtureID = stockFixtures.first?.id }
+            chooseFixture(selectedFixtureID)
         }
-
-        let draft = engine.makePlacementDraft(kind: kind, origin: defaultOrigin)
-        var nextFlow = flow
-        nextFlow.beginPlacement(draft)
-        flow = nextFlow
+    }
+    func chooseFixture(_ id: UUID?) {
+        selectedFixtureID = id
+        selectedSlot = (0..<(selectedFixtureDefinition?.stockCapacity ?? 0)).first { slot in
+            !state.stock.contains { $0.fixtureID == id && $0.slotIndex == slot }
+        } ?? 0
+        if let kind = selectedFixture?.kind,
+           !ProductCatalog.definition(for: selectedProduct).isCompatible(with: kind) { selectedProduct = .glowPotion }
         inlineMessage = nil
     }
-
-    func setPlacementOrigin(_ origin: GridPoint) {
-        updateDraft { draft in
-            let nextOrigin = clampedOrigin(origin, for: draft)
-            draft.origin = nextOrigin
-        }
+    func selectFixture(_ id: UUID) {
+        guard state.phase == .preparing, placementDraft == nil else { return }
+        chooseFixture(id)
+        flow.closeBuild()
+        panel = (selectedFixtureDefinition?.stockCapacity ?? 0) > 0 ? .stock : .fixture
     }
-
+    func beginPlacement(kind: FixtureKind) {
+        guard state.phase == .preparing, session != nil else { return }
+        panel = .none; movingFixtureID = nil
+        let preferred = GridPoint(x: 5, y: kind == .simpleShelf ? 10 : 4)
+        var draft = engine.makePlacementDraft(kind: kind, origin: preferred)
+        if (try? engine.validate(draft)) == nil {
+            outer: for y in 0..<engine.layout.depth {
+                for x in 0..<engine.layout.width {
+                    let candidate = engine.makePlacementDraft(kind: kind, origin: GridPoint(x: x, y: y))
+                    if (try? engine.validate(candidate)) != nil { draft = candidate; break outer }
+                }
+            }
+        }
+        flow.beginPlacement(draft); inlineMessage = nil
+    }
+    func beginMovingSelectedFixture() {
+        guard let fixture = selectedFixture, state.phase == .preparing else { return }
+        movingFixtureID = fixture.id; panel = .none
+        flow.beginPlacement(PlacementDraft(fixtureID: fixture.id, kind: fixture.kind, origin: fixture.origin, rotation: fixture.rotation))
+    }
+    func setPlacementOrigin(_ point: GridPoint) { updateDraft { $0.origin = point } }
     func movePlacement(deltaX: Int, deltaY: Int) {
-        updateDraft { draft in
-            let proposed = GridPoint(
-                x: draft.origin.x + deltaX,
-                y: draft.origin.y + deltaY
-            )
-            draft.origin = clampedOrigin(proposed, for: draft)
-        }
+        updateDraft { $0.origin = GridPoint(x: $0.origin.x + deltaX, y: $0.origin.y + deltaY) }
     }
-
     func rotatePlacement() {
         updateDraft { draft in
             let rotations = FixtureRotation.allCases
-            guard let index = rotations.firstIndex(of: draft.rotation) else { return }
+            let index = rotations.firstIndex(of: draft.rotation) ?? 0
             draft.rotation = rotations[(index + 1) % rotations.count]
-            draft.origin = clampedOrigin(draft.origin, for: draft)
         }
     }
-
-    func cancelCurrentPlacement() {
-        guard let draft = placementDraft else { return }
-        _ = draft // Transient cancellation never writes or mutates the saved engine.
-        state = engine.state
-        var nextFlow = flow
-        nextFlow.cancelPlacement()
-        flow = nextFlow
-        inlineMessage = nil
-    }
-
-    @discardableResult
-    func confirmCurrentPlacement() -> Bool {
-        guard session != nil, let draft = placementDraft else { return false }
-        do {
-            try session?.commit { try $0.confirm(draft) }
-            state = engine.state
-            var nextFlow = flow
-            nextFlow.finishPlacement()
-            flow = nextFlow
-            inlineMessage = nil
-            return true
-        } catch {
-            inlineMessage = userFacingMessage(for: error)
-            return false
-        }
-    }
-
     private func updateDraft(_ mutation: (inout PlacementDraft) -> Void) {
         guard var draft = placementDraft else { return }
         mutation(&draft)
-        var nextFlow = flow
-        nextFlow.updatePlacement(draft)
-        flow = nextFlow
-        inlineMessage = nil
+        let footprint = FixtureCatalog.definition(for: draft.kind).footprint.rotated(draft.rotation)
+        draft.origin = GridPoint(x: min(max(0, draft.origin.x), engine.layout.width - footprint.width),
+                                 y: min(max(0, draft.origin.y), engine.layout.depth - footprint.depth))
+        flow.updatePlacement(draft); inlineMessage = nil
+    }
+    func cancelCurrentPlacement() {
+        if movingFixtureID != nil { flow.closeBuild(); panel = .fixture }
+        else { flow.cancelPlacement() }
+        movingFixtureID = nil; inlineMessage = nil
+    }
+    @discardableResult
+    func confirmCurrentPlacement() -> Bool {
+        guard let draft = placementDraft else { return false }
+        let moveID = movingFixtureID
+        if transact({ engine in
+            if let id = moveID { try engine.moveFixture(fixtureID: id, origin: draft.origin, rotation: draft.rotation) }
+            else { _ = try engine.confirm(draft) }
+        }) {
+            selectedFixtureID = draft.fixtureID
+            flow.finishPlacement(); movingFixtureID = nil; return true
+        }
+        return false
+    }
+    @discardableResult
+    func confirmStock() -> Bool {
+        guard let draft = stockDraft else { return false }
+        if transact({ _ = try $0.confirm(draft) }) { chooseFixture(selectedFixtureID); return true }
+        return false
+    }
+    func returnSelectedStock() {
+        guard let item = selectedStock else { return }
+        _ = transact { _ = try $0.returnStock(stockID: item.id) }
+    }
+    func sellSelectedFixture() {
+        guard let id = selectedFixtureID else { return }
+        if transact({ _ = try $0.sellEmptyFixture(fixtureID: id) }) {
+            selectedFixtureID = nil; panel = .none
+        }
+    }
+    func startDay() {
+        guard state.phase == .preparing else { return }
+        if transact({ _ = try $0.openDay() }) {
+            panel = .none; flow.closeBuild(); isPaused = false
+            startNextVisit()
+        }
+    }
+    private func startNextVisit() {
+        activeVisit = state.currentDay?.nextVisit
+        visitProgress = 0; visitWasCommitted = false; lastOutcome = nil
+    }
+    // Presentation time only. Financial state advances once at the sale moment,
+    // through an atomic save. A retry retains the original visitor token.
+    func tick(seconds: Double) {
+        guard isAppActive, !isPaused, seconds > 0 else { return }
+        if activeVisit == nil, state.phase == .open { startNextVisit() }
+        guard let visit = activeVisit else { return }
+        visitProgress = min(1, visitProgress + min(seconds, 0.25) / (isFast ? 3.0 : 6.0))
+        if visitProgress >= 0.65 && !visitWasCommitted {
+            var result: VisitOutcome?
+            guard transact({ result = try $0.advanceDay(expectedVisitID: visit.id) }) else {
+                visitProgress = 0.64; isPaused = true; return
+            }
+            lastOutcome = result; visitWasCommitted = true
+        }
+        if visitProgress >= 1 {
+            activeVisit = nil
+            if state.phase == .open { startNextVisit() }
+        }
+    }
+    func togglePause() { isPaused.toggle(); if !isPaused { inlineMessage = nil } }
+    func setAppActive(_ active: Bool) { isAppActive = active }
+    func prepareNextDay() {
+        guard let day = state.currentDay, showsSummary else { return }
+        if transact({ _ = try $0.acknowledgeDaySummary(dayID: day.id) }) { panel = .none; lastOutcome = nil }
     }
 
-    private func clampedOrigin(_ origin: GridPoint, for draft: PlacementDraft) -> GridPoint {
-        let definition = FixtureCatalog.definition(for: draft.kind)
-        let footprint = definition.footprint.rotated(draft.rotation)
-        return GridPoint(
-            x: min(max(0, origin.x), engine.layout.width - footprint.width),
-            y: min(max(0, origin.y), engine.layout.depth - footprint.depth)
-        )
+    func repair(_ group: RestorationGroupID) {
+        _ = transact { _ = try $0.repair(group) }
     }
-
+    func expand(_ direction: ExpansionDirection) {
+        _ = transact { _ = try $0.expandShop(toward: direction) }
+    }
+    func repairFailure(_ group: RestorationGroupID) -> String? {
+        do { try engine.validateRepair(group); return nil }
+        catch { return userFacingMessage(for: error) }
+    }
+    func expansionFailure(_ direction: ExpansionDirection) -> String? {
+        do { try engine.validateExpansion(toward: direction); return nil }
+        catch { return userFacingMessage(for: error) }
+    }
     private func userFacingMessage(for error: Error) -> String {
         switch error {
-        case ShopNameValidationError.empty:
-            return "Enter a name for your shop."
-        case ShopNameValidationError.tooShort:
-            return "Use at least 2 characters."
-        case ShopNameValidationError.tooLong:
-            return "Keep the name to 24 characters or fewer."
-        case ShopNameValidationError.containsControlCharacters:
-            return "That name contains unsupported characters."
-        case let PlacementError.insufficientFunds(required, available):
+        case ShopNameValidationError.empty: return "Enter a name for your shop."
+        case ShopNameValidationError.tooShort: return "Use at least 2 characters."
+        case ShopNameValidationError.tooLong: return "Keep the name to 24 characters or fewer."
+        case ShopNameValidationError.containsControlCharacters: return "That name contains unsupported characters."
+        case let PlacementError.insufficientFunds(required, available), let CommerceError.insufficientFunds(required, available):
             return "You need $\(required), but have $\(available)."
-        case PlacementError.outsideShopBounds:
-            return "Keep the fixture inside the shop."
-        case PlacementError.entranceMustRemainClear:
-            return "Keep the entrance clear."
-        case let PlacementError.blockedByStaticObject(blocker):
-            switch blocker {
-            case .rubble:
-                return "Clear the rubble before building here."
-            case .brokenBoards:
-                return "Clear the broken boards before building here."
-            case .discardedPapers:
-                return "Clear the discarded papers before building here."
-            case .frontColumn:
-                return "The shop structure blocks this cell."
-            }
-        case PlacementError.overlapsExistingFixture:
-            return "That space is already occupied."
-        case PlacementError.duplicateFixtureID:
-            return "That fixture has already been placed."
-        case PlacementError.shopIsNotPreparing:
-            return "Finish the trading day before building."
-        case PlacementError.shelfMustBeAdjacentToWall:
-            return "Shelves must be placed next to a wall."
-        default:
-            return "The change could not be saved. Please try again."
+        case PlacementError.outsideShopBounds: return "Keep the fixture inside the shop."
+        case PlacementError.entranceMustRemainClear: return "Keep the entrance clear."
+        case PlacementError.blockedByStaticObject: return "Repair this part of the shop before building here."
+        case PlacementError.overlapsExistingFixture: return "That space is already occupied."
+        case PlacementError.duplicateFixtureID: return "That fixture has already been placed."
+        case PlacementError.shopIsNotPreparing, CommerceError.wrongPhase: return "Finish the trading day before changing the shop."
+        case PlacementError.shelfMustBeAdjacentToWall: return "Place this fixture along a wall."
+        case CommerceError.slotOccupied: return "This slot is full. Return its item or select an empty slot."
+        case CommerceError.incompatibleProduct: return "Choose a compatible table or shelf for this item."
+        case CommerceError.fixtureContainsStock: return "Return the stock before selling this fixture."
+        case CommerceError.noReachableStock: return "Stock a display that customers can reach from the entrance. Move anything blocking the way."
+        case RestorationError.repairsRequired: return "Complete all three repairs before adding a room."
+        case RestorationError.alreadyExpanded: return "Your new room is already part of the shop."
+        case RestorationError.expansionConnectionBlocked: return "Move fixtures away from this wall to open the passage."
+        case RestorationError.repairAlreadyCompleted: return "This repair is already complete."
+        default: return "The change could not be saved. Please try again."
         }
     }
 }

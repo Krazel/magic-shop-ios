@@ -86,6 +86,7 @@ public enum PlacementRules {
             guard let cell = hitMap.cell(at: point) else {
                 throw PlacementError.outsideShopBounds
             }
+            if cell.zone == .outside { throw PlacementError.outsideShopBounds }
             if cell.zone == .entrance { throw PlacementError.entranceMustRemainClear }
             if let blocker = cell.staticBlocker {
                 throw PlacementError.blockedByStaticObject(blocker)

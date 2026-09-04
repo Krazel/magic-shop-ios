@@ -24,3 +24,12 @@ Validation:
 Do not add accounts, analytics, ads, tracking, StoreKit, external dependencies,
 TestFlight upload or App Store deployment unless the owner explicitly opens
 that phase.
+
+## Current owner authority — 2026-09-05
+The owner approved the three commerce masters and explicitly delegated all
+remaining design/product decisions to finish the small game without further
+questions: varied decorations, repair, compact expansion, enjoyable animation,
+and a simulated schedule with days/hours. This supersedes earlier visual gates
+and Coming soon exclusions within that scope. Preserve visual-first references
+and compare runtime; autonomous selection is not a claim of a new owner review.
+Version target 0.2 (1). External store publication remains a separate phase.

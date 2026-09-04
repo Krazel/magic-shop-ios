@@ -58,9 +58,9 @@ final class WorldMapTests: XCTestCase {
     func testStarterHitMapIdentifiesDebrisArchitectureAndEntrance() {
         let map = WorldHitMap.starter
 
-        XCTAssertEqual(map.hit(at: GridPoint(x: 1, y: 4), fixtures: []), .blocked(.rubble))
-        XCTAssertEqual(map.hit(at: GridPoint(x: 9, y: 4), fixtures: []), .blocked(.brokenBoards))
-        XCTAssertEqual(map.hit(at: GridPoint(x: 8, y: 2), fixtures: []), .blocked(.discardedPapers))
+        XCTAssertEqual(map.hit(at: GridPoint(x: 1, y: 5), fixtures: []), .blocked(.rubble))
+        XCTAssertEqual(map.hit(at: GridPoint(x: 9, y: 5), fixtures: []), .blocked(.brokenBoards))
+        XCTAssertEqual(map.hit(at: GridPoint(x: 9, y: 2), fixtures: []), .blocked(.discardedPapers))
         XCTAssertEqual(map.hit(at: GridPoint(x: 0, y: 0), fixtures: []), .blocked(.frontColumn))
         XCTAssertEqual(map.hit(at: GridPoint(x: 5, y: 0), fixtures: []), .entrance)
         XCTAssertEqual(map.hit(at: GridPoint(x: 5, y: 5), fixtures: []), .available)

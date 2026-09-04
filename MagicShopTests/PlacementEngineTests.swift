@@ -87,7 +87,7 @@ final class PlacementEngineTests: XCTestCase {
         let engine = GameEngine()
         let rubbleCell = engine.makePlacementDraft(
             kind: .basicDisplayTable,
-            origin: GridPoint(x: 1, y: 4)
+            origin: GridPoint(x: 1, y: 5)
         )
 
         assertPlacementError(.blockedByStaticObject(.rubble)) {

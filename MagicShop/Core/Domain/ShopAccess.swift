@@ -34,9 +34,10 @@ public enum ShopAccess {
     private static func traversal(in state: GameState)
         -> (order: [GridPoint], parents: [GridPoint: GridPoint]) {
         let map = state.world.hitMap
-        let occupied = map.dynamicOccupancy(fixtures: state.fixtures)
+        let blockers = state.fixtures.filter { FixtureCatalog.definition(for: $0.kind).blocksWalking }
+        let occupied = map.dynamicOccupancy(fixtures: blockers)
         let walkable = Set(map.cells.filter {
-            $0.staticBlocker == nil && occupied[$0.point] == nil
+            $0.zone != .outside && $0.staticBlocker == nil && occupied[$0.point] == nil
         }.map(\.point))
         let entranceCells: [WorldCellMetadata] = map.cells.filter { cell in
             cell.zone == .entrance && walkable.contains(cell.point)

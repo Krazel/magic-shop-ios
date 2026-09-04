@@ -76,20 +76,22 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
-      - name: Capture current onboarding shell
+      - name: Capture playable states on iPhone
         run: |
+          set -euo pipefail
           APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
           mkdir -p "$RUNNER_TEMP/VisualQA"
-          # XCTest may shut down the original simulator after using a clone.
           xcrun simctl boot "$SIMULATOR_UDID" || true
           xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+          xcrun simctl status_bar "$SIMULATOR_UDID" override --time '9:41' --batteryState charged --batteryLevel 100
           xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
-          xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
-          xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop
-          sleep 3
-          xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/onboarding-runtime.png"
-          printf 'Commit: %s\nRun: %s\nSimulator: %s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$SIMULATOR_UDID" > "$RUNNER_TEMP/VisualQA/capture-manifest.txt"
-
+          for STATE in onboarding overview build placement stock open summary improvements decor journal restored; do
+            xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
+            xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE"
+            sleep 3
+            xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/$STATE-runtime.png"
+          done
+          printf 'Commit: %s\nRun: %s\nSimulator: %s\nSource: real simulator app with isolated deterministic game-state fixtures\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$SIMULATOR_UDID" > "$RUNNER_TEMP/VisualQA/capture-manifest.txt"
       - name: Upload runtime capture
         uses: actions/upload-artifact@v4
         with:
@@ -101,12 +103,12 @@ jobs:
         if: success()
         run: |
           APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
-          ARTIFACT_ROOT="$RUNNER_TEMP/MagicShop-0.1.1-build-1-CI"
+          ARTIFACT_ROOT="$RUNNER_TEMP/MagicShop-0.2-build-1-CI"
           mkdir -p "$ARTIFACT_ROOT"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ARTIFACT_ROOT/MagicShop-simulator.app.zip"
           cat > "$ARTIFACT_ROOT/build-manifest.txt" <<EOF
           App: Magic Shop
-          Marketing version: 0.1.1
+          Marketing version: 0.2
           Build: 1
           Commit: $GITHUB_SHA
           CI run: $GITHUB_RUN_ID
@@ -118,8 +120,8 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: MagicShop-0.1.1-build-1-${{ github.sha }}-Simulator-QA
-          path: ${{ runner.temp }}/MagicShop-0.1.1-build-1-CI/
+          name: MagicShop-0.2-build-1-${{ github.sha }}-Simulator-QA
+          path: ${{ runner.temp }}/MagicShop-0.2-build-1-CI/
           if-no-files-found: error
           retention-days: 14
 

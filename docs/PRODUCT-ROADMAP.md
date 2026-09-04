@@ -91,3 +91,15 @@ Bounded subagents: commerce_core (Domain + CommerceTests/GameStateTests),
 commerce_visuals (design/proposals/commerce-v1 only),
 audit_runtime (read-only analysis + its audit report). Each returns to the
 director; only the director commits, pushes and dispatches CI.
+## Execution authority and final 0.2 contract — 2026-09-05
+The owner approved the three commerce images and delegated remaining choices,
+explicitly requesting varied decoration, comfortable controls, animation, days
+and hours. M2-M4 now form one complete 0.2 (1) delivery with no further visual
+approval pause. Existing historical gates above no longer block this work.
+Calendar starts Monday, Day 1; shop preparation is untimed. Trading opens09:00
+and closes18:00 over six paced visits; the game clock pauses in background.
+Finite restoration: three debris repairs, six decorative choices, one adjacent
+compact room selectable left/right/rear. A clear achievable completion goal
+leads into continued shop play. No absence penalties or real-time waiting.
+Root owns App/UI/config/CI/integration; commerce_core owns Domain+domain tests;
+audit_runtime owns World; commerce_visuals owns new complete-game art paths.

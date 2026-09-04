@@ -89,7 +89,7 @@ final class GameStateTests: XCTestCase {
 extension GameStateTests {
     func testCommerceStartsPreparingWithoutInventoryOrDayHistory() {
         let state = GameState.initial
-        XCTAssertEqual(state.schemaVersion, 3)
+        XCTAssertEqual(state.schemaVersion, GameState.currentSchemaVersion)
         XCTAssertEqual(state.phase, .preparing)
         XCTAssertTrue(state.stock.isEmpty)
         XCTAssertNil(state.currentDay)
@@ -120,7 +120,7 @@ extension GameStateTests {
             json.removeValue(forKey: "dayHistory")
             if version == 1 { json.removeValue(forKey: "world") }
             let decoded = try decodeObject(json)
-            XCTAssertEqual(decoded.schemaVersion, 3)
+            XCTAssertEqual(decoded.schemaVersion, GameState.currentSchemaVersion)
             XCTAssertEqual(decoded.shopName, original.shopName)
             XCTAssertEqual(decoded.balance, original.balance)
             XCTAssertEqual(decoded.fixtures, original.fixtures)
@@ -132,7 +132,7 @@ extension GameStateTests {
     }
 
     func testFutureOrInvalidSchemaIsRejectedInsteadOfSilentlyDowngraded() throws {
-        for version in [0, 4, Int.max] {
+        for version in [0, GameState.currentSchemaVersion + 1, Int.max] {
             let data = "{\"schemaVersion\":\(version)}".data(using: .utf8)!
             XCTAssertThrowsError(try JSONDecoder().decode(GameState.self, from: data)) { error in
                 XCTAssertEqual(error as? GameStateValidationError, .unsupportedSchemaVersion(version))

@@ -314,7 +314,7 @@ final class CommerceTests: XCTestCase {
         let saved = engine.state
         try engine.moveFixture(fixtureID: table.id, origin: table.origin)
         for point in [GridPoint(x: 6, y: 6), GridPoint(x: 5, y: 0),
-                      GridPoint(x: 1, y: 4), GridPoint(x: Int.max, y: 4)] {
+                      GridPoint(x: 1, y: 5), GridPoint(x: Int.max, y: 4)] {
             XCTAssertThrowsError(try engine.moveFixture(fixtureID: table.id, origin: point))
             XCTAssertEqual(engine.state, saved)
         }

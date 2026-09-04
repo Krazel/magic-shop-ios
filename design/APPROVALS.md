@@ -79,3 +79,24 @@ are governed independently by the approvals below.
 - Owner notes: preview and selection occupy exactly one square floor cell; the table costs $50. Balance remains $500 until `Place` confirms a valid position, then becomes $450.
 - Adaptable: native gesture handling, accessible placement alternatives, safe-area spacing and VoiceOver labels.
 - Runtime capture: pending implementation
+
+## Commerce and autonomous completion — 2026-09-05
+
+The owner explicitly approved all three commerce images with "si" and asked
+for the entire game to be completed without further questions, including varied
+decorations, pleasant interaction, animations, and a meaningful schedule with
+days and hours. Subsequent visual/product choices within this small game are
+delegated to the director. Produce complete visual specifications before new
+visual implementation and record the chosen references; do not create another
+owner approval gate. This project-specific instruction supersedes earlier
+pending-approval wording, not the preservation of the existing masters.
+
+| Screen/state | Canonical image | SHA-256 |
+| --- | --- | --- |
+| Stock, empty table slot | `design/approved/commerce-01-stock-v1.png` | `1A8B322FB60558034866E76A72E502423DFA29355D2D1B02670149F643922ACF` |
+| Open, first sale | `design/approved/commerce-02-open-v1.png` | `68C77294B3F31E5B396E1535049DD6E03283403DF82B35EE9730C52D459FC9C4` |
+| Day complete, three sales | `design/approved/commerce-03-day-complete-v1.png` | `1EF68E66FEE8787BC8EDD541A3C20C2F865D83001BF0B1FAB92AF2D136E65617` |
+
+All: current, owner-approved 2026-09-05, portrait 853x1844, English iPhone.
+Runtime comparison pending the complete 0.2 candidate. Prompts and independent
+scenario arithmetic remain in `design/proposals/commerce-v1/MANIFEST.md`.

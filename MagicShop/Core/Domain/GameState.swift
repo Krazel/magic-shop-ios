@@ -1,7 +1,7 @@
 import Foundation
 
 public struct GameState: Codable, Equatable, Sendable {
-    public static let currentSchemaVersion = 3
+    public static let currentSchemaVersion = 4
     public static let startingBalance = 500
 
     public var schemaVersion: Int
@@ -14,6 +14,7 @@ public struct GameState: Codable, Equatable, Sendable {
     public var phase: ShopPhase
     public var currentDay: ShopDayState?
     public var dayHistory: [DaySummary]
+    public var restoration: ShopRestorationState
 
     public init(
         schemaVersion: Int = GameState.currentSchemaVersion,
@@ -25,7 +26,8 @@ public struct GameState: Codable, Equatable, Sendable {
         stock: [StockItem] = [],
         phase: ShopPhase = .preparing,
         currentDay: ShopDayState? = nil,
-        dayHistory: [DaySummary] = []
+        dayHistory: [DaySummary] = [],
+        restoration: ShopRestorationState = .initial
     ) {
         self.schemaVersion = schemaVersion
         self.shopName = shopName
@@ -37,6 +39,7 @@ public struct GameState: Codable, Equatable, Sendable {
         self.phase = phase
         self.currentDay = currentDay
         self.dayHistory = dayHistory
+        self.restoration = restoration
     }
 
     public static var initial: GameState { GameState() }
@@ -44,7 +47,7 @@ public struct GameState: Codable, Equatable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, shopName, onboardingCompleted, balance, fixtures, world
-        case stock, phase, currentDay, dayHistory
+        case stock, phase, currentDay, dayHistory, restoration
     }
 
     public init(from decoder: Decoder) throws {
@@ -55,7 +58,7 @@ public struct GameState: Codable, Equatable, Sendable {
         }
         schemaVersion = Self.currentSchemaVersion
         shopName = try container.decodeIfPresent(String.self, forKey: .shopName)
-        if savedVersion == 3 {
+        if savedVersion >= 3 {
             // Current saves must contain their economy and shop state. Missing
             // or null fields are corruption, never permission to reset progress.
             onboardingCompleted = try container.decode(Bool.self, forKey: .onboardingCompleted)
@@ -70,7 +73,7 @@ public struct GameState: Codable, Equatable, Sendable {
             world = try container.decode(ShopWorldState.self, forKey: .world)
         } else {
             // Schema 1 predated the persistent world.
-            world = try container.decodeIfPresent(ShopWorldState.self, forKey: .world) ?? .starter
+            world = try container.decodeIfPresent(ShopWorldState.self, forKey: .world) ?? .legacyStarter
         }
 
         if savedVersion < 3 {
@@ -85,6 +88,15 @@ public struct GameState: Codable, Equatable, Sendable {
             phase = try container.decode(ShopPhase.self, forKey: .phase)
             currentDay = try container.decodeIfPresent(ShopDayState.self, forKey: .currentDay)
             dayHistory = try container.decode([DaySummary].self, forKey: .dayHistory)
+        }
+        if savedVersion < 4 {
+            RestorationWorld.migrateCalibration(&world, fixtures: fixtures)
+            let repaired = RepairCatalog.all.filter { repair in
+                !world.hitMap.cells.contains { $0.staticBlocker == repair.blocker }
+            }.map(\.id)
+            restoration = ShopRestorationState(repairedGroups: Set(repaired))
+        } else {
+            restoration = try container.decode(ShopRestorationState.self, forKey: .restoration)
         }
         try validateIntegrity()
     }
@@ -123,6 +135,9 @@ public struct GameState: Codable, Equatable, Sendable {
                   fixture.origin.y <= layout.depth - footprint.depth else {
                 throw invalid("Furniture outside world")
             }
+            guard PlacementRules.occupiedCells(for: fixture).allSatisfy({
+                world.hitMap.cell(at: $0)?.zone != .outside
+            }) else { throw invalid("Furniture in outside space") }
         }
         guard Set(stock.map(\.id)).count == stock.count else {
             throw invalid("Duplicate stock identity")
@@ -172,6 +187,35 @@ public struct GameState: Codable, Equatable, Sendable {
         }
         guard soldIDs.isDisjoint(with: Set(stock.map(\.id))) else {
             throw invalid("Sold stock is still on display")
+        }
+        for group in restoration.repairedGroups {
+            let blocker = RepairCatalog.definition(for: group).blocker
+            guard !world.hitMap.cells.contains(where: { $0.staticBlocker == blocker }) else {
+                throw invalid("Repaired group still blocks cells")
+            }
+        }
+        if let expansion = restoration.expansion {
+            guard restoration.repairedGroups.count == RestorationGroupID.allCases.count,
+                  layout == expansion.layout else { throw invalid("Invalid expansion") }
+            let shift = expansion.starterOrigin
+            let room = expansion.roomOrigin
+            for cell in world.hitMap.cells {
+                let p = cell.point
+                let inStarter = p.x >= shift.x && p.x < shift.x + 11 && p.y >= 0 && p.y < 11
+                let inRoom = p.x >= room.x && p.x < room.x + 5 &&
+                    p.y >= room.y && p.y < room.y + 5
+                guard (cell.zone != .outside) == (inStarter || inRoom) else {
+                    throw invalid("Expansion floor shape does not match room")
+                }
+            }
+        }
+        if let completion = restoration.completion {
+            guard completion.completedOnDay > 0, completion.completedOnDay <= calendar.dayNumber,
+                  restoration.repairedGroups.count == RestorationGroupID.allCases.count,
+                  restoration.expansion != nil,
+                  restorationProgress.successfulTradingDays >= RestorationProgress.requiredTradingDays else {
+                throw invalid("Invalid restoration completion")
+            }
         }
     }
 

@@ -125,6 +125,7 @@ public struct ShopFloorState: Codable, Equatable, Sendable {
 }
 
 public enum WorldCellZone: String, Codable, Equatable, Hashable, Sendable {
+    case outside
     case interior
     case entrance
 }
@@ -184,9 +185,9 @@ public struct WorldHitMap: Codable, Equatable, Sendable {
         let layout = ShopLayout.starter
         let entrance = GridPoint(x: layout.width / 2, y: 0)
         let blockers: [GridPoint: StaticBlockerID] = [
-            GridPoint(x: 1, y: 4): .rubble,
-            GridPoint(x: 9, y: 4): .brokenBoards,
-            GridPoint(x: 8, y: 2): .discardedPapers,
+            GridPoint(x: 1, y: 5): .rubble,
+            GridPoint(x: 9, y: 5): .brokenBoards,
+            GridPoint(x: 9, y: 2): .discardedPapers,
             GridPoint(x: 0, y: 0): .frontColumn,
             GridPoint(x: layout.width - 1, y: 0): .frontColumn
         ]
@@ -237,6 +238,7 @@ public struct WorldHitMap: Codable, Equatable, Sendable {
 
     public func hit(at point: GridPoint, fixtures: [PlacedFixture]) -> WorldCellHit {
         guard let cell = cell(at: point) else { return .outside }
+        if cell.zone == .outside { return .outside }
         if cell.zone == .entrance { return .entrance }
         if let blocker = cell.staticBlocker { return .blocked(blocker) }
         if let fixtureID = dynamicOccupancy(fixtures: fixtures)[point] {
@@ -358,5 +360,22 @@ public struct CameraViewportTransform: Equatable, Sendable {
             x: (point.x - width / 2) * camera.zoom,
             y: (height / 2 - point.y) * camera.zoom + camera.verticalOffset
         )
+    }
+}
+
+extension ShopWorldState {
+    /// Historical map used only as the schema-1 migration source.
+    static var legacyStarter: ShopWorldState {
+        var world = Self.starter
+        let moves: [(GridPoint, GridPoint, StaticBlockerID)] = [
+            (GridPoint(x: 1, y: 5), GridPoint(x: 1, y: 4), .rubble),
+            (GridPoint(x: 9, y: 5), GridPoint(x: 9, y: 4), .brokenBoards),
+            (GridPoint(x: 9, y: 2), GridPoint(x: 8, y: 2), .discardedPapers)
+        ]
+        for (from, to, blocker) in moves {
+            world.hitMap.updateCell(at: from) { $0.staticBlocker = nil }
+            world.hitMap.updateCell(at: to) { $0.staticBlocker = blocker }
+        }
+        return world
     }
 }
