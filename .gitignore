@@ -25,3 +25,17 @@ DerivedData/
 work/
 outputs/MagicShop-*-Simulator-QA/
 outputs/MagicShop-*-Sideloadly/
+
+# Local credentials and private release material
+.env
+.env.*
+!.env.example
+.private/
+*.p8
+*.p12
+*.pem
+*.key
+*.mobileprovision
+
+# Downloaded validation evidence
+outputs/ci/

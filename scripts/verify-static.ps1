@@ -27,6 +27,12 @@ $requiredFiles = @(
     'MagicShop\Core\Domain\FixtureCatalog.swift',
     'MagicShop\Core\Domain\PlacementRules.swift',
     'MagicShop\Core\Domain\GameEngine.swift',
+    'MagicShop\Core\Domain\CommerceModels.swift',
+    'MagicShop\Core\Domain\ShopAccess.swift',
+    'MagicShop\Core\Persistence\GameSession.swift',
+    'MagicShopTests\CommerceTests.swift',
+    'MagicShopTests\GameSessionTests.swift',
+    'MagicShopTests\AppModelTests.swift',
     'MagicShop\Core\Domain\WorldCameraState.swift',
     'MagicShop\Core\Domain\WorldMap.swift',
     'MagicShop\Core\Persistence\GameStateStore.swift',
@@ -59,8 +65,8 @@ Assert-True (-not $package.Contains('MagicShop/World')) 'Package.swift must not 
 
 $project = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop.xcodeproj\project.pbxproj') -Raw
 Assert-True ($project.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0;')) 'iOS deployment target must be 16.0.'
-Assert-True ($project.Contains('MARKETING_VERSION = 0.1;')) 'Marketing version must be 0.1.'
-Assert-True ($project.Contains('CURRENT_PROJECT_VERSION = 2;')) 'Build number must be 2.'
+Assert-True ($project.Contains('MARKETING_VERSION = 0.1.1;')) 'Marketing version must be 0.1.1.'
+Assert-True ($project.Contains('CURRENT_PROJECT_VERSION = 1;')) 'Build number must be 1.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.application";')) 'App target is missing.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.bundle.unit-test";')) 'Unit-test target is missing.'
 
@@ -77,7 +83,7 @@ Assert-True (-not $sideloadWorkflow.Contains('pull_request:')) 'Sideloadly IPA w
 Assert-True (-not $sideloadWorkflow.Contains('push:')) 'Sideloadly IPA workflow must not run on push.'
 Assert-True ($sideloadWorkflow.Contains('runs-on: macos-15')) 'Sideloadly IPA workflow must use a macOS runner.'
 Assert-True ($sideloadWorkflow.Contains('build-sideloadly-ipa.sh')) 'Sideloadly IPA workflow must use the reviewed build script.'
-Assert-True ($sideloadWorkflow.Contains('MagicShop-0.1-build-2-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
+Assert-True ($sideloadWorkflow.Contains('MagicShop-0.1.1-build-1-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
 Assert-True ($sideloadWorkflow.Contains('actions/upload-artifact@v4')) 'Sideloadly IPA artifact is not retained.'
 
 $sideloadScript = Get-Content -LiteralPath (Join-Path $projectRoot 'scripts\build-sideloadly-ipa.sh') -Raw
@@ -150,7 +156,7 @@ Assert-True ($worldMap.Contains('commonWallAdjacency')) 'Wall adjacency metadata
 Assert-True ($worldMap.Contains('CameraViewportTransform')) 'Testable screen/world transform is missing.'
 
 $gameState = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop\Core\Domain\GameState.swift') -Raw
-Assert-True ($gameState.Contains('currentSchemaVersion = 2')) 'GameState schema must include modular world persistence.'
+Assert-True ($gameState.Contains('currentSchemaVersion = 3')) 'GameState schema must include commerce and world persistence.'
 Assert-True ($gameState.Contains('public var world: ShopWorldState')) 'GameState must persist ShopWorldState.'
 
 $shopScene = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop\World\ShopScene.swift') -Raw
@@ -302,7 +308,7 @@ Write-Output "- Required files: $($requiredFiles.Count)"
 Write-Output "- Core Swift files: $($coreSwift.Count)"
 Write-Output "- XCTest methods declared: $testCount"
 Write-Output '- Package.swift excludes SwiftUI/SpriteKit sources'
-Write-Output '- iOS 16.0, version 0.1, build 2'
+Write-Output '- iOS 16.0, version 0.1.1, build 1'
 Write-Output '- Git repository and unsigned macOS iOS CI workflow verified'
 Write-Output '- Manual unsigned iphoneos IPA workflow for Sideloadly verified'
 Write-Output '- Four current approval hashes verified'

@@ -1,0 +1,33 @@
+Use case: precise-object-edit / ui-mockup. Create ONE complete iPhone portrait Magic Shop "Day complete" screenshot by editing input 1, the corrected OPEN screenshot. Preserve its entire exact underlying environment plate and composition, camera, architecture, floor texture and debris, lighting, unchanged placed shelf at back left and the tiny one-tile display table at center-right. Input 2 is only the approved-family panel style reference; use its dark teal and gold carved panel frame and cream parchment content treatment.
+
+Change only these completed-day overlays and movable sprites:
+- Top HUD stays exactly in place with "My Shop"; balance changes from "$285" to "$355".
+- Remove the small Day 1 / Shop open / progress panel in the upper brown gap. Keep the surrounding brown texture perfectly matching.
+- The two customers have left: remove both small sprites, the carried potion, the floating "+$25", the potion from the shelf and the charm from the table. Seamlessly expose original floor behind removed sprites. Both furniture pieces remain EMPTY and at their exact current size and position. Do not change furniture, resize it or move it.
+- Remove the bottom helper caption "Customers buy automatically.".
+- Overlay a restrained completed-day summary panel over the lower-middle room, approximately x110..743 and y870..1430 on an 853x1844 canvas. Use the dark teal carved/gold edge and cream parchment from input2, clean readable high quality English type. The upper room, hanging lamp and empty shelf remain clearly visible above the panel; the background plate remains present behind it. No full-screen new location, no illustration inside the panel, no celebratory crowd.
+Exact summary copy:
+Title "Day complete"
+Subtitle "Day 1 · 3 items sold"
+Three aligned rows with left labels and right dollar figures:
+"Sales" "$95"
+"Stock cost" "$40"
+"Profit" "$55"
+The Profit row receives slightly stronger teal text weight and a thin gold divider, not another badge.
+A short quiet line "A good start for your little shop."
+One wide primary button, dark teal with gold trim and cream text: "Prepare Day 2".
+No other buttons, totals, sales breakdown, red negative figures or additional numbers.
+- Keep fixed bottom BUILD / STOCK / OPEN bar exactly in place matching input1. It stays behind the completed-day state, with OPEN the previous active tab, and does not compete with the summary CTA.
+
+Economy accuracy: started with $500; table cost $50 and shelf $150 leaves $300; bought two Glow Potions for $10 each and one Lucky Charm for $20, stock cost $40, leaves $260; sold two potions for $25 each and one charm for $45, Sales $95; Profit $55; resulting balance $355. Display only requested figures, no arithmetic or explanatory accounting paragraph.
+
+Important invariants: entire exact small square worn shop as in input1; no visible grid or placement squares; no refurbished walls, cleaned debris, enlarged room or new furniture; no ads/IAP/settings/monetization; no oversized graphics or confetti. Keep full original portrait aspect ratio and comfortable safe areas. New proposal only, not a runtime screenshot.
+
+REJECTED CORRECTION EXPERIMENT — NOT SELECTED
+Use case: precise-object-edit. Correct ONLY the vertical registration of the SHOP WORLD in input 1, the Day complete screenshot. Input 2, the OPEN screenshot, is the exact registration reference. The day-complete generator shifted the entire room upward, but it must stay at the exact same world position as OPEN.
+
+Move the entire room environment (roof cutaway caps, walls, lamp, all floor and debris, facade and both empty furniture pieces together) DOWN so the TOP back teal wall edge is at exactly the same y position as input2: approximately y=375 on this 853 x 1844 canvas, instead of y=204. Shift the whole world uniformly by approximately +171 pixels, without changing its scale, perspective, architecture or relative furniture positions. The upper brown gap then matches input2. Extend the original brown background into the area vacated above the room. The lower facade can be hidden behind the fixed summary panel; that is correct.
+
+Keep ALL UI exactly FIXED where it currently is in input1: top My Shop/$355 HUD, Day complete summary panel, its Sales $95/Stock cost $40/Profit $55 rows, "A good start for your little shop.", "Prepare Day 2" button, and bottom BUILD/STOCK/OPEN navigation. Do not move, resize or restyle any UI element. Do not add customers, stock, progress panel or sales particles; the table and shelf stay empty. Preserve exact texts and amounts. No new grid or other changes. Return the single full corrected portrait screenshot.
+
+Result rejected: bottom navigation cropped and overlay moved despite preservation instructions. Selected result is the original complete Day complete image.

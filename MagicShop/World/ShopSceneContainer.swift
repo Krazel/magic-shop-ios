@@ -74,7 +74,7 @@ struct ShopSceneContainer: UIViewRepresentable {
             guard let view = recognizer.view,
                   recognizer.state == .began || recognizer.state == .changed else { return }
             let translation = recognizer.translation(in: view)
-            cameraState.panVertically(by: Double(translation.y))
+            cameraState.panVertically(by: Double(translation.y) * cameraState.zoom)
             recognizer.setTranslation(.zero, in: view)
             applyCamera()
         }

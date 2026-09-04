@@ -31,6 +31,12 @@
 		D00000000000000000000016 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C00000000000000000000018 /* XCTest.framework */; };
 		D00000000000000000000017 /* WorldMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000019 /* WorldMap.swift */; };
 		D00000000000000000000018 /* WorldMapTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0000000000000000000001A /* WorldMapTests.swift */; };
+		D00000000000000000000020 /* CommerceModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000020 /* CommerceModels.swift */; };
+		D00000000000000000000021 /* ShopAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000021 /* ShopAccess.swift */; };
+		D00000000000000000000022 /* GameSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000022 /* GameSession.swift */; };
+		D00000000000000000000023 /* CommerceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000023 /* CommerceTests.swift */; };
+		D00000000000000000000024 /* GameSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000024 /* GameSessionTests.swift */; };
+		D00000000000000000000025 /* AppModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000025 /* AppModelTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +76,12 @@
 		C00000000000000000000018 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Developer/Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		C00000000000000000000019 /* WorldMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldMap.swift; sourceTree = "<group>"; };
 		C0000000000000000000001A /* WorldMapTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldMapTests.swift; sourceTree = "<group>"; };
+		C00000000000000000000020 /* CommerceModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommerceModels.swift; sourceTree = "<group>"; };
+		C00000000000000000000021 /* ShopAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopAccess.swift; sourceTree = "<group>"; };
+		C00000000000000000000022 /* GameSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSession.swift; sourceTree = "<group>"; };
+		C00000000000000000000023 /* CommerceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommerceTests.swift; sourceTree = "<group>"; };
+		C00000000000000000000024 /* GameSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSessionTests.swift; sourceTree = "<group>"; };
+		C00000000000000000000025 /* AppModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModelTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -145,6 +157,8 @@
 		B00000000000000000000006 /* Domain */ = {
 			isa = PBXGroup;
 			children = (
+				C00000000000000000000021 /* ShopAccess.swift */,
+				C00000000000000000000020 /* CommerceModels.swift */,
 				C00000000000000000000001 /* GameState.swift */,
 				C00000000000000000000002 /* FixtureModels.swift */,
 				C00000000000000000000003 /* FixtureCatalog.swift */,
@@ -160,6 +174,7 @@
 		B00000000000000000000007 /* Persistence */ = {
 			isa = PBXGroup;
 			children = (
+				C00000000000000000000022 /* GameSession.swift */,
 				C00000000000000000000008 /* GameStateStore.swift */,
 			);
 			path = Persistence;
@@ -185,6 +200,9 @@
 		B0000000000000000000000A /* MagicShopTests */ = {
 			isa = PBXGroup;
 			children = (
+				C00000000000000000000025 /* AppModelTests.swift */,
+				C00000000000000000000024 /* GameSessionTests.swift */,
+				C00000000000000000000023 /* CommerceTests.swift */,
 				C0000000000000000000000F /* GameStateTests.swift */,
 				C00000000000000000000010 /* ShopNameValidatorTests.swift */,
 				C00000000000000000000011 /* PlacementEngineTests.swift */,
@@ -304,6 +322,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00000000000000000000022 /* GameSession.swift in Sources */,
+				D00000000000000000000021 /* ShopAccess.swift in Sources */,
+				D00000000000000000000020 /* CommerceModels.swift in Sources */,
 				D00000000000000000000001 /* GameState.swift in Sources */,
 				D00000000000000000000002 /* FixtureModels.swift in Sources */,
 				D00000000000000000000003 /* FixtureCatalog.swift in Sources */,
@@ -325,6 +346,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00000000000000000000025 /* AppModelTests.swift in Sources */,
+				D00000000000000000000024 /* GameSessionTests.swift in Sources */,
+				D00000000000000000000023 /* CommerceTests.swift in Sources */,
 				D0000000000000000000000F /* GameStateTests.swift in Sources */,
 				D00000000000000000000010 /* ShopNameValidatorTests.swift in Sources */,
 				D00000000000000000000011 /* PlacementEngineTests.swift in Sources */,
@@ -386,7 +410,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Magic Shop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
@@ -394,7 +418,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -409,7 +433,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Magic Shop";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.games";
@@ -417,7 +441,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -432,10 +456,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -450,10 +474,10 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

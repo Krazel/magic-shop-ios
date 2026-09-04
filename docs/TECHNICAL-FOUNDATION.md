@@ -1,5 +1,13 @@
 # Technical foundation — first slice
 
+## Current scope update — 2026-09-04
+
+This document records the original first slice. Its statements that Stock/Open
+are out of scope and schema 2 is current are historical: the owner authorized
+the commerce domain in [PRODUCT-ROADMAP.md](PRODUCT-ROADMAP.md), with architecture
+in [COMMERCE-ARCHITECTURE.md](COMMERCE-ARCHITECTURE.md). New final UI still needs
+explicit visual approval. The original approved plate remains the visible world.
+
 ## Visual boundary
 
 The starter shop, onboarding/name, Build catalog v3 and Basic Display Table

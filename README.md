@@ -2,9 +2,28 @@
 
 Local iPhone-first implementation of the Magic Shop first slice.
 
+## Active development — 2026-09-04
+
+The owner has authorized completing the game. See
+[the product roadmap](docs/PRODUCT-ROADMAP.md) and
+[commerce architecture](docs/COMMERCE-ARCHITECTURE.md).
+
+M1 adds a tested commerce domain behind the existing approved shell: three
+single-unit products, compatible display slots, automatic resumable trading
+days, summaries, reachable displays and reversible stock/furniture investment.
+Stock/Open controls remain disabled until their complete images are approved.
+The current 0.1.1 (1) delivery fixes failed-save transactions, protects unreadable
+saves and corrects pan speed under zoom. It is technical QA, not yet the 0.2
+playable commerce vertical.
+
+New domain/API and JSON migration tests run through both SwiftPM and Xcode.
+AppModel failure/recovery tests run in Xcode. CI also captures the actual
+onboarding shell; a captured image is evidence for comparison, not an approval.
+Remaining shelf projection and plate/hitmap alignment findings are tracked in
+[the audit](docs/AUDIT-2026-09-04.md) and must close before M2 acceptance.
 ## Current scope
 
-- Version `0.1`, build `2`, iOS 16+.
+- Version `0.1.1`, build `1`, iOS 16+.
 - Approved first-run story, validated shop naming and persistent HUD name.
 - SwiftUI fixed HUD, native Build controls and accessible placement actions.
 - SpriteKit shop world using the approved clean shop image directly, with pinch zoom, vertical pan, fixture sprites and placement preview.

@@ -9,25 +9,35 @@ final class AppModel: ObservableObject {
     @Published private(set) var selectedCategory: FixtureCategory = .tables
     @Published private(set) var inlineMessage: String?
 
-    private var engine: GameEngine
-    private let store: any GameStateStore
+    private var session: GameSession?
+    private let providedStore: (any GameStateStore)?
+    private var engine: GameEngine { session?.engine ?? GameEngine() }
 
     init(store: (any GameStateStore)? = nil) {
-        let resolvedStore: any GameStateStore
-        if let store {
-            resolvedStore = store
-        } else if let fileStore = try? FileGameStateStore.applicationSupport() {
-            resolvedStore = fileStore
-        } else {
-            resolvedStore = InMemoryGameStateStore()
-        }
+        providedStore = store
+        state = .initial
+        flow = FirstSliceFlow(state: .initial)
+        _ = restoreSavedSession()
+    }
 
-        self.store = resolvedStore
-        let loadedState = (try? resolvedStore.load()) ?? .initial
-        self.engine = GameEngine(state: loadedState)
-        self.state = loadedState
-        self.flow = FirstSliceFlow(state: loadedState)
-        self.shopNameInput = loadedState.shopName ?? ""
+    // A load failure must never become a new game that overwrites the original.
+    // Reusing the existing inline error keeps recovery inside the approved UI.
+    @discardableResult
+    private func restoreSavedSession() -> Bool {
+        do {
+            let store = try providedStore ?? FileGameStateStore.applicationSupport()
+            let restored = try GameSession(store: store)
+            session = restored
+            state = restored.engine.state
+            flow = FirstSliceFlow(state: state)
+            shopNameInput = state.shopName ?? ""
+            inlineMessage = nil
+            return true
+        } catch {
+            session = nil
+            inlineMessage = "Your saved shop could not be opened. It has not been changed. Tap Open the Door to retry."
+            return false
+        }
     }
 
     var placementDraft: PlacementDraft? {
@@ -40,7 +50,7 @@ final class AppModel: ObservableObject {
     }
 
     var isPlacementValid: Bool {
-        guard let draft = placementDraft else { return false }
+        guard session != nil, let draft = placementDraft else { return false }
         return (try? engine.validate(draft)) != nil
     }
 
@@ -56,9 +66,13 @@ final class AppModel: ObservableObject {
 
     @discardableResult
     func submitOnboarding() -> Bool {
+        guard session != nil else {
+            _ = restoreSavedSession()
+            return false
+        }
         do {
-            try engine.completeOnboarding(shopName: shopNameInput)
-            try persistEngineState()
+            try session?.commit { try $0.completeOnboarding(shopName: shopNameInput) }
+            state = engine.state
             var nextFlow = flow
             nextFlow.didCompleteOnboarding()
             flow = nextFlow
@@ -71,6 +85,7 @@ final class AppModel: ObservableObject {
     }
 
     func openBuild() {
+        guard session != nil else { return }
         var nextFlow = flow
         nextFlow.openBuild()
         flow = nextFlow
@@ -90,6 +105,7 @@ final class AppModel: ObservableObject {
     }
 
     func beginPlacement(kind: FixtureKind) {
+        guard session != nil else { return }
         let defaultOrigin: GridPoint
         switch kind {
         case .basicDisplayTable:
@@ -133,7 +149,7 @@ final class AppModel: ObservableObject {
 
     func cancelCurrentPlacement() {
         guard let draft = placementDraft else { return }
-        engine.cancel(draft)
+        _ = draft // Transient cancellation never writes or mutates the saved engine.
         state = engine.state
         var nextFlow = flow
         nextFlow.cancelPlacement()
@@ -143,10 +159,10 @@ final class AppModel: ObservableObject {
 
     @discardableResult
     func confirmCurrentPlacement() -> Bool {
-        guard let draft = placementDraft else { return false }
+        guard session != nil, let draft = placementDraft else { return false }
         do {
-            try engine.confirm(draft)
-            try persistEngineState()
+            try session?.commit { try $0.confirm(draft) }
+            state = engine.state
             var nextFlow = flow
             nextFlow.finishPlacement()
             flow = nextFlow
@@ -174,11 +190,6 @@ final class AppModel: ObservableObject {
             x: min(max(0, origin.x), engine.layout.width - footprint.width),
             y: min(max(0, origin.y), engine.layout.depth - footprint.depth)
         )
-    }
-
-    private func persistEngineState() throws {
-        try store.save(engine.state)
-        state = engine.state
     }
 
     private func userFacingMessage(for error: Error) -> String {
@@ -210,6 +221,10 @@ final class AppModel: ObservableObject {
             }
         case PlacementError.overlapsExistingFixture:
             return "That space is already occupied."
+        case PlacementError.duplicateFixtureID:
+            return "That fixture has already been placed."
+        case PlacementError.shopIsNotPreparing:
+            return "Finish the trading day before building."
         case PlacementError.shelfMustBeAdjacentToWall:
             return "Shelves must be placed next to a wall."
         default:

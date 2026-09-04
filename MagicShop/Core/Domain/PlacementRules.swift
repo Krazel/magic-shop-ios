@@ -20,6 +20,8 @@ public enum PlacementError: Error, Equatable, Sendable {
     case blockedByStaticObject(StaticBlockerID)
     case overlapsExistingFixture
     case shelfMustBeAdjacentToWall
+    case duplicateFixtureID(UUID)
+    case shopIsNotPreparing(ShopPhase)
 }
 
 public enum PlacementRules {
@@ -49,44 +51,51 @@ public enum PlacementRules {
         in state: GameState,
         layout: ShopLayout? = nil
     ) throws {
+        guard state.phase == .preparing else {
+            throw PlacementError.shopIsNotPreparing(state.phase)
+        }
+        guard !state.fixtures.contains(where: { $0.id == draft.fixtureID }) else {
+            throw PlacementError.duplicateFixtureID(draft.fixtureID)
+        }
+        let definition = FixtureCatalog.definition(for: draft.kind)
+        guard state.balance >= definition.price else {
+            throw PlacementError.insufficientFunds(required: definition.price, available: state.balance)
+        }
+        try validateLocation(draft, in: state, layout: layout)
+    }
+
+    /// Geometry is shared by purchase and relocation. Moving ignores only the
+    /// existing furniture's own footprint and never checks a purchase price.
+    static func validateLocation(
+        _ draft: PlacementDraft,
+        in state: GameState,
+        layout: ShopLayout? = nil,
+        ignoringFixtureID: UUID? = nil
+    ) throws {
         let definition = FixtureCatalog.definition(for: draft.kind)
         let footprint = definition.footprint.rotated(draft.rotation)
         let hitMap = state.world.hitMap
         let expectedLayout = layout ?? hitMap.layout
-
-        guard state.balance >= definition.price else {
-            throw PlacementError.insufficientFunds(
-                required: definition.price,
-                available: state.balance
-            )
-        }
-
-        guard draft.origin.x >= 0,
-              draft.origin.y >= 0,
-              draft.origin.x + footprint.width <= expectedLayout.width,
-              draft.origin.y + footprint.depth <= expectedLayout.depth else {
+        guard draft.origin.x >= 0, draft.origin.y >= 0,
+              draft.origin.x <= expectedLayout.width - footprint.width,
+              draft.origin.y <= expectedLayout.depth - footprint.depth else {
             throw PlacementError.outsideShopBounds
         }
-
         let proposedCells = occupiedCells(origin: draft.origin, footprint: footprint)
         for point in proposedCells {
             guard let cell = hitMap.cell(at: point) else {
                 throw PlacementError.outsideShopBounds
             }
-            if cell.zone == .entrance {
-                throw PlacementError.entranceMustRemainClear
-            }
+            if cell.zone == .entrance { throw PlacementError.entranceMustRemainClear }
             if let blocker = cell.staticBlocker {
                 throw PlacementError.blockedByStaticObject(blocker)
             }
         }
-
-        let occupied = hitMap.dynamicOccupancy(fixtures: state.fixtures)
-
+        let others = state.fixtures.filter { $0.id != ignoringFixtureID }
+        let occupied = hitMap.dynamicOccupancy(fixtures: others)
         guard proposedCells.allSatisfy({ occupied[$0] == nil }) else {
             throw PlacementError.overlapsExistingFixture
         }
-
         if definition.placementConstraint == .adjacentToWall {
             guard !hitMap.commonWallAdjacency(for: proposedCells).isEmpty else {
                 throw PlacementError.shelfMustBeAdjacentToWall

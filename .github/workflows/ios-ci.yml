@@ -76,17 +76,35 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
 
+      - name: Capture current onboarding shell
+        run: |
+          APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
+          mkdir -p "$RUNNER_TEMP/VisualQA"
+          xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
+          xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
+          xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop
+          sleep 3
+          xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/onboarding-runtime.png"
+          printf 'Commit: %s\nRun: %s\nSimulator: %s\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$SIMULATOR_UDID" > "$RUNNER_TEMP/VisualQA/capture-manifest.txt"
+
+      - name: Upload runtime capture
+        uses: actions/upload-artifact@v4
+        with:
+          name: MagicShop-VisualQA-${{ github.sha }}
+          path: ${{ runner.temp }}/VisualQA/
+          if-no-files-found: error
+          retention-days: 14
       - name: Package simulator build evidence
         if: success()
         run: |
           APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
-          ARTIFACT_ROOT="$RUNNER_TEMP/MagicShop-0.1-build-2-CI"
+          ARTIFACT_ROOT="$RUNNER_TEMP/MagicShop-0.1.1-build-1-CI"
           mkdir -p "$ARTIFACT_ROOT"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ARTIFACT_ROOT/MagicShop-simulator.app.zip"
           cat > "$ARTIFACT_ROOT/build-manifest.txt" <<EOF
           App: Magic Shop
-          Marketing version: 0.1
-          Build: 2
+          Marketing version: 0.1.1
+          Build: 1
           Commit: $GITHUB_SHA
           CI run: $GITHUB_RUN_ID
           Purpose: GitHub-Actions-Simulator-QA
@@ -97,8 +115,8 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: MagicShop-0.1-build-2-${{ github.sha }}-Simulator-QA
-          path: ${{ runner.temp }}/MagicShop-0.1-build-2-CI/
+          name: MagicShop-0.1.1-build-1-${{ github.sha }}-Simulator-QA
+          path: ${{ runner.temp }}/MagicShop-0.1.1-build-1-CI/
           if-no-files-found: error
           retention-days: 14
 
