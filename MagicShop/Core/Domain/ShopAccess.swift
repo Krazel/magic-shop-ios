@@ -38,10 +38,13 @@ public enum ShopAccess {
         let walkable = Set(map.cells.filter {
             $0.staticBlocker == nil && occupied[$0.point] == nil
         }.map(\.point))
-        let entrances = map.cells.filter {
-            $0.zone == .entrance && walkable.contains($0.point)
-        }.map(\.point).sorted { left, right in
-            left.y == right.y ? left.x < right.x : left.y < right.y
+        let entranceCells: [WorldCellMetadata] = map.cells.filter { cell in
+            cell.zone == .entrance && walkable.contains(cell.point)
+        }
+        let entrancePoints: [GridPoint] = entranceCells.map { $0.point }
+        let entrances: [GridPoint] = entrancePoints.sorted { left, right in
+            if left.y == right.y { return left.x < right.x }
+            return left.y < right.y
         }
         var queue = entrances
         var visited = Set(entrances)
