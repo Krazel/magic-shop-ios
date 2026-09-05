@@ -1,0 +1,12 @@
+{
+  "result": "PASS",
+  "ipa": "MagicShop-0.2-build-1-unsigned.ipa",
+  "sha256": "da396c2889e9e394f4aac967662bd6bb458d9f885d811b7511ef07a81cc3e91e",
+  "version": "0.2",
+  "build": "1",
+  "commit": "77cbc09488072736c1fcee95c4581252f78da8f2",
+  "platform": "iPhoneOS arm64",
+  "minimum_iOS": "16.0",
+  "installation": "Unsigned; Sideloadly must re-sign. Device install is a separate check.",
+  "deviceRun": "33932563815"
+}

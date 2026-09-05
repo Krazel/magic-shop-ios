@@ -1,0 +1,41 @@
+[
+  {
+    "file": "design/runtime/0.2/77cbc09/stock-compact-runtime.png",
+    "sha256": "7f00aa7eeee69eddce53db6b47c30fae13ae044d2042101f6334a69fa950477e",
+    "canvas": [
+      750,
+      1334
+    ],
+    "sourceCommit": "77cbc09488072736c1fcee95c4581252f78da8f2",
+    "ciRun": "33932562250",
+    "state": "stock-compact-runtime",
+    "language": "en",
+    "source": "real iOS simulator screenshot; isolated deterministic in-memory game state"
+  },
+  {
+    "file": "design/runtime/0.2/77cbc09/stock-large-text-runtime.png",
+    "sha256": "7f3c35cc07ffa26a387814976decdcba1bea06c48be718103a1d711549a30446",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "77cbc09488072736c1fcee95c4581252f78da8f2",
+    "ciRun": "33932562250",
+    "state": "stock-large-text-runtime",
+    "language": "en",
+    "source": "real iOS simulator screenshot; isolated deterministic in-memory game state"
+  },
+  {
+    "file": "design/runtime/0.2/77cbc09/stock-runtime.png",
+    "sha256": "07acc335a2ce8d8c9351902da162864afcdb42a5a168c351dd5941d600abddb9",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "77cbc09488072736c1fcee95c4581252f78da8f2",
+    "ciRun": "33932562250",
+    "state": "stock-runtime",
+    "language": "en",
+    "source": "real iOS simulator screenshot; isolated deterministic in-memory game state"
+  }
+]

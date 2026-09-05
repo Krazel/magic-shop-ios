@@ -193,3 +193,14 @@ World snapshot:
 Static verification passes after these corrections, including all seven current
 approval hashes and archived runtime asset sources. The new World snapshot must
 be compiled and recaptured before these visual fixes are considered verified.
+
+## Final World review — 4087139
+
+Public CI 33931440266 passed the Release build and all 90 XCTest. Independent
+read-only review of restored-left/right/rear, all three partial repairs, open
+and placement found no blocking visual issue. Sizes, mounted decor, product
+surfaces, visible placement and independent debris removal are confirmed in
+real screenshots archived at design/runtime/0.2/4087139. A rear painting can
+touch the cutaway edge and joins retain a slight light/grout transition; these
+are minor presentation limits, not gameplay blockers. The later 77cbc09 app
+change only increases the Stock camera lift; World source is identical.

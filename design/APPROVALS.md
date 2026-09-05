@@ -103,7 +103,7 @@ scenario arithmetic remain in `design/proposals/commerce-v1/MANIFEST.md`.
 
 ## Complete game direction selected under delegated authority
 
-- Status: current visual direction selected by the director under the owner's
+- Status: historical v1, replaced by v2 below; selected by the director under the owner's
   explicit instruction to finish all design decisions without further questions.
   It is not a claim that the owner individually reviewed this additional image.
 - Image: `design/approved/complete-game-director-v1.png`
@@ -127,3 +127,53 @@ It replaces v1 as current and corrects the shelf product to a potion; v1 remains
 historical. Same direction, native accessibility and expansion options apply.
 App icon source selected under delegated authority: door, warm light and cyan
 potion; archived with prompt and packaging provenance in COMPLETE-GAME-ART.md.
+
+## Runtime comparison archive — 0.2 (1), 2026-09-05
+
+The owner delegated the remaining visual decisions without further questions.
+Native calendar, weekday, pause/speed controls, accessibility layouts and
+progression panels were completed under that authority. The masters remain
+archived specifications; these separate files are real screenshots of the app,
+not generated store captures. File hashes, device canvases, source commit and
+CI run are recorded beside each capture in the runtime manifests.
+
+| Current screen/state | Actual comparable screenshot |
+| --- | --- |
+| Shop overview | [Overview](runtime/0.2/4087139/overview-runtime.png) |
+| Onboarding | [Onboarding](runtime/0.2/4087139/onboarding-runtime.png) |
+| Onboarding, compact | [Compact onboarding](runtime/0.2/4087139/onboarding-compact-runtime.png) |
+| Build | [Build](runtime/0.2/4087139/build-runtime.png) |
+| Placement | [Placement](runtime/0.2/4087139/placement-runtime.png) |
+| Placement, compact | [Compact placement](runtime/0.2/4087139/placement-compact-runtime.png) |
+| Open, first sale paused | [Open](runtime/0.2/4087139/open-runtime.png) |
+| Day complete | [Summary](runtime/0.2/4087139/summary-runtime.png) |
+| Decoration catalog | [Decor](runtime/0.2/4087139/decor-runtime.png) |
+| Improvements | [Improvements](runtime/0.2/4087139/improvements-runtime.png) |
+| Journal | [Journal](runtime/0.2/4087139/journal-runtime.png) |
+| Restored, left wing | [Left wing](runtime/0.2/4087139/restored-runtime.png) |
+| Restored, right wing | [Right wing](runtime/0.2/4087139/restored-right-runtime.png) |
+| Restored, rear room | [Rear room](runtime/0.2/4087139/restored-rear-runtime.png) |
+| Rubble repaired | [Rubble](runtime/0.2/4087139/repair-rubble-runtime.png) |
+| Floorboards repaired | [Boards](runtime/0.2/4087139/repair-boards-runtime.png) |
+| Papers tidied | [Papers](runtime/0.2/4087139/repair-papers-runtime.png) |
+
+The old Stock captures in 4087139 remain historical evidence of the panel
+correction. A final 75-point extra camera lift is separately recaptured so the
+default selected table is visible above that panel. See the final Stock archive
+record below. Native control sizes and scrolling adapt to iPhone safe areas
+and accessibility text. See COMPLETE-GAME-VERIFICATION.md for exact checks and
+minor retained presentation limits; no pixel-identical or physical-device
+verification is claimed.
+
+### Final Stock archive — current
+
+Source `77cbc09488072736c1fcee95c4581252f78da8f2`, focused Release capture run
+`33932562250` SUCCESS, director review PASS on 2026-09-05. The selected table is
+visible above the panel; the purchase actions remain contained and legible.
+
+- [Stock](runtime/0.2/77cbc09/stock-runtime.png)
+- [Stock, compact](runtime/0.2/77cbc09/stock-compact-runtime.png)
+- [Stock, large type](runtime/0.2/77cbc09/stock-large-text-runtime.png)
+
+`runtime/0.2/current-manifest.json` identifies the 20 current screen captures;
+23 images remain archived including the three superseded Stock captures.

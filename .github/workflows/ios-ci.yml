@@ -85,14 +85,14 @@ jobs:
             CODE_SIGNING_REQUIRED=NO
 
       - name: Export XCTest diagnostics
-        if: always() && steps.tests.outcome == 'success'
+        if: always() && steps.simulator_build.outcome == 'success' && steps.tests.outcome != 'skipped'
         run: |
           mkdir -p "$RUNNER_TEMP/TestDiagnostics"
           xcrun xcresulttool get test-results summary --path "$RUNNER_TEMP/MagicShopTests.xcresult" > "$RUNNER_TEMP/TestDiagnostics/summary.json" || true
           cat "$RUNNER_TEMP/TestDiagnostics/summary.json"
           xcrun xcresulttool export attachments --path "$RUNNER_TEMP/MagicShopTests.xcresult" --output-path "$RUNNER_TEMP/TestDiagnostics/attachments" || true
       - name: Upload XCTest diagnostics
-        if: always() && steps.tests.outcome == 'success'
+        if: always() && steps.simulator_build.outcome == 'success' && steps.tests.outcome != 'skipped'
         uses: actions/upload-artifact@v4
         with:
           name: MagicShop-TestDiagnostics-${{ github.sha }}

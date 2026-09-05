@@ -34,8 +34,8 @@ loans, crafting, accounts, ads, tracking, purchases or network calls.
 ## Candidate 0.2 (build 1)
 
 The current delivery joins commerce, the simulated calendar, restoration,
-decoration and expansion. The full candidate still requires final CI and visual
-verification; see `docs/COMPLETE-GAME-VERIFICATION.md` for recorded evidence.
+decoration and expansion. The candidate has passed native CI and visual
+review; see `docs/COMPLETE-GAME-VERIFICATION.md` for exact source commits, the 90-test execution and the final focused Stock capture.
 This is a local testing build, not a public store release.
 
 Approved masters and the director's delegated visual choices are retained in

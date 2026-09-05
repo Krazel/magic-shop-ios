@@ -1,41 +1,75 @@
 # Complete-game verification — 0.2 (1)
 
-## Acceptance scope
-A complete small offline game: onboarding; Build/Stock/Open; one unit per slot;
-six paced visitors with 09:00–18:00 calendar; pause/speed/background handling;
-summary/history; reversible stock/furniture; three repairs; six decorations;
-one 5×5 expansion left/right/rear; restoration completion and continued play.
-English iPhone UI with native accessible controls and reduced-motion behavior.
+## Delivered scope
 
-## Checks already executed
-- Windows static verifier PASS after integration: source references, approved
-  image hashes, original plate and dormant asset preservation, version 0.2/1.
-- First Xcode compile exposed a schema-migration initializer closure reading
-  self before restoration initialized. Fixed by capturing local calibrated
-  cells. This failed run is diagnostic history, not acceptance evidence.
-- Integrated source 826ab09d7e857566d73e59d7aabdb08db3af6caf passed Release simulator build and all 90 XCTest (87 domain/model, 3 UI), with no failures or skips, in public CI 33929958252. The complete native controls journey, next-day calendar, completion journal and large-text purchase all executed.
-- The resulting runtime captures exposed over-sized panel backgrounds, obstructed shop hints and undersized world props. Those captures are diagnostic evidence, not final visual acceptance. Corrections constrain panel artwork, anchor controls at the bottom, protect content space under large type and recalibrate the world. The corrected source requires another complete CI/capture pass.
-- A separate read-only AppModel/UI audit found no concrete progression, recovery, calendar or panel-closing blocker. This does not substitute native execution.
+Complete small offline English iPhone game: name the shop; Build/Stock/Open;
+one physical item per slot; six paced visitors; calendar from 09:00 to 18:00;
+weekday cycle; pause and 2x speed; background pause; summary and history;
+reversible stock/furniture; three repairs; six decorations; one 5x5 expansion
+left/right/rear; restoration completion and continued play. Native named controls,
+Dynamic Type and Reduce Motion are supported. Preparation is untimed.
 
-## Corrected source execution
-- Source: `4087139c0ff262efa82295c5e531dd6d5e5a4aca`, version 0.2 (1).
-- Public CI `33931440266`: Release simulator build PASS; 90 XCTest PASS, zero failures/expected failures/skips, iPhone 16 Pro arm64 simulator, iOS 18.5 (22F77), macOS 15.7.9.
-- Device IPA run `33931451771` SUCCESS. Downloaded unsigned iPhoneOS arm64, 33,861,201 bytes; minimum iOS 16.0. Local verifier checks bundle version/build, source manifest, Mach-O architecture and checksum.
-- IPA SHA-256: `cc6d6582556086b1d365f43e00ae8015eea283a34ab8bc53060b33e69b3cd227`.
-- The new real completion-journal screenshot confirms bounded panel frames and readable HUD/calendar. Full state-capture review still pending.
+## Source and execution
 
-## Final evidence to record
-- Exact source commit, public CI run and executed test count.
-- Native control journey: name, build, stock, open, pause, speed, next day.
-- Restoration completion journal via a real playable economy fixture.
-- Runtime screenshots and comparison against current masters; no mockup may
-  stand in for a runtime screenshot.
-- Large text screenshot, VoiceOver control inventory and Reduce Motion review.
-- Unsigned iphoneos IPA checksum, version/build, commit manifest and architecture.
+- Full tested source: `4087139c0ff262efa82295c5e531dd6d5e5a4aca`.
+- Public CI: https://github.com/Krazel/magic-shop-ios/actions/runs/33931440266 — SUCCESS.
+- Release simulator build PASS and 90 executed XCTest PASS: 87 domain/model,
+  three native UI journeys. Zero failures, expected failures or skipped tests.
+- XCTest ran on iPhone 16 Pro arm64 simulator, iOS 18.5 (22F77), macOS 15.7.9.
+  Its UI journeys create/name a shop, build, stock, open, pause, change speed,
+  resume, acknowledge the summary and confirm Day 2 Tuesday; buy with large
+  text; and open the completed restoration journal.
+- Final application source: `77cbc09488072736c1fcee95c4581252f78da8f2`.
+  Its only app change after the full test pass raises the Stock camera lift
+  from 105 to 180 points; all game rules, transactions and World code are
+  unchanged. The new opt-in capture_only CI mode checks that presentation
+  change without claiming another 90-test execution. Normal CI still runs tests.
+- Focused Release capture run: https://github.com/Krazel/magic-shop-ios/actions/runs/33932562250.
+  SUCCESS; all three final Stock captures were reviewed. The selected table is visible above the panel on regular/compact iPhone and with large type; controls remain readable and contained. Files and hashes are archived in `design/runtime/0.2/77cbc09/`.
+- Static verifier and git diff checks PASS after the final app change. Original
+  masters, archived artwork and source/runtime asset hashes remain intact.
 
-## Honest boundaries
-This Windows host cannot run Xcode or a physical iPhone locally. GitHub Actions
-provides simulator execution and device compilation. Physical installation,
-real-device touch comfort and hardware performance must not be claimed as
-executed without evidence. No TestFlight, App Store or production action is part
-of this local candidate. No external service or personal data was introduced.
+## Actual visual evidence
+
+Twenty native screenshots from the full run are archived under
+`design/runtime/0.2/4087139/`, with per-file SHA-256, canvas, source commit and
+run in `manifest.json`. They include the regular iPhone, compact iPhone,
+large type, each repair independently, and all three expansion positions.
+
+Root reviewed Stock normal/compact/large, placement and trading. Independent
+read-only visual lanes reviewed onboarding normal/compact, Build, Decor,
+Improvements, Summary, Journal, restoration in all three directions, the
+three individual repairs, trading and placement. The oversized decorative
+backgrounds are fixed; frames no longer obscure labels or controls. Placement
+and restoration props are visible; wall decor is mounted on plaster; annexes
+have an open connecting passage and matching terracotta. The three repairs
+remove their own authored worn areas. Scroll panels retain their fixed actions.
+
+Minor presentation limits retained: the rear-wing painting can touch its
+cutaway edge, and joins retain a small lighting/grout transition. These do not
+block placement, access, reading or progression. The reference artwork is
+preserved; native calendar/controls and accessible layouts follow the owner's
+delegated direction, with actual runtime evidence linked in APPROVALS.md.
+
+## Exact iPhone artifact
+
+- Device run: https://github.com/Krazel/magic-shop-ios/actions/runs/33932563815 — SUCCESS.
+- App source: `77cbc09488072736c1fcee95c4581252f78da8f2`.
+- Filename: `MagicShop-0.2-build-1-unsigned.ipa` under local `outputs/ci/33932563815/`.
+- SHA-256: `da396c2889e9e394f4aac967662bd6bb458d9f885d811b7511ef07a81cc3e91e`.
+- Local `verify-ipa.py` PASS: checksum, source manifest, 0.2 build 1, iPhoneOS
+  arm64 Mach-O, minimum iOS 16.0. Verification JSON is saved beside the IPA.
+- This grouped development delivery remains 0.2 (1); earlier intermediate IPAs
+  were never delivered as a new version and remain preserved for diagnosis.
+
+## Boundaries
+
+This Windows host cannot run Xcode or install onto a physical iPhone locally.
+GitHub Actions supplies native simulator execution and device compilation.
+Physical installation, real-device touch comfort, hardware frame rate and
+VoiceOver listening have not been claimed as executed. The unsigned IPA needs
+Sideloadly re-signing to install. No TestFlight/App Store submission or production
+service is included, and no external SDK, account or data collection was added.
+
+Earlier failed compiler/test snapshots and the initially flawed visual capture
+remain diagnostic history. They are not the accepted source or final artifact.
