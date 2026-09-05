@@ -206,7 +206,7 @@ struct ShopSceneContainer: UIViewRepresentable {
             let press = UILongPressGestureRecognizer(target: self, action: #selector(handleFixturePress(_:)))
             press.minimumPressDuration = 0.18
             press.allowableMovement = 14
-            press.maximumNumberOfTouches = 1
+            press.numberOfTouchesRequired = 1
             press.delegate = self
             view.addGestureRecognizer(press)
             fixturePress = press

@@ -21,7 +21,7 @@ struct ProvisionalRootView: View {
                     floorPreviewStyle: model.carePaint ? model.floorStyle : nil,
                     reduceMotion: reduceMotion,
                     isPaused: model.isPaused || !model.isAppActive,
-                    contentLift: model.panel == .stock ? 180 : (model.panel == .pricing ? 120 : (model.flow.route == .buildCatalog || model.placementDraft != nil ? 105 : 0)),
+                    contentLift: model.panel == .stock ? 180 : ((model.panel == .pricing || model.panel == .care) ? 120 : (model.flow.route == .buildCatalog || model.placementDraft != nil ? 105 : 0)),
                     onGridTap: model.setPlacementOrigin, onFixtureTap: model.selectFixture,
                     onDragStart: model.beginWorldDrag, onDragMove: model.setPlacementOrigin,
                     onDragEnd: model.finishWorldDrag, onToolStroke: model.toolStroke

@@ -42,25 +42,48 @@ final class ShopScene: SKScene {
             body.anchorPoint = CGPoint(x: 0.5, y: 0.045)
             body.zPosition = 1
             carried.zPosition = 2
-            bubbleShape = SKShapeNode(rectOf: CGSize(width: tileWidth * 2.25, height: tileHeight * 0.76),
-                                      cornerRadius: tileHeight * 0.22)
+            bubbleShape = SKShapeNode(path: Self.cloudPath(width: tileWidth * 1.85, height: tileHeight * 1.35))
             bubbleShape.fillColor = SKColor(red: 0.98, green: 0.93, blue: 0.80, alpha: 0.96)
             bubbleShape.strokeColor = SKColor(red: 0.69, green: 0.48, blue: 0.22, alpha: 0.90)
             bubbleShape.lineWidth = 0.8
             bubble.addChild(bubbleShape)
-            icon.position.x = -tileWidth * 0.77
+            icon.position = CGPoint(x: 0, y: tileHeight * 0.25)
             bubble.addChild(icon)
             caption.fontSize = max(7, tileWidth * 0.30)
             caption.fontColor = SKColor(red: 0.22, green: 0.18, blue: 0.12, alpha: 1)
             caption.verticalAlignmentMode = .center
-            caption.position.x = tileWidth * 0.23
+            caption.position = CGPoint(x: 0, y: -tileHeight * 0.27)
             bubble.addChild(caption)
+            for index in 0..<2 {
+                let dot = SKShapeNode(circleOfRadius: tileHeight * (index == 0 ? 0.08 : 0.045))
+                dot.fillColor = bubbleShape.fillColor
+                dot.strokeColor = bubbleShape.strokeColor
+                dot.lineWidth = 0.45
+                dot.position = CGPoint(x: -tileWidth * (index == 0 ? 0.25 : 0.16),
+                                       y: -tileHeight * (index == 0 ? 0.68 : 0.85))
+                bubble.addChild(dot)
+            }
             bubble.zPosition = 4
             root.addChild(shadow)
             root.addChild(body)
             root.addChild(carried)
             root.addChild(bubble)
         }
+        private static func cloudPath(width: CGFloat, height: CGFloat) -> CGPath {
+            let path = CGMutablePath()
+            func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * width, y: y * height) }
+            path.move(to: point(-0.38, -0.38))
+            path.addCurve(to: point(-0.50, -0.05), control1: point(-0.56, -0.36), control2: point(-0.60, -0.15))
+            path.addCurve(to: point(-0.34, 0.29), control1: point(-0.58, 0.16), control2: point(-0.49, 0.32))
+            path.addCurve(to: point(0, 0.46), control1: point(-0.31, 0.49), control2: point(-0.10, 0.53))
+            path.addCurve(to: point(0.34, 0.29), control1: point(0.17, 0.57), control2: point(0.33, 0.45))
+            path.addCurve(to: point(0.50, -0.05), control1: point(0.55, 0.32), control2: point(0.60, 0.12))
+            path.addCurve(to: point(0.36, -0.38), control1: point(0.59, -0.20), control2: point(0.52, -0.39))
+            path.addCurve(to: point(-0.38, -0.38), control1: point(0.12, -0.48), control2: point(-0.13, -0.47))
+            path.closeSubpath()
+            return path
+        }
+
     }
 
     private let plateEdgeShader = SKShader(source: """
@@ -947,7 +970,7 @@ final class ShopScene: SKScene {
                 setUniformHeight(tileHeight * 0.46, on: art.carried)
             }
             art.bubble.position = CGPoint(x: lane * tileWidth * 0.32,
-                                          y: art.body.size.height + tileHeight * 0.34)
+                                          y: art.body.size.height + tileHeight * 0.85)
             art.bubble.isHidden = walking && visitor.outcome == nil
             art.carried.isHidden = visitor.sale == nil
             art.carried.position = CGPoint(x: tileWidth * 0.15, y: art.body.size.height * 0.52)
