@@ -109,10 +109,12 @@ final class ShopJourneyUITests: XCTestCase {
             thenDragTo: last.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)))
         let apply = app.buttons["apply-floor"]
         XCTAssertTrue(apply.isEnabled)
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Balance, 180 dollars")).firstMatch.exists)
         attach(app, "Floor stroke preview")
         apply.tap()
         XCTAssertTrue(app.staticTexts["care-feedback"].waitForExistence(timeout: 5))
         XCTAssertFalse(apply.isEnabled)
+        XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label == %@", "Balance, 176 dollars")).firstMatch.exists)
         attach(app, "Floor applied")
     }
 
@@ -144,8 +146,8 @@ final class ShopJourneyUITests: XCTestCase {
         let tile = app.descendants(matching: .any)["world-cell-1-5"].firstMatch
         XCTAssertTrue(tile.waitForExistence(timeout: 10))
         for expected in 1...3 {
-            let start = tile.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.5))
-            let end = tile.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.5))
+            let start = tile.coordinate(withNormalizedOffset: CGVector(dx: 0.1, dy: 0.5))
+            let end = tile.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
             start.press(forDuration: 0.1, thenDragTo: end)
             let feedback = app.staticTexts["care-feedback"]
             XCTAssertTrue(feedback.waitForExistence(timeout: 5))

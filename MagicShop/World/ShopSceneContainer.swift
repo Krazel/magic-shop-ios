@@ -91,7 +91,7 @@ struct ShopSceneContainer: UIViewRepresentable {
         view.accessibilityIdentifier = "shop-world"
         context.coordinator.accessibleView = view
         view.accessibilityLabel = "Shop floor"
-        view.accessibilityTraits = [.image, .adjustable]
+        view.accessibilityTraits = []
         view.accessibilityHint = "Swipe up or down to zoom. More actions move or reset the camera. Build, Stock and Care also provide buttons for arranging and cleaning."
         view.adjustZoom = { [weak coordinator = context.coordinator] increase in
             coordinator?.zoom(increase ? 1.15 : 1 / 1.15)
@@ -144,7 +144,7 @@ struct ShopSceneContainer: UIViewRepresentable {
         view.updateWorldAccessibility(scene: coordinator.scene, fixtures: state.fixtures,
                                       preview: preview, tool: interactionTool,
                                       onFixtureTap: onFixtureTap, onToolStroke: onToolStroke)
-        view.accessibilityValue = "\(state.fixtures.count) pieces of furniture, \(state.stock.count) items stocked. Zoom \(Int(100 / coordinator.cameraState.zoom)) percent."
+        view.worldDescription = "\(state.fixtures.count) pieces of furniture, \(state.stock.count) items stocked. Zoom \(Int(100 / coordinator.cameraState.zoom)) percent."
     }
 
     static func dismantleUIView(_ view: ShopAccessibleView, coordinator: Coordinator) {
@@ -417,7 +417,46 @@ struct ShopSceneContainer: UIViewRepresentable {
     }
 }
 
-final class ShopAccessibleView: SKView {
+// SKView exposes its own scene-node accessibility tree and overrides custom
+// container children. A UIKit host keeps real fixture/tile targets authoritative.
+final class ShopAccessibleView: UIView {
+    private let spriteView = SKView()
+    var worldDescription = ""
+    var ignoresSiblingOrder: Bool {
+        get { spriteView.ignoresSiblingOrder }
+        set { spriteView.ignoresSiblingOrder = newValue }
+    }
+    var preferredFramesPerSecond: Int {
+        get { spriteView.preferredFramesPerSecond }
+        set { spriteView.preferredFramesPerSecond = newValue }
+    }
+    var isPaused: Bool {
+        get { spriteView.isPaused }
+        set { spriteView.isPaused = newValue }
+    }
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isMultipleTouchEnabled = true
+        spriteView.isMultipleTouchEnabled = true
+        isAccessibilityElement = false
+        spriteView.frame = bounds
+        spriteView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        spriteView.backgroundColor = .clear
+        spriteView.isAccessibilityElement = false
+        spriteView.accessibilityElementsHidden = true
+        addSubview(spriteView)
+    }
+    required init?(coder: NSCoder) { nil }
+    func presentScene(_ scene: SKScene?) { spriteView.presentScene(scene) }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        spriteView.frame = bounds
+        if let scene = spriteView.scene as? ShopScene {
+            if bounds.width > 0, bounds.height > 0, scene.size != bounds.size { scene.size = bounds.size }
+            updateCameraFrames(scene: scene)
+        }
+    }
+
     var adjustZoom: ((Bool) -> Void)?
     private lazy var cameraElement = ShopWorldAccessibilityElement(accessibilityContainer: self)
     private var fixtureElements: [UUID: ShopWorldAccessibilityElement] = [:]
@@ -486,8 +525,8 @@ final class ShopAccessibleView: SKView {
         cameraElement.accessibilityIdentifier = "world-camera"
         cameraElement.accessibilityLabel = "Shop floor camera"
         cameraElement.accessibilityTraits = [.image, .adjustable]
-        cameraElement.accessibilityHint = accessibilityHint
-        cameraElement.accessibilityValue = accessibilityValue
+        cameraElement.accessibilityHint = "Swipe up or down to zoom. More actions move or reset the camera. Build, Stock and Care also provide buttons for arranging and cleaning."
+        cameraElement.accessibilityValue = worldDescription
         cameraElement.accessibilityFrameInContainerSpace = bounds
         cameraElement.accessibilityCustomActions = accessibilityCustomActions
         cameraElement.adjust = { [weak self] in self?.adjustZoom?($0) }

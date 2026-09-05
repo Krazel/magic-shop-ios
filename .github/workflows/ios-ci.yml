@@ -10,6 +10,10 @@ on:
         description: 'Capture living shop, care and pricing after an already tested presentation adjustment'
         type: boolean
         default: false
+      interaction_check:
+        description: 'Run all native UI tests and focused captures after previously passing unchanged Core/model tests'
+        type: boolean
+        default: false
 
 concurrency:
   group: ios-ci-${{ github.ref }}
@@ -74,7 +78,9 @@ jobs:
         if: inputs.capture_only != true
         run: |
           set -o pipefail
-          xcodebuild test \
+          TEST_SCOPE=()
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then TEST_SCOPE=(-only-testing:MagicShopUITests); fi
+          xcodebuild test "${TEST_SCOPE[@]}" \
             -project MagicShop.xcodeproj \
             -scheme MagicShop \
             -configuration Debug \
@@ -110,13 +116,16 @@ jobs:
           xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
           STATES="onboarding overview build placement stock living living-summary pricing care floors floor-laid drag improvements decor journal restored-right"
           if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="living pricing care floors floor-laid stock"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="living pricing care floors floor-laid drag"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE"
             sleep 3
             xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/$STATE-runtime.png"
           done
-          for STATE in stock pricing care floors; do
+          LARGE_STATES="stock pricing care floors"
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then LARGE_STATES="pricing care floors"; fi
+          for STATE in $LARGE_STATES; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE" --large-text
             sleep 3
@@ -143,6 +152,7 @@ jobs:
           xcrun simctl install "$SMALL_UDID" "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
           STATES="onboarding stock placement pricing care floors living"
           if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="living pricing care floors floor-laid stock"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="pricing care floors living"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SMALL_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SMALL_UDID" com.example.MagicShop --visual-state "$STATE"

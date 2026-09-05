@@ -54,7 +54,7 @@ extension AppModel {
                 if ["living", "living-summary"].contains(name) {
                     let day = try engine.openLivingDay(seed: 42)
                     let minute = name == "living-summary" ? 1080 : (600...1000).first(where: { minute in
-                        day.visitors.filter { $0.arrivalMinute <= minute && minute < $0.departureMinute }.count >= 3
+                        day.visitors.filter { $0.arrivalMinute + 3 <= minute && minute < $0.departureMinute - 3 }.count >= 3
                     }) ?? 680
                     _ = try engine.advanceLivingDay(expectedDayID: day.id, expectedMinute: day.minute, toMinute: minute)
                 }

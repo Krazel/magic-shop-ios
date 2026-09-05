@@ -439,7 +439,10 @@ private struct PricingPanel: View {
                     }
                 }.padding(.bottom, 5)
             }
-            if saved { Text("Price saved").font(.caption).foregroundStyle(MagicPalette.mint).accessibilityIdentifier("price-saved") }
+            Text(saved ? "Saved price: $\(draftPrice)" : "Your price: $\(draftPrice)")
+                .font(.caption).foregroundStyle(saved ? MagicPalette.mint : MagicPalette.parchment)
+                .lineLimit(1).minimumScaleFactor(0.7)
+                .accessibilityIdentifier(saved ? "price-saved" : "price-preview")
             InlineMessage()
             Button("Apply Price") { saved = model.applyPrice(draftPrice, for: product) }
                 .buttonStyle(GoldButtonStyle()).disabled(!valid).accessibilityIdentifier("apply-price")
@@ -465,7 +468,7 @@ private struct CarePanel: View {
             ScrollView {
                 if model.carePaint { floorControls }
                 else { cleanControls }
-            }.frame(maxHeight: model.carePaint ? 125 : 180)
+            }.frame(maxHeight: model.carePaint ? 125 : (model.dirtyTileCount > 0 ? 140 : 105))
             if !model.careFeedback.isEmpty {
                 Text(model.careFeedback).font(.caption).foregroundStyle(MagicPalette.mint)
                     .accessibilityIdentifier("care-feedback")
@@ -498,7 +501,7 @@ private struct CarePanel: View {
                 material("Oak", asset: "FloorWarmOak", style: .warmOak)
                 material("Checkered", asset: "FloorCheckerStone", style: .checkerStone)
             }
-            Text("Drag across tiles to preview. Pay only when you apply.").font(.caption).multilineTextAlignment(.center)
+            Text("Drag to preview; two fingers move the view. Pay when you apply.").font(.caption).multilineTextAlignment(.center)
         }
     }
     private func material(_ title: String, asset: String, style: FloorStyleID) -> some View {
@@ -513,18 +516,25 @@ private struct CarePanel: View {
     }
     private var cleanControls: some View {
         VStack(spacing: 5) {
-            Text("Drag over dust to sweep. Three passes clear each worn area.").font(.caption).multilineTextAlignment(.center)
-            ForEach(RepairCatalog.all) { repair in
-                let progress = model.state.repairProgress(for: repair.id)
-                Button { model.cleanGroup(repair.id) } label: {
-                    HStack {
-                        Image(systemName: progress == 3 ? "checkmark.circle.fill" : "paintbrush.fill")
-                        Text(repair.displayName); Spacer(); Text("\(progress)/3")
-                    }.font(.caption.bold()).frame(minHeight: 44)
-                }.disabled(progress == 3).accessibilityIdentifier("sweep-\(repair.id.rawValue)")
+            Text("Drag to sweep; each worn area needs 3 passes. Two fingers move the view.").font(.caption).multilineTextAlignment(.center)
+            HStack(spacing: 7) {
+                ForEach(RepairCatalog.all) { repair in
+                    let progress = model.state.repairProgress(for: repair.id)
+                    let title = repair.id == .rubble ? "Rubble" : repair.id == .brokenBoards ? "Boards" : "Papers"
+                    Button { model.cleanGroup(repair.id) } label: {
+                        VStack(spacing: 3) {
+                            Text(title)
+                            Label("\(progress)/3", systemImage: progress == 3 ? "checkmark.circle.fill" : "paintbrush.fill")
+                        }.font(.caption.bold()).frame(maxWidth: .infinity, minHeight: 52)
+                            .background(.black.opacity(0.18), in: RoundedRectangle(cornerRadius: 10))
+                    }.disabled(progress == 3).accessibilityIdentifier("sweep-\(repair.id.rawValue)")
+                        .accessibilityLabel(repair.displayName).accessibilityValue("\(progress) of 3 passes")
+                }
             }
-            Button("Sweep a dusty tile · \(model.dirtyTileCount) left", action: model.cleanNextDust)
-                .font(.caption.bold()).frame(minHeight: 44).disabled(model.dirtyTileCount == 0)
+            if model.dirtyTileCount > 0 {
+                Button("Sweep a dusty tile · \(model.dirtyTileCount) left", action: model.cleanNextDust)
+                    .font(.caption.bold()).frame(minHeight: 44)
+            }
             if model.state.phase == .open { Text("Lay new floors after closing.").font(.caption2) }
         }
     }
