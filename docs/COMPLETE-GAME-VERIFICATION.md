@@ -17,6 +17,13 @@ English iPhone UI with native accessible controls and reduced-motion behavior.
 - The resulting runtime captures exposed over-sized panel backgrounds, obstructed shop hints and undersized world props. Those captures are diagnostic evidence, not final visual acceptance. Corrections constrain panel artwork, anchor controls at the bottom, protect content space under large type and recalibrate the world. The corrected source requires another complete CI/capture pass.
 - A separate read-only AppModel/UI audit found no concrete progression, recovery, calendar or panel-closing blocker. This does not substitute native execution.
 
+## Corrected source execution
+- Source: `4087139c0ff262efa82295c5e531dd6d5e5a4aca`, version 0.2 (1).
+- Public CI `33931440266`: Release simulator build PASS; 90 XCTest PASS, zero failures/expected failures/skips, iPhone 16 Pro arm64 simulator, iOS 18.5 (22F77), macOS 15.7.9.
+- Device IPA run `33931451771` SUCCESS. Downloaded unsigned iPhoneOS arm64, 33,861,201 bytes; minimum iOS 16.0. Local verifier checks bundle version/build, source manifest, Mach-O architecture and checksum.
+- IPA SHA-256: `cc6d6582556086b1d365f43e00ae8015eea283a34ab8bc53060b33e69b3cd227`.
+- The new real completion-journal screenshot confirms bounded panel frames and readable HUD/calendar. Full state-capture review still pending.
+
 ## Final evidence to record
 - Exact source commit, public CI run and executed test count.
 - Native control journey: name, build, stock, open, pause, speed, next day.

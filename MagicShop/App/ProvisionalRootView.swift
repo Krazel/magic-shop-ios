@@ -16,7 +16,7 @@ struct ProvisionalRootView: View {
                     activeVisit: model.activeVisit, visitProgress: model.visitProgress,
                     lastOutcome: model.lastOutcome, reduceMotion: reduceMotion,
                     isPaused: model.isPaused || !model.isAppActive,
-                    contentLift: model.panel == .stock || model.flow.route == .buildCatalog || model.placementDraft != nil ? 105 : 0,
+                    contentLift: model.panel == .stock ? 180 : (model.flow.route == .buildCatalog || model.placementDraft != nil ? 105 : 0),
                     onGridTap: model.setPlacementOrigin, onFixtureTap: model.selectFixture
                 )
                 .ignoresSafeArea()
