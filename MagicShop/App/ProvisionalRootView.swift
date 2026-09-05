@@ -458,6 +458,7 @@ private struct PricingPanel: View {
 
 private struct CarePanel: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.dynamicTypeSize) private var textSize
     var body: some View {
         VStack(spacing: 8) {
             PanelHeading(title: "Care", icon: "paintbrush.fill")
@@ -496,18 +497,30 @@ private struct CarePanel: View {
     }
     private var floorControls: some View {
         VStack(spacing: 8) {
-            HStack(spacing: 7) {
-                material("Terracotta", asset: "FloorTerracotta", style: .terracotta)
-                material("Oak", asset: "FloorWarmOak", style: .warmOak)
-                material("Checkered", asset: "FloorCheckerStone", style: .checkerStone)
-            }
+            if textSize.isAccessibilitySize {
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal) {
+                        materials.frame(height: 115)
+                    }.onAppear { proxy.scrollTo(model.floorStyle, anchor: .center) }
+                }
+            } else { materials }
             Text("Drag to preview; two fingers move the view. Pay when you apply.").font(.caption).multilineTextAlignment(.center)
+        }
+    }
+    private var materials: some View {
+        HStack(spacing: 7) {
+            material("Terracotta", asset: "FloorTerracotta", style: .terracotta)
+                .frame(width: textSize.isAccessibilitySize ? 190 : nil).id(FloorStyleID.terracotta)
+            material("Oak", asset: "FloorWarmOak", style: .warmOak)
+                .frame(width: textSize.isAccessibilitySize ? 190 : nil).id(FloorStyleID.warmOak)
+            material("Checkered", asset: "FloorCheckerStone", style: .checkerStone)
+                .frame(width: textSize.isAccessibilitySize ? 190 : nil).id(FloorStyleID.checkerStone)
         }
     }
     private func material(_ title: String, asset: String, style: FloorStyleID) -> some View {
         Button { model.selectFloor(style) } label: {
             VStack(spacing: 3) {
-                Image(asset).resizable().scaledToFill().frame(height: 38).clipped().clipShape(RoundedRectangle(cornerRadius: 5))
+                Image(asset).resizable().scaledToFill().frame(height: textSize.isAccessibilitySize ? 24 : 38).clipped().clipShape(RoundedRectangle(cornerRadius: 5))
                 Text(title).font(.caption.bold())
                 Text("$\(ShopCare.paintCost(for: style) ?? 0) / tile").font(.caption2)
             }.padding(7).frame(maxWidth: .infinity).foregroundStyle(MagicPalette.ink).parchmentCard()

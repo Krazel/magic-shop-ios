@@ -117,6 +117,7 @@ jobs:
           STATES="onboarding overview build placement stock living living-summary pricing care floors floor-laid drag improvements decor journal restored-right"
           if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="living pricing care floors floor-laid stock"; fi
           if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="living pricing care floors floor-laid drag"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="floors"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE"
@@ -125,6 +126,7 @@ jobs:
           done
           LARGE_STATES="stock pricing care floors"
           if [ "${{ inputs.interaction_check }}" = "true" ]; then LARGE_STATES="pricing care floors"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then LARGE_STATES="floors"; fi
           for STATE in $LARGE_STATES; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE" --large-text
@@ -153,6 +155,7 @@ jobs:
           STATES="onboarding stock placement pricing care floors living"
           if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="living pricing care floors floor-laid stock"; fi
           if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="pricing care floors living"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="floors"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SMALL_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SMALL_UDID" com.example.MagicShop --visual-state "$STATE"
