@@ -44,6 +44,10 @@
 		D00000000000000000000034 /* RestorationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000034 /* RestorationTests.swift */; };
 D00000000000000000000050 /* ShopJourneyUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000050 /* ShopJourneyUITests.swift */; };
 D00000000000000000000051 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C00000000000000000000018 /* XCTest.framework */; };
+		D00000000000000000000035 /* LivingShopDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000035 /* LivingShopDay.swift */; };
+		D00000000000000000000036 /* LivingShopValidation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000036 /* LivingShopValidation.swift */; };
+		D00000000000000000000037 /* ShopPricingCare.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000037 /* ShopPricingCare.swift */; };
+		D00000000000000000000038 /* LivingShopTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000038 /* LivingShopTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +101,10 @@ D00000000000000000000051 /* XCTest.framework in Frameworks */ = {isa = PBXBuildF
 		C00000000000000000000034 /* RestorationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorationTests.swift; sourceTree = "<group>"; };
 C00000000000000000000050 /* ShopJourneyUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopJourneyUITests.swift; sourceTree = "<group>"; };
 C00000000000000000000051 /* MagicShopUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MagicShopUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C00000000000000000000035 /* LivingShopDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivingShopDay.swift; sourceTree = "<group>"; };
+		C00000000000000000000036 /* LivingShopValidation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivingShopValidation.swift; sourceTree = "<group>"; };
+		C00000000000000000000037 /* ShopPricingCare.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopPricingCare.swift; sourceTree = "<group>"; };
+		C00000000000000000000038 /* LivingShopTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LivingShopTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -176,6 +184,9 @@ C00000000000000000000051 /* MagicShopUITests.xctest */,
 		B00000000000000000000006 /* Domain */ = {
 			isa = PBXGroup;
 			children = (
+				C00000000000000000000037 /* ShopPricingCare.swift */,
+				C00000000000000000000036 /* LivingShopValidation.swift */,
+				C00000000000000000000035 /* LivingShopDay.swift */,
 				C00000000000000000000032 /* ShopRestoration.swift */,
 				C00000000000000000000031 /* ShopCalendar.swift */,
 				C00000000000000000000021 /* ShopAccess.swift */,
@@ -221,6 +232,7 @@ C00000000000000000000051 /* MagicShopUITests.xctest */,
 		B0000000000000000000000A /* MagicShopTests */ = {
 			isa = PBXGroup;
 			children = (
+				C00000000000000000000038 /* LivingShopTests.swift */,
 				C00000000000000000000034 /* RestorationTests.swift */,
 				C00000000000000000000033 /* CompleteAppModelTests.swift */,
 				C00000000000000000000025 /* AppModelTests.swift */,
@@ -349,6 +361,9 @@ E00000000000000000000052 /* Resources */ = {isa = PBXResourcesBuildPhase; buildA
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00000000000000000000037 /* ShopPricingCare.swift in Sources */,
+				D00000000000000000000036 /* LivingShopValidation.swift in Sources */,
+				D00000000000000000000035 /* LivingShopDay.swift in Sources */,
 				D00000000000000000000032 /* ShopRestoration.swift in Sources */,
 				D00000000000000000000031 /* ShopCalendar.swift in Sources */,
 				D00000000000000000000030 /* VisualFixtures.swift in Sources */,
@@ -376,6 +391,7 @@ E00000000000000000000052 /* Resources */ = {isa = PBXResourcesBuildPhase; buildA
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D00000000000000000000038 /* LivingShopTests.swift in Sources */,
 				D00000000000000000000034 /* RestorationTests.swift in Sources */,
 				D00000000000000000000033 /* CompleteAppModelTests.swift in Sources */,
 				D00000000000000000000025 /* AppModelTests.swift in Sources */,
@@ -453,7 +469,7 @@ E00000000000000000000050 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActio
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -477,7 +493,7 @@ E00000000000000000000050 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActio
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShop;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -495,7 +511,7 @@ E00000000000000000000050 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActio
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -513,7 +529,7 @@ E00000000000000000000050 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActio
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
-				MARKETING_VERSION = 0.2;
+				MARKETING_VERSION = 0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -523,8 +539,8 @@ E00000000000000000000050 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActio
 			};
 			name = Release;
 		};
-100000000000000000000050 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 0.2; PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = MagicShop; }; name = Debug; };
-100000000000000000000051 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 0.2; PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = MagicShop; }; name = Release; };
+100000000000000000000050 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 0.3; PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = MagicShop; }; name = Debug; };
+100000000000000000000051 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; MARKETING_VERSION = 0.3; PRODUCT_BUNDLE_IDENTIFIER = com.example.MagicShopUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = 1; TEST_TARGET_NAME = MagicShop; }; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */

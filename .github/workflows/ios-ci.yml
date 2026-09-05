@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       capture_only:
-        description: 'Focused Stock visual check after an already tested presentation-only adjustment'
+        description: 'Capture living shop, care and pricing after an already tested presentation adjustment'
         type: boolean
         default: false
 
@@ -108,18 +108,20 @@ jobs:
           xcrun simctl bootstatus "$SIMULATOR_UDID" -b
           xcrun simctl status_bar "$SIMULATOR_UDID" override --time '9:41' --batteryState charged --batteryLevel 100
           xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
-          STATES="onboarding overview build placement stock open summary improvements decor journal repair-rubble repair-boards repair-papers restored restored-right restored-rear"
-          if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="stock"; fi
+          STATES="onboarding overview build placement stock living living-summary pricing care floors floor-laid drag improvements decor journal restored-right"
+          if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="living pricing care floors floor-laid stock"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE"
             sleep 3
             xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/$STATE-runtime.png"
           done
-          xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
-          xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state stock --large-text
-          sleep 3
-          xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/stock-large-text-runtime.png"
+          for STATE in stock pricing care floors; do
+            xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
+            xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE" --large-text
+            sleep 3
+            xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/$STATE-large-text-runtime.png"
+          done
           printf 'Commit: %s\nRun: %s\nSimulator: %s\nSource: real simulator app with isolated deterministic game-state fixtures\n' "$GITHUB_SHA" "$GITHUB_RUN_ID" "$SIMULATOR_UDID" > "$RUNNER_TEMP/VisualQA/capture-manifest.txt"
       - name: Capture compact iPhone layout
         if: always() && steps.simulator_build.outcome == 'success'
@@ -139,8 +141,8 @@ jobs:
           xcrun simctl bootstatus "$SMALL_UDID" -b
           xcrun simctl status_bar "$SMALL_UDID" override --time '9:41' --batteryState charged --batteryLevel 100
           xcrun simctl install "$SMALL_UDID" "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
-          STATES="onboarding stock placement"
-          if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="stock"; fi
+          STATES="onboarding stock placement pricing care floors living"
+          if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="living pricing care floors floor-laid stock"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SMALL_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SMALL_UDID" com.example.MagicShop --visual-state "$STATE"
@@ -160,12 +162,12 @@ jobs:
         if: success()
         run: |
           APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
-          ARTIFACT_ROOT="$RUNNER_TEMP/MagicShop-0.2-build-1-CI"
+          ARTIFACT_ROOT="$RUNNER_TEMP/MagicShop-0.3-build-1-CI"
           mkdir -p "$ARTIFACT_ROOT"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ARTIFACT_ROOT/MagicShop-simulator.app.zip"
           cat > "$ARTIFACT_ROOT/build-manifest.txt" <<EOF
           App: Magic Shop
-          Marketing version: 0.2
+          Marketing version: 0.3
           Build: 1
           Commit: $GITHUB_SHA
           CI run: $GITHUB_RUN_ID
@@ -177,8 +179,8 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: MagicShop-0.2-build-1-${{ github.sha }}-Simulator-QA
-          path: ${{ runner.temp }}/MagicShop-0.2-build-1-CI/
+          name: MagicShop-0.3-build-1-${{ github.sha }}-Simulator-QA
+          path: ${{ runner.temp }}/MagicShop-0.3-build-1-CI/
           if-no-files-found: error
           retention-days: 14
 

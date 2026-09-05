@@ -31,6 +31,11 @@ public struct ShopCalendar: Equatable, Sendable {
             (Self.closingMinute - Self.openingMinute) * cursor / ShopDayState.visitorCount
     }
 
+    public init(dayNumber: Int, minute: Int) {
+        self.dayNumber = max(1, dayNumber)
+        minutesSinceMidnight = min(max(minute, Self.openingMinute), Self.closingMinute)
+    }
+
     public var weekday: ShopWeekday {
         ShopWeekday(rawValue: (dayNumber - 1) % 7) ?? .monday
     }
@@ -42,6 +47,7 @@ public struct ShopCalendar: Equatable, Sendable {
 
 extension GameState {
     public var calendar: ShopCalendar {
+        if let day = livingDay { return ShopCalendar(dayNumber: day.dayNumber, minute: day.minute) }
         if let day = currentDay {
             return ShopCalendar(dayNumber: day.dayNumber, processedVisits: day.nextVisitIndex)
         }

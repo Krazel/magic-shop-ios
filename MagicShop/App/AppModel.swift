@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-enum ShopPanel: String { case none, stock, improvements, journal, fixture }
+enum ShopPanel: String { case none, stock, improvements, journal, fixture, pricing, care }
 
 @MainActor
 final class AppModel: ObservableObject {
@@ -21,6 +21,13 @@ final class AppModel: ObservableObject {
     @Published var isFast = false
     @Published private(set) var isAppActive = true
     @Published private(set) var movingFixtureID: UUID?
+    @Published private(set) var livingMinute: Double?
+    @Published var carePaint = false
+    @Published var floorStyle: FloorStyleID = .warmOak
+    @Published private(set) var floorPreview: [GridPoint] = []
+    @Published private(set) var careFeedback = ""
+    private var livingAccumulator = 0.0
+    private var dragSnapshot: PlacementDraft?
     private var visitWasCommitted = false
     private var session: GameSession?
     private let providedStore: (any GameStateStore)?
@@ -40,6 +47,7 @@ final class AppModel: ObservableObject {
             let restored = try GameSession(store: store)
             session = restored
             state = restored.engine.state
+            livingMinute = state.livingDay.map { Double($0.minute) }
             flow = FirstSliceFlow(state: state)
             shopNameInput = state.shopName ?? ""
             inlineMessage = nil
@@ -100,14 +108,28 @@ final class AppModel: ObservableObject {
             state.fixtures.contains { $0.id == item.fixtureID && ShopAccess.isReachable($0, in: state) }
         }
     }
+    var canManageStock: Bool { state.phase == .preparing || (state.phase == .open && state.livingDay != nil) }
     var isTrading: Bool { state.phase == .open || activeVisit != nil }
+    var daySummary: DaySummary? { state.livingDay?.summary ?? state.currentDay?.summary }
+    var tradingProgress: Double {
+        if let minute = livingMinute, state.livingDay != nil { return min(1, max(0, (minute - 540) / 540)) }
+        return min(1, (Double(activeVisit?.id.index ?? 6) + visitProgress) / 6)
+    }
     var showsSummary: Bool { state.phase == .summary && activeVisit == nil }
     var clockText: String {
+        if state.livingDay != nil {
+            let minute = min(1080, max(540, Int(livingMinute ?? Double(state.calendar.minutesSinceMidnight))))
+            return String(format: "%02d:%02d", minute / 60, minute % 60)
+        }
         guard let visit = activeVisit else { return state.calendar.timeText }
         let minutes = min(18 * 60, 9 * 60 + visit.id.index * 90 + Int(visitProgress * 90))
         return String(format: "%02d:%02d", minutes / 60, minutes % 60)
     }
     var visitorText: String {
+        if let day = state.livingDay {
+            let people = day.activeVisitors.count
+            return "\(people) browsing · \(day.sales.count) sales · $\(day.revenue) today"
+        }
         guard let visit = activeVisit else { return isPaused ? "Paused" : "Welcoming your next visitor" }
         if visitWasCommitted, let outcome = lastOutcome {
             return outcome.sale.map { "+$\($0.revenue) · Thank you!" } ?? "Nothing today. Maybe tomorrow!"
@@ -127,15 +149,20 @@ final class AppModel: ObservableObject {
         guard state.phase == .preparing, session != nil else { return }
         panel = .none; movingFixtureID = nil; flow.openBuild(); inlineMessage = nil
     }
-    func closeBuild() { flow.closeBuild(); panel = .none; movingFixtureID = nil; inlineMessage = nil }
+    func closeBuild() {
+        flow.closeBuild(); panel = .none; movingFixtureID = nil; inlineMessage = nil
+        floorPreview = []; careFeedback = ""; dragSnapshot = nil
+    }
     func selectCategory(_ category: FixtureCategory) {
         selectedCategory = category
         inlineMessage = nil
         if category == .walls { flow.closeBuild(); panel = .improvements }
     }
     func showPanel(_ next: ShopPanel) {
-        guard state.phase == .preparing else { return }
+        guard state.phase == .preparing || (canManageStock && [.stock, .pricing, .care].contains(next)) else { return }
         flow.closeBuild(); movingFixtureID = nil; panel = next; inlineMessage = nil
+        floorPreview = []; careFeedback = ""
+        if state.phase != .preparing { carePaint = false }
         if next == .fixture, selectedFixtureID == nil { selectedFixtureID = state.fixtures.first?.id }
         if next == .stock {
             if (selectedFixtureDefinition?.stockCapacity ?? 0) == 0 { selectedFixtureID = stockFixtures.first?.id }
@@ -152,7 +179,8 @@ final class AppModel: ObservableObject {
         inlineMessage = nil
     }
     func selectFixture(_ id: UUID) {
-        guard state.phase == .preparing, placementDraft == nil else { return }
+        guard canManageStock, placementDraft == nil, panel != .care else { return }
+        if state.phase != .preparing, let fixture = state.fixtures.first(where: { $0.id == id }), FixtureCatalog.definition(for: fixture.kind).stockCapacity == 0 { return }
         chooseFixture(id)
         flow.closeBuild()
         panel = (selectedFixtureDefinition?.stockCapacity ?? 0) > 0 ? .stock : .fixture
@@ -232,9 +260,10 @@ final class AppModel: ObservableObject {
     }
     func startDay() {
         guard state.phase == .preparing else { return }
-        if transact({ _ = try $0.openDay() }) {
+        if transact({ _ = try $0.openLivingDay() }) {
             panel = .none; flow.closeBuild(); isPaused = false
-            startNextVisit()
+            floorPreview = []; livingAccumulator = 0; livingMinute = 540
+            activeVisit = nil; lastOutcome = nil
         }
     }
     private func startNextVisit() {
@@ -245,6 +274,22 @@ final class AppModel: ObservableObject {
     // through an atomic save. A retry retains the original visitor token.
     func tick(seconds: Double) {
         guard isAppActive, !isPaused, seconds > 0 else { return }
+        if let day = state.livingDay {
+            guard state.phase == .open else { return }
+            livingAccumulator += min(seconds, 0.25) * (isFast ? 18 : 9)
+            if livingAccumulator >= 2 {
+                let next = min(1080, day.minute + Int(livingAccumulator))
+                var advance: LivingDayAdvance?
+                guard transact({ advance = try $0.advanceLivingDay(expectedDayID: day.id, expectedMinute: day.minute, toMinute: next) }) else {
+                    livingAccumulator = 0; livingMinute = Double(day.minute); isPaused = true; return
+                }
+                livingAccumulator -= Double(next - day.minute)
+                if let outcome = advance?.outcomes.last { lastOutcome = outcome }
+                if state.phase == .summary { panel = .none; floorPreview = []; livingAccumulator = 0 }
+            }
+            livingMinute = min(1080, Double(state.livingDay?.minute ?? day.minute) + livingAccumulator)
+            return
+        }
         if activeVisit == nil, state.phase == .open { startNextVisit() }
         guard let visit = activeVisit else { return }
         visitProgress = min(1, visitProgress + min(seconds, 0.25) / (isFast ? 3.0 : 6.0))
@@ -263,8 +308,78 @@ final class AppModel: ObservableObject {
     func togglePause() { isPaused.toggle(); if !isPaused { inlineMessage = nil } }
     func setAppActive(_ active: Bool) { isAppActive = active }
     func prepareNextDay() {
-        guard let day = state.currentDay, showsSummary else { return }
-        if transact({ _ = try $0.acknowledgeDaySummary(dayID: day.id) }) { panel = .none; lastOutcome = nil }
+        guard showsSummary else { return }
+        if let day = state.livingDay {
+            if transact({ _ = try $0.acknowledgeLivingDaySummary(dayID: day.id) }) {
+                panel = .none; lastOutcome = nil; livingMinute = nil; livingAccumulator = 0
+            }
+        } else if let day = state.currentDay {
+            if transact({ _ = try $0.acknowledgeDaySummary(dayID: day.id) }) { panel = .none; lastOutcome = nil }
+        }
+    }
+
+    @discardableResult
+    func beginWorldDrag(_ id: UUID) -> Bool {
+        guard state.phase == .preparing else { return false }
+        if let draft = placementDraft, draft.fixtureID == id { dragSnapshot = draft; return true }
+        guard placementDraft == nil, state.fixtures.contains(where: { $0.id == id }) else { return false }
+        chooseFixture(id); beginMovingSelectedFixture(); dragSnapshot = placementDraft
+        return dragSnapshot != nil
+    }
+    func finishWorldDrag(_ dropped: Bool) {
+        guard let original = dragSnapshot else { return }
+        dragSnapshot = nil
+        if movingFixtureID != nil {
+            if dropped && isPlacementValid && confirmCurrentPlacement() { return }
+            let reason = inlineMessage ?? (dropped ? "That space is not available. The fixture stayed where it was." : nil)
+            flow.closeBuild(); movingFixtureID = nil; panel = .none; inlineMessage = reason
+        } else if !dropped { flow.updatePlacement(original) }
+    }
+    func pricingQuote(for product: ProductKind, price: Int? = nil) -> PricingQuote {
+        engine.pricingQuote(for: product, price: price)
+    }
+    @discardableResult
+    func applyPrice(_ price: Int, for product: ProductKind) -> Bool {
+        transact { try $0.setPrice(price, for: product) }
+    }
+    var dirtyTileCount: Int { state.dirt.count }
+    var floorPreviewCost: Int { floorPreview.count * (ShopCare.paintCost(for: floorStyle) ?? 0) }
+    func selectFloor(_ style: FloorStyleID) { floorStyle = style; floorPreview = []; careFeedback = "" }
+    func cancelFloorPreview() { floorPreview = []; careFeedback = "" }
+    func toolStroke(_ point: GridPoint) {
+        guard panel == .care else { return }
+        if carePaint {
+            guard state.phase == .preparing, !floorPreview.contains(point), state.world.floor.styleID(at: point) != floorStyle else { return }
+            do {
+                var copy = engine
+                for tile in floorPreview + [point] { _ = try copy.paintFloor(at: tile, style: floorStyle) }
+                floorPreview.append(point); inlineMessage = nil
+            } catch { inlineMessage = userFacingMessage(for: error) }
+        } else {
+            var result: CleaningResult?
+            if transact({ result = try $0.cleanCell(at: point) }), let result, result.didChange {
+                if let group = result.repairGroup {
+                    careFeedback = result.completedRepair ? "\(RepairCatalog.definition(for: group).displayName) complete!" : "Keep sweeping · \(result.repairProgress)/3 passes"
+                } else { careFeedback = "A little cleaner · \(dirtyTileCount) dusty tiles left" }
+            }
+        }
+    }
+    @discardableResult
+    func applyFloorPreview() -> Bool {
+        guard !floorPreview.isEmpty else { return false }
+        let points = floorPreview, style = floorStyle
+        if transact({ engine in for point in points { _ = try engine.paintFloor(at: point, style: style) } }) {
+            careFeedback = "\(points.count) tiles laid"; floorPreview = []; return true
+        }
+        return false
+    }
+    func cleanGroup(_ group: RestorationGroupID) {
+        guard let cell = state.world.hitMap.cells.first(where: { $0.staticBlocker == RepairCatalog.definition(for: group).blocker }) else { return }
+        carePaint = false; toolStroke(cell.point)
+    }
+    func cleanNextDust() {
+        guard let point = state.dirt.keys.sorted(by: { $0.y == $1.y ? $0.x < $1.x : $0.y < $1.y }).first else { return }
+        carePaint = false; toolStroke(point)
     }
 
     func repair(_ group: RestorationGroupID) {
@@ -283,6 +398,12 @@ final class AppModel: ObservableObject {
     }
     private func userFacingMessage(for error: Error) -> String {
         switch error {
+        case let LivingShopError.invalidPrice(minimum, maximum): return "Choose a price from $\(minimum) to $\(maximum)."
+        case LivingShopError.invalidCareCell: return "Choose a clear tile inside your shop. Sweep worn areas before laying a floor."
+        case LivingShopError.invalidFloorStyle: return "Choose one of the three floor materials."
+        case LivingShopError.workingCapitalRequired: return "Keep enough value for a $50 display and $10 stock. Trade a little more before laying this floor."
+        case LivingShopError.noWalkableEntrance: return "Clear a path from the entrance before opening."
+        case LivingShopError.unexpectedMinute, LivingShopError.invalidMinuteRange: return "The day could not advance. Resume to try again."
         case ShopNameValidationError.empty: return "Enter a name for your shop."
         case ShopNameValidationError.tooShort: return "Use at least 2 characters."
         case ShopNameValidationError.tooLong: return "Keep the name to 24 characters or fewer."

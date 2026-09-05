@@ -1,0 +1,85 @@
+{
+  "package": "Magic Shop 0.3 living-shop",
+  "selectedDate": "2026-09-05",
+  "authority": "Director selection under explicit owner delegation; not separately owner-reviewed",
+  "production": "Built-in ImageGen; byte-identical reused DustPatch and FloorTerracotta",
+  "language": "en",
+  "items": [
+    {
+      "name": "DustPatch",
+      "path": "design/assets/living-shop/DustPatch.png",
+      "width": 256,
+      "height": 229,
+      "mode": "RGBA",
+      "sha256": "91D1205C5F5037EEC04EBDDDB74C0806455625C475DDBAF984BDF2F57516B329",
+      "source": "design/assets/first-slice/modular/floor/terracotta-stain-decal.png",
+      "prompt": null,
+      "selection": "director-selected",
+      "runtimePath": "MagicShop/Resources/Assets.xcassets/DustPatch.imageset/DustPatch.png",
+      "runtimeHashMatches": true,
+      "alphaCorners": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "FloorCheckerStone",
+      "path": "design/assets/living-shop/FloorCheckerStone.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "sha256": "B06B3C4B6107B7B4DACC80A3A2BC561B0B47590C197BFA30DC25A51D55F7A4B5",
+      "source": "C:/Users/dmkra/.codex/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-c75a372e-9dda-4475-8d5b-1848cb4545df.png",
+      "prompt": "design/assets/living-shop/FloorCheckerStone-prompt.txt",
+      "selection": "director-selected",
+      "runtimePath": "MagicShop/Resources/Assets.xcassets/FloorCheckerStone.imageset/FloorCheckerStone.png",
+      "runtimeHashMatches": true,
+      "alphaCorners": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "FloorWarmOak",
+      "path": "design/assets/living-shop/FloorWarmOak.png",
+      "width": 1254,
+      "height": 1254,
+      "mode": "RGB",
+      "sha256": "8D876943117F60D1DB3A284FEEE7841F95913E6844544DAB4B0FCE250A3D3D59",
+      "source": "C:/Users/dmkra/.codex/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-0e8ae2bd-802c-4fae-b3ec-e726e364530a.png",
+      "prompt": "design/assets/living-shop/FloorWarmOak-prompt.txt",
+      "selection": "director-selected",
+      "runtimePath": "MagicShop/Resources/Assets.xcassets/FloorWarmOak.imageset/FloorWarmOak.png",
+      "runtimeHashMatches": true,
+      "alphaCorners": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "FloorTerracotta",
+      "path": "design/assets/living-shop/FloorTerracotta.png",
+      "width": 256,
+      "height": 256,
+      "mode": "RGB",
+      "sha256": "CF0B041D3620395A8CAD82B87D85D5FAC84E3777C9484B543217795615158FF7",
+      "source": "design/assets/first-slice/modular/floor/terracotta-tile-base.png",
+      "prompt": null,
+      "selection": "director-selected reused alias",
+      "runtimePath": "MagicShop/Resources/Assets.xcassets/FloorTerracotta.imageset/FloorTerracotta.png",
+      "runtimeHashMatches": true,
+      "alphaCorners": [
+        255,
+        255,
+        255,
+        255
+      ]
+    }
+  ]
+}

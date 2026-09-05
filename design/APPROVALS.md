@@ -177,3 +177,23 @@ visible above the panel; the purchase actions remain contained and legible.
 
 `runtime/0.2/current-manifest.json` identifies the 20 current screen captures;
 23 images remain archived including the three superseded Stock captures.
+
+
+## Living Shop 0.3 — current director-selected masters
+
+Selected on 2026-09-05 by the project director under the owner's explicit authorization of the 0.3 expansion and autonomous design decisions. The owner did not individually review these three generated images; this archive does not claim otherwise. Earlier references and proposal history remain preserved. These are full-screen visual specifications, not runtime or store screenshots.
+
+| Screen/state | Canonical image | Actual canvas | Language | SHA-256 |
+| --- | --- | --- | --- | --- |
+| Open, three concurrent browsers and response bubbles | [Living Open v2](approved/living-open-v2.png) | 852×1846 | English | `A7E9A8EFECA4C9D8471828D4BCDC8100603B23D09E62F7676FDA323B1C793EE0` |
+| Pricing, Glow Potion pending at $30 | [Living Pricing v1](approved/living-pricing-v1.png) | 851×1849 | English | `37D47B6112A67FF8FEEA4737685DD528D69ADD9EF45FC0849B5ACB6D0E1951BC` |
+| Care / Floor, four Oak tiles pending at $8 | [Living Care/Floors v1](approved/living-care-floors-v1.png) | 851×1849 | English | `D6330129292EE8CC00DBAAFEA72B91F115D079353ED7A65DB2DFC06339707144` |
+
+- Device/orientation: English iPhone, portrait; requested reference canvas 1206×2622. Built-in ImageGen returned the actual canvases listed above.
+- Source proposal history, exact prompts, inventory and fidelity notes: [Living Shop master manifest](proposals/living-shop/MANIFEST.md), [machine-readable manifest](proposals/living-shop/manifest.json). Open v1 remains historical in proposals and is not current.
+- Governing base: the final native 0.2 Stock screenshot and the restored-right screenshot. Preserve existing room geometry, plates, customer/product sprites, native safe areas and accessibility behavior. Generated restaging does not authorize changing the world's physical layout.
+- Product rules: the displayed 70% interest and example balances are illustrative; live pricing interest, costs, demand and balances come from Core. Exactly three product kinds remain. Each shelf slot holds one product.
+- Floor prices: Terracotta $1, Oak $2 and Checkered $3 per eligible tile. Floor preview is pending until Apply Floor. Clean is the compact companion state with sweeping gestures, initial three-pass repair progress and free recurrent dust removal.
+- Native adaptation: scrollable panel contents, Dynamic Type, VoiceOver labels, safe-area spacing and stepper layout may adapt to device. Retain the bounded teal/gold surfaces and clear actions; do not hide the world interaction area behind controls.
+- Runtime sources/imagesets: [Living Shop art manifest](assets/living-shop/MANIFEST.md). New PNGs are materials/decals only; full-screen masters are never flattened runtime backgrounds.
+- Comparable runtime captures: pending the 0.3 integration/CI capture and visual review. No post-implementation fidelity pass or pixel equality is claimed by archiving these masters.

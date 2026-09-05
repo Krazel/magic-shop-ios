@@ -14,20 +14,25 @@ struct ProvisionalRootView: View {
                     previewIsValid: model.isPlacementValid,
                     selectedFixtureID: model.selectedFixtureID,
                     activeVisit: model.activeVisit, visitProgress: model.visitProgress,
-                    lastOutcome: model.lastOutcome, reduceMotion: reduceMotion,
+                    lastOutcome: model.lastOutcome,
+                    presentationMinute: model.livingMinute,
+                    interactionTool: model.panel == .care ? (model.carePaint ? .paint : .clean) : .none,
+                    floorPreview: model.floorPreview,
+                    floorPreviewStyle: model.carePaint ? model.floorStyle : nil,
+                    reduceMotion: reduceMotion,
                     isPaused: model.isPaused || !model.isAppActive,
-                    contentLift: model.panel == .stock ? 180 : (model.flow.route == .buildCatalog || model.placementDraft != nil ? 105 : 0),
-                    onGridTap: model.setPlacementOrigin, onFixtureTap: model.selectFixture
+                    contentLift: model.panel == .stock ? 180 : (model.panel == .pricing ? 120 : (model.flow.route == .buildCatalog || model.placementDraft != nil ? 105 : 0)),
+                    onGridTap: model.setPlacementOrigin, onFixtureTap: model.selectFixture,
+                    onDragStart: model.beginWorldDrag, onDragMove: model.setPlacementOrigin,
+                    onDragEnd: model.finishWorldDrag, onToolStroke: model.toolStroke
                 )
                 .ignoresSafeArea()
-                .accessibilityLabel("Shop floor")
-                .accessibilityHint("Pinch to zoom or drag to explore. Select furniture using the Stock list or Build controls.")
 
                 VStack(spacing: 8) {
                     ShopHUD().dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     if model.state.onboardingCompleted {
                         CalendarBar().dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                        if model.isTrading { TradingStatus() }
+
                     }
                     Spacer(minLength: 6)
                     if model.state.onboardingCompleted {
@@ -68,9 +73,11 @@ struct ProvisionalRootView: View {
                 case .improvements: ImprovementsPanel()
                 case .journal: JournalPanel()
                 case .fixture: FixturePanel()
+                case .pricing: PricingPanel()
+                case .care: CarePanel()
                 case .none:
                     if !model.isTrading { PreparationHint() }
-                    else if let message = model.inlineMessage { Text(message).font(.callout).padding(14).magicPanel() }
+                    else { TradingStatus() }
                 }
             }
         }
@@ -134,9 +141,13 @@ private struct TradingStatus: View {
     var body: some View {
         VStack(spacing: 6) {
             HStack {
-                Text(model.isPaused ? "Shop paused" : "Shop open")
+                Text(model.isPaused ? "Shop paused" : "A lively afternoon")
                     .font(.system(.headline, design: .serif))
                 Spacer()
+                if model.state.livingDay != nil {
+                    Button("Prices") { model.showPanel(.pricing) }.frame(minHeight: 44)
+                    Button("Care") { model.showPanel(.care) }.frame(minHeight: 44)
+                }
                 Button { model.isFast.toggle() } label: {
                     Text(model.isFast ? "2×" : "1×").frame(width: 44, height: 44)
                 }.accessibilityLabel(model.isFast ? "Normal speed" : "Double speed")
@@ -144,10 +155,11 @@ private struct TradingStatus: View {
                     Image(systemName: model.isPaused ? "play.fill" : "pause.fill").frame(width: 44, height: 44)
                 }.accessibilityLabel(model.isPaused ? "Resume day" : "Pause day")
             }
-            ProgressView(value: Double(model.activeVisit?.id.index ?? 6) + model.visitProgress, total: 6)
+            ProgressView(value: model.tradingProgress, total: 1)
                 .tint(MagicPalette.gold).accessibilityLabel("Trading day progress")
             Text(model.visitorText).font(.caption).multilineTextAlignment(.center)
                 .accessibilityIdentifier("visitor-status")
+            InlineMessage()
         }.foregroundStyle(MagicPalette.parchment).padding(.horizontal, 14).padding(.bottom, 10).magicPanel(corner: 18)
     }
 }
@@ -253,7 +265,7 @@ private struct PlacementPanel: View {
         if let definition = model.placementDefinition {
             VStack(spacing: 8) {
                 Text(definition.displayName).font(.system(.headline, design: .serif))
-                Text(model.movingFixtureID == nil ? "$\(definition.price) · Tap the floor to position" : "Move for free · Stock stays on the display")
+                Text(model.movingFixtureID == nil ? "$\(definition.price) · Drag to position, then Place" : "Move for free · Stock stays on the display")
                     .font(.caption)
                 Text(model.placementMessage ?? "").font(.caption.weight(.semibold))
                     .foregroundStyle(model.isPlacementValid ? MagicPalette.mint : .orange)
@@ -308,9 +320,9 @@ private struct StockPanel: View {
                     if let item = model.selectedStock { stockedItem(item) }
                     else { productChoices }
                     HStack {
-                        Button("Move display", action: model.beginMovingSelectedFixture).font(.caption).frame(minHeight: 44)
+                        Button("Move display", action: model.beginMovingSelectedFixture).font(.caption).frame(minHeight: 44).disabled(model.state.phase != .preparing)
                         Spacer()
-                        Button("Manage", action: { model.panel = .fixture }).font(.caption).frame(minHeight: 44)
+                        Button("Prices", action: { model.showPanel(.pricing) }).font(.caption).frame(minHeight: 44)
                     }
                 }
             }
@@ -335,7 +347,7 @@ private struct StockPanel: View {
                                 Image(product.kind.assetName).resizable().scaledToFit().frame(width: 48, height: 52)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(product.displayName).font(.system(.headline, design: .serif))
-                                    Text("Buy $\(product.purchasePrice) · Sell $\(product.salePrice)").font(.subheadline.weight(.semibold)).foregroundStyle(MagicPalette.deepTeal)
+                                    Text("Buy $\(product.purchasePrice) · Sell $\(model.state.price(for: product.kind))").font(.subheadline.weight(.semibold)).foregroundStyle(MagicPalette.deepTeal)
                                     Text(product.kind == .pocketSpellbook ? "Shelf only" : product.kind == .luckyCharm ? "Table only" : "Table or shelf").font(.caption)
                                 }
                                 Spacer(minLength: 0)
@@ -363,6 +375,158 @@ private struct StockPanel: View {
                 Button("Return for $\(item.purchaseCost)", action: model.returnSelectedStock).frame(minHeight: 44).font(.callout.bold())
             }
         }.frame(maxWidth: .infinity).padding(10).foregroundStyle(MagicPalette.ink).parchmentCard()
+    }
+}
+
+private struct PricingPanel: View {
+    @EnvironmentObject private var model: AppModel
+    @State private var product: ProductKind = .glowPotion
+    @State private var draftPrice = 25
+    @State private var saved = false
+    private var quote: PricingQuote { model.pricingQuote(for: product, price: draftPrice) }
+    private var valid: Bool { (quote.minimumPrice...quote.maximumPrice).contains(draftPrice) }
+    private var comparison: String {
+        let percent = Int((Double(draftPrice) - Double(quote.marketPrice)) / Double(quote.marketPrice) * 100)
+        return percent == 0 ? "At market price" : "\(abs(percent))% \(percent > 0 ? "above" : "below") market"
+    }
+    var body: some View {
+        VStack(spacing: 8) {
+            PanelHeading(title: "Pricing", icon: "tag.fill")
+            ScrollView {
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(product.assetName).resizable().scaledToFit().frame(width: 40, height: 44)
+                        Picker("Product price", selection: $product) {
+                            ForEach(ProductCatalog.all, id: \.kind) { Text($0.displayName).tag($0.kind) }
+                        }.pickerStyle(.menu).tint(MagicPalette.ink).frame(maxWidth: .infinity, minHeight: 44)
+                    }.padding(6).parchmentCard()
+                    HStack {
+                        priceFact("Stock cost", quote.cost)
+                        Rectangle().fill(MagicPalette.gold).frame(width: 1, height: 36)
+                        priceFact("Market price", quote.marketPrice)
+                    }
+                    GoldDivider()
+                    Text("Your price").font(.system(.headline, design: .serif))
+                    HStack(spacing: 20) {
+                        Button { draftPrice = max(quote.minimumPrice, draftPrice - 1); saved = false } label: {
+                            Image(systemName: "minus").frame(width: 48, height: 48).overlay(Circle().stroke(MagicPalette.gold))
+                        }.accessibilityLabel("Lower price").disabled(draftPrice <= quote.minimumPrice)
+                        Text("$\(draftPrice)").font(.system(.largeTitle, design: .serif, weight: .bold)).monospacedDigit()
+                            .lineLimit(1).minimumScaleFactor(0.5).frame(minWidth: 95).accessibilityIdentifier("asking-price")
+                        Button { draftPrice = min(quote.maximumPrice, draftPrice + 1); saved = false } label: {
+                            Image(systemName: "plus").frame(width: 48, height: 48).overlay(Circle().stroke(MagicPalette.gold))
+                        }.accessibilityLabel("Raise price").disabled(draftPrice >= quote.maximumPrice)
+                    }.foregroundStyle(MagicPalette.gold)
+                    Text(comparison).font(.subheadline)
+                    VStack(spacing: 6) {
+                        HStack { Text("Estimated interest"); Spacer(); Text("\(quote.estimatedDemandPercent)%").monospacedDigit() }
+                        ProgressView(value: Double(quote.estimatedDemandPercent), total: 100).tint(MagicPalette.mint)
+                        Text("Among interested visitors. Their budget and available stock also matter.")
+                            .font(.caption).multilineTextAlignment(.center)
+                    }
+                    HStack(spacing: 8) {
+                        ForEach(ProductCatalog.all.filter { $0.kind != product }, id: \.kind) { item in
+                            Button { product = item.kind } label: {
+                                HStack(spacing: 6) {
+                                    Image(item.kind.assetName).resizable().scaledToFit().frame(width: 32, height: 38)
+                                    VStack(alignment: .leading) {
+                                        Text(item.displayName).font(.caption.bold())
+                                        Text("$\(model.state.price(for: item.kind))").font(.headline)
+                                    }
+                                }.frame(maxWidth: .infinity, minHeight: 52).padding(6).foregroundStyle(MagicPalette.ink).parchmentCard()
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                }.padding(.bottom, 5)
+            }
+            if saved { Text("Price saved").font(.caption).foregroundStyle(MagicPalette.mint).accessibilityIdentifier("price-saved") }
+            InlineMessage()
+            Button("Apply Price") { saved = model.applyPrice(draftPrice, for: product) }
+                .buttonStyle(GoldButtonStyle()).disabled(!valid).accessibilityIdentifier("apply-price")
+        }.foregroundStyle(MagicPalette.parchment).padding(15).magicPanel()
+            .onAppear { draftPrice = model.state.price(for: product) }
+            .onChange(of: product) { draftPrice = model.state.price(for: $0); saved = false }
+    }
+    private func priceFact(_ title: String, _ amount: Int) -> some View {
+        VStack(spacing: 3) { Text(title).font(.caption); Text("$\(amount)").font(.system(.title2, design: .serif, weight: .bold)) }
+            .frame(maxWidth: .infinity)
+    }
+}
+
+private struct CarePanel: View {
+    @EnvironmentObject private var model: AppModel
+    var body: some View {
+        VStack(spacing: 8) {
+            PanelHeading(title: "Care", icon: "paintbrush.fill")
+            HStack(spacing: 8) {
+                tab("Clean", paint: false)
+                tab("Floor", paint: true).disabled(model.state.phase != .preparing)
+            }
+            ScrollView {
+                if model.carePaint { floorControls }
+                else { cleanControls }
+            }.frame(maxHeight: model.carePaint ? 125 : 180)
+            if !model.careFeedback.isEmpty {
+                Text(model.careFeedback).font(.caption).foregroundStyle(MagicPalette.mint)
+                    .accessibilityIdentifier("care-feedback")
+            }
+            InlineMessage()
+            if model.carePaint {
+                HStack(spacing: 8) {
+                    Text("\(model.floorPreview.count) tiles\n$\(model.floorPreviewCost)").font(.caption.bold()).monospacedDigit()
+                        .accessibilityIdentifier("floor-preview-total")
+                    Button(action: model.cancelFloorPreview) {
+                        Image(systemName: "arrow.uturn.backward").frame(width: 44, height: 44)
+                    }.accessibilityLabel("Cancel floor preview")
+                    Button("Apply Floor") { _ = model.applyFloorPreview() }.buttonStyle(GoldButtonStyle())
+                        .disabled(model.floorPreview.isEmpty).accessibilityIdentifier("apply-floor")
+                }
+            }
+        }.foregroundStyle(MagicPalette.parchment).padding(14).magicPanel()
+    }
+    private func tab(_ title: String, paint: Bool) -> some View {
+        Button { model.carePaint = paint; model.cancelFloorPreview() } label: {
+            Text(title).font(.system(.headline, design: .serif)).frame(maxWidth: .infinity, minHeight: 44)
+                .background(model.carePaint == paint ? MagicPalette.teal : .black.opacity(0.2), in: Capsule())
+                .overlay(Capsule().stroke(MagicPalette.gold.opacity(model.carePaint == paint ? 1 : 0.3)))
+        }.accessibilityIdentifier(paint ? "care-floor" : "care-clean")
+    }
+    private var floorControls: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 7) {
+                material("Terracotta", asset: "FloorTerracotta", style: .terracotta)
+                material("Oak", asset: "FloorWarmOak", style: .warmOak)
+                material("Checkered", asset: "FloorCheckerStone", style: .checkerStone)
+            }
+            Text("Drag across tiles to preview. Pay only when you apply.").font(.caption).multilineTextAlignment(.center)
+        }
+    }
+    private func material(_ title: String, asset: String, style: FloorStyleID) -> some View {
+        Button { model.selectFloor(style) } label: {
+            VStack(spacing: 3) {
+                Image(asset).resizable().scaledToFill().frame(height: 38).clipped().clipShape(RoundedRectangle(cornerRadius: 5))
+                Text(title).font(.caption.bold())
+                Text("$\(ShopCare.paintCost(for: style) ?? 0) / tile").font(.caption2)
+            }.padding(7).frame(maxWidth: .infinity).foregroundStyle(MagicPalette.ink).parchmentCard()
+                .overlay(RoundedRectangle(cornerRadius: 15).stroke(model.floorStyle == style ? MagicPalette.gold : .clear, lineWidth: 3))
+        }.buttonStyle(.plain).accessibilityIdentifier("floor-\(style.rawValue)")
+    }
+    private var cleanControls: some View {
+        VStack(spacing: 5) {
+            Text("Drag over dust to sweep. Three passes clear each worn area.").font(.caption).multilineTextAlignment(.center)
+            ForEach(RepairCatalog.all) { repair in
+                let progress = model.state.repairProgress(for: repair.id)
+                Button { model.cleanGroup(repair.id) } label: {
+                    HStack {
+                        Image(systemName: progress == 3 ? "checkmark.circle.fill" : "paintbrush.fill")
+                        Text(repair.displayName); Spacer(); Text("\(progress)/3")
+                    }.font(.caption.bold()).frame(minHeight: 44)
+                }.disabled(progress == 3).accessibilityIdentifier("sweep-\(repair.id.rawValue)")
+            }
+            Button("Sweep a dusty tile · \(model.dirtyTileCount) left", action: model.cleanNextDust)
+                .font(.caption.bold()).frame(minHeight: 44).disabled(model.dirtyTileCount == 0)
+            if model.state.phase == .open { Text("Lay new floors after closing.").font(.caption2) }
+        }
     }
 }
 
@@ -394,7 +558,7 @@ private struct FixturePanel: View {
 private struct SummaryPanel: View {
     @EnvironmentObject private var model: AppModel
     var body: some View {
-        if let summary = model.state.currentDay?.summary {
+        if let summary = model.daySummary {
             VStack(spacing: 12) {
                 Image(systemName: "moon.stars.fill").font(.title).foregroundStyle(MagicPalette.gold).accessibilityHidden(true)
                 Text("Day complete").font(.system(.title, design: .serif, weight: .bold))
@@ -405,7 +569,7 @@ private struct SummaryPanel: View {
                     summaryRow("Stock cost", summary.costOfGoods)
                     summaryRow("Profit", summary.profit)
                 }.font(.system(.title3, design: .serif)).padding(.horizontal, 20)
-                Text(summary.customersServed == 6 ? "Every visitor found a little magic." : "\(summary.customersWithoutPurchase) visitors left without buying. Try a mix of all three products tomorrow.")
+                Text(summary.customersServed == summary.visitorCount ? "Every visitor found a little magic." : "\(summary.customersWithoutPurchase) visitors left without buying. Try adjusting prices or your mix of products tomorrow.")
                     .font(.callout).multilineTextAlignment(.center)
                 Button("Prepare Day \(summary.dayNumber + 1)", action: model.prepareNextDay)
                     .buttonStyle(GoldButtonStyle()).accessibilityIdentifier("prepare-next-day")
@@ -422,7 +586,7 @@ private struct PreparationHint: View {
         VStack(spacing: 6) {
             Text(model.state.hasCompletedRestoration ? "Your little shop is restored ✦" : model.state.fixtures.isEmpty ? "A little magic starts here" : model.state.stock.isEmpty ? "Your displays are waiting" : "Ready when you are")
                 .font(.system(.headline, design: .serif))
-            Text(model.state.fixtures.isEmpty ? "BUILD a display, STOCK an item, then OPEN your doors." : model.state.stock.isEmpty ? "Stock a few curious things. Each slot holds one item." : "Two visitors per product today. Unsold stock stays for tomorrow.")
+            Text(model.state.fixtures.isEmpty ? "BUILD a display, STOCK an item, then OPEN your doors." : model.state.stock.isEmpty ? "Stock a few curious things. Each slot holds one item." : "Hold and drag furniture. Set your prices, then welcome curious visitors.")
                 .font(.caption).multilineTextAlignment(.center)
             HStack {
                 Button("Improve the shop") { model.showPanel(.improvements) }.frame(minHeight: 44)
@@ -431,7 +595,8 @@ private struct PreparationHint: View {
                     Button("Arrange") { model.showPanel(.fixture) }.frame(minHeight: 44)
                     Spacer()
                 }
-                Button("Journal") { model.showPanel(.journal) }.frame(minHeight: 44)
+                Button("Prices") { model.showPanel(.pricing) }.frame(minHeight: 44)
+                Button("Care") { model.showPanel(.care) }.frame(minHeight: 44)
             }.font(.caption.bold()).foregroundStyle(MagicPalette.gold)
             InlineMessage()
         }.foregroundStyle(MagicPalette.parchment).padding(.horizontal, 14).padding(.top, 12).magicPanel(corner: 20)
@@ -443,7 +608,7 @@ private struct BottomNavigation: View {
     var body: some View {
         HStack(spacing: 8) {
             nav("BUILD", "hammer.fill", MagicPalette.purple, model.state.phase == .preparing, model.flow.route == .buildCatalog, model.openBuild)
-            nav("STOCK", "shippingbox.fill", MagicPalette.coral, model.state.phase == .preparing, model.panel == .stock) { model.showPanel(.stock) }
+            nav("STOCK", "shippingbox.fill", MagicPalette.coral, model.canManageStock, model.panel == .stock) { model.showPanel(.stock) }
             nav("OPEN", "storefront.fill", MagicPalette.teal, model.state.phase == .preparing, model.isTrading, model.startDay)
         }
     }
@@ -633,14 +798,14 @@ private struct ImprovementsPanel: View {
                             Spacer()
                             if finished { Text("Done").font(.caption).foregroundStyle(MagicPalette.mint) }
                             else {
-                                Button("$\(repair.price)") { model.repair(repair.id) }
-                                    .buttonStyle(GoldButtonStyle()).frame(width: 90)
-                                    .disabled(model.repairFailure(repair.id) != nil)
-                                    .accessibilityLabel("\(repair.displayName), \(repair.price) dollars")
+                                Button("Clean · \(model.state.repairProgress(for: repair.id))/3") {
+                                    model.showPanel(.care); model.carePaint = false
+                                }.font(.caption.bold()).frame(minWidth: 90, minHeight: 44)
+                                    .accessibilityLabel("Clean \(repair.displayName) by hand")
                             }
                         }.padding(10).background(.black.opacity(0.16), in: RoundedRectangle(cornerRadius: 12))
                     }
-                    Text("Every repair clears real space for your displays.").font(.caption)
+                    Text("Sweep each worn area three times for free. Every repair clears real space for your displays.").font(.caption)
                     GoldDivider()
                     Text("Make it yours").font(.system(.headline, design: .serif))
                     Text("Plants, starlight, framed moons and warm brass. Pick your favorites in Build → Decor.").font(.callout)
@@ -690,7 +855,7 @@ private struct JournalPanel: View {
                     goal("Add a cozy new room", progress.hasExpansion ? 1 : 0, 1)
                     GoldDivider()
                     Text("Your rhythm").font(.system(.headline, design: .serif))
-                    Text("Prepare for as long as you like. Open from 09:00 to 18:00, with two visitors for each product. Pause or use 2× speed whenever you like. Time stops while the app is away.").font(.callout)
+                    Text("Prepare for as long as you like. Open from 09:00 to 18:00. Visitors arrive at different times, browse together and compare your prices with their budgets. Pause or use 2× speed whenever you like. Time stops while the app is away. Refill displays, adjust prices or sweep while the shop is open.").font(.callout)
                     Text("One item per display slot. Unsold stock stays overnight. Return items or sell empty furniture at their purchase price whenever you want to try something different.").font(.callout)
                     if !model.state.dayHistory.isEmpty {
                         GoldDivider()

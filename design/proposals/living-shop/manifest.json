@@ -1,0 +1,85 @@
+{
+  "package": "Magic Shop 0.3 living-shop",
+  "selectedDate": "2026-09-05",
+  "authority": "Director selection under explicit owner delegation; not separately owner-reviewed",
+  "production": "Built-in ImageGen, except byte-identical reused DustPatch",
+  "language": "en",
+  "items": [
+    {
+      "name": "01-open-living-v1",
+      "path": "design/proposals/living-shop/01-open-living-v1.png",
+      "width": 851,
+      "height": 1849,
+      "mode": "RGB",
+      "sha256": "64F0FE8B6ED843217DBD8CEDFE24205D4B7564965F5D7DF9388563170B45B4A5",
+      "source": "C:/Users/dmkra/.codex/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-bb46bfff-1f99-4335-9aea-9c659c92e393.png",
+      "prompt": "design/proposals/living-shop/01-open-living-v1-prompt.txt",
+      "selection": "superseded-preserved",
+      "runtimePath": null,
+      "runtimeHashMatches": null,
+      "alphaCorners": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "01-open-living-v2",
+      "path": "design/proposals/living-shop/01-open-living-v2.png",
+      "width": 852,
+      "height": 1846,
+      "mode": "RGB",
+      "sha256": "A7E9A8EFECA4C9D8471828D4BCDC8100603B23D09E62F7676FDA323B1C793EE0",
+      "source": "C:/Users/dmkra/.codex/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-2432448e-a859-45aa-bc61-25498d9aaa8c.png",
+      "prompt": "design/proposals/living-shop/01-open-living-v2-prompt.txt",
+      "selection": "director-selected",
+      "runtimePath": null,
+      "runtimeHashMatches": null,
+      "alphaCorners": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "02-pricing-v1",
+      "path": "design/proposals/living-shop/02-pricing-v1.png",
+      "width": 851,
+      "height": 1849,
+      "mode": "RGB",
+      "sha256": "37D47B6112A67FF8FEEA4737685DD528D69ADD9EF45FC0849B5ACB6D0E1951BC",
+      "source": "C:/Users/dmkra/.codex/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-3b9f652b-63ed-4270-be39-9e49bf5a6f7b.png",
+      "prompt": "design/proposals/living-shop/02-pricing-v1-prompt.txt",
+      "selection": "director-selected",
+      "runtimePath": null,
+      "runtimeHashMatches": null,
+      "alphaCorners": [
+        255,
+        255,
+        255,
+        255
+      ]
+    },
+    {
+      "name": "03-care-floors-v1",
+      "path": "design/proposals/living-shop/03-care-floors-v1.png",
+      "width": 851,
+      "height": 1849,
+      "mode": "RGB",
+      "sha256": "D6330129292EE8CC00DBAAFEA72B91F115D079353ED7A65DB2DFC06339707144",
+      "source": "C:/Users/dmkra/.codex/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-01c962b5-e11e-446c-8565-d8db94007b4f.png",
+      "prompt": "design/proposals/living-shop/03-care-floors-v1-prompt.txt",
+      "selection": "director-selected",
+      "runtimePath": null,
+      "runtimeHashMatches": null,
+      "alphaCorners": [
+        255,
+        255,
+        255,
+        255
+      ]
+    }
+  ]
+}

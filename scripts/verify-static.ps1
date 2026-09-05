@@ -65,7 +65,7 @@ Assert-True (-not $package.Contains('MagicShop/World')) 'Package.swift must not 
 
 $project = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop.xcodeproj\project.pbxproj') -Raw
 Assert-True ($project.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0;')) 'iOS deployment target must be 16.0.'
-Assert-True ($project.Contains('MARKETING_VERSION = 0.2;')) 'Marketing version must be 0.2.'
+Assert-True ($project.Contains('MARKETING_VERSION = 0.3;')) 'Marketing version must be 0.3.'
 Assert-True ($project.Contains('CURRENT_PROJECT_VERSION = 1;')) 'Build number must be 1.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.application";')) 'App target is missing.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.bundle.unit-test";')) 'Unit-test target is missing.'
@@ -83,7 +83,7 @@ Assert-True (-not $sideloadWorkflow.Contains('pull_request:')) 'Sideloadly IPA w
 Assert-True (-not $sideloadWorkflow.Contains('push:')) 'Sideloadly IPA workflow must not run on push.'
 Assert-True ($sideloadWorkflow.Contains('runs-on: macos-15')) 'Sideloadly IPA workflow must use a macOS runner.'
 Assert-True ($sideloadWorkflow.Contains('build-sideloadly-ipa.sh')) 'Sideloadly IPA workflow must use the reviewed build script.'
-Assert-True ($sideloadWorkflow.Contains('MagicShop-0.2-build-1-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
+Assert-True ($sideloadWorkflow.Contains('MagicShop-0.3-build-1-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
 Assert-True ($sideloadWorkflow.Contains('actions/upload-artifact@v4')) 'Sideloadly IPA artifact is not retained.'
 
 $sideloadScript = Get-Content -LiteralPath (Join-Path $projectRoot 'scripts\build-sideloadly-ipa.sh') -Raw
@@ -156,13 +156,13 @@ Assert-True ($worldMap.Contains('commonWallAdjacency')) 'Wall adjacency metadata
 Assert-True ($worldMap.Contains('CameraViewportTransform')) 'Testable screen/world transform is missing.'
 
 $gameState = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop\Core\Domain\GameState.swift') -Raw
-Assert-True ($gameState.Contains('currentSchemaVersion = 4')) 'GameState schema must include commerce and world persistence.'
+Assert-True ($gameState.Contains('currentSchemaVersion = 5')) 'GameState schema must include commerce and world persistence.'
 Assert-True ($gameState.Contains('public var world: ShopWorldState')) 'GameState must persist ShopWorldState.'
 
 $shopScene = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop\World\ShopScene.swift') -Raw
 Assert-True ($shopScene.Contains('StarterShopBackground')) 'ShopScene must render the approved clean background directly.'
 Assert-True (-not $shopScene.Contains('addPlacementGrid')) 'ShopScene must not draw a visible placement grid.'
-Assert-True (-not ($shopScene -match 'RearPlasterPanel|WornTerracottaTile|FacadeEntranceBay|HangingLamp')) 'ShopScene must not assemble the modular environment.'
+Assert-True (-not ($shopScene -match 'RearPlasterPanel|FacadeEntranceBay|HangingLamp')) 'ShopScene must preserve the approved walls and facade; painted floor materials are allowed.'
 
 $implementationText = ($allProjectSwift | ForEach-Object {
     Get-Content -LiteralPath $_.FullName -Raw
@@ -329,6 +329,15 @@ foreach ($entry in $commerceApprovals.GetEnumerator()) {
  $path = Join-Path $projectRoot "design\approved\$($entry.Key)"
  Assert-True ((Test-Path -LiteralPath $path) -and (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -eq $entry.Value) "Commerce master changed or missing: $($entry.Key)"
 }
+
+foreach ($assetName in @('FloorTerracotta','FloorWarmOak','FloorCheckerStone','DustPatch')) {
+    $source = Join-Path $projectRoot "design\assets\living-shop\$assetName.png"
+    $runtime = Join-Path $projectRoot "MagicShop\Resources\Assets.xcassets\$assetName.imageset\$assetName.png"
+    Assert-True ((Test-Path -LiteralPath $source) -and (Test-Path -LiteralPath $runtime)) "Missing living-shop source/runtime: $assetName"
+    if ((Test-Path -LiteralPath $source) -and (Test-Path -LiteralPath $runtime)) {
+        Assert-True ((Get-FileHash -LiteralPath $source).Hash -eq (Get-FileHash -LiteralPath $runtime).Hash) "Living-shop source/runtime mismatch: $assetName"
+    }
+}
 if ($failures.Count -gt 0) {
     Write-Output 'STATIC VERIFICATION: FAIL'
     foreach ($failure in $failures) { Write-Output "- $failure" }
@@ -340,7 +349,7 @@ Write-Output "- Required files: $($requiredFiles.Count)"
 Write-Output "- Core Swift files: $($coreSwift.Count)"
 Write-Output "- XCTest methods declared: $testCount"
 Write-Output '- Package.swift excludes SwiftUI/SpriteKit sources'
-Write-Output '- iOS 16.0, version 0.2, build 1'
+Write-Output '- iOS 16.0, version 0.3, build 1'
 Write-Output '- Git repository and unsigned macOS iOS CI workflow verified'
 Write-Output '- Manual unsigned iphoneos IPA workflow for Sideloadly verified'
 Write-Output '- Seven owner approval hashes verified; complete-game runtime images have archived sources and real sprite alpha'

@@ -9,6 +9,9 @@ public struct FloorStyleID: RawRepresentable, Codable, Equatable, Hashable, Send
     }
 
     public static let wornTerracotta = FloorStyleID(rawValue: "wornTerracotta")
+    public static let terracotta = FloorStyleID(rawValue: "terracotta")
+    public static let warmOak = FloorStyleID(rawValue: "warmOak")
+    public static let checkerStone = FloorStyleID(rawValue: "checkerStone")
 }
 
 public struct FloorStyle: Equatable, Hashable, Sendable {
@@ -58,7 +61,17 @@ public enum FloorStyleCatalog {
         groutColorHex: "512C24"
     )
 
-    public static let all: [FloorStyle] = [wornTerracotta]
+    public static let terracotta = FloorStyle(id: .terracotta, displayName: "Terracotta",
+        textureAssetName: "FloorTerracotta", baseColorHex: "B7704B",
+        alternateColorHex: "A65E35", groutColorHex: "673D2A")
+    public static let warmOak = FloorStyle(id: .warmOak, displayName: "Warm Oak",
+        textureAssetName: "FloorWarmOak", baseColorHex: "B88956",
+        alternateColorHex: "9D7147", groutColorHex: "634831")
+    public static let checkerStone = FloorStyle(id: .checkerStone, displayName: "Checker Stone",
+        textureAssetName: "FloorCheckerStone", baseColorHex: "D9CFB4",
+        alternateColorHex: "718E82", groutColorHex: "53665E")
+    public static let paintable: [FloorStyle] = [terracotta, warmOak, checkerStone]
+    public static let all: [FloorStyle] = [wornTerracotta] + paintable
 
     public static func definition(for id: FloorStyleID) -> FloorStyle? {
         all.first { $0.id == id }

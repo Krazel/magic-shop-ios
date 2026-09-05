@@ -4,7 +4,7 @@ import XCTest
 
 final class CompleteAppModelTests: XCTestCase {
     @MainActor
-    func testClockPausesAndSixVisitsFinishWithoutDuplicateSales() async throws {
+    func testClockPausesAndTwelveLivingVisitorsFinishWithoutDuplicateSales() async throws {
         let store = InMemoryGameStateStore()
         let model = AppModel(store: store)
         model.shopNameInput = "Clockwork Curios"
@@ -17,20 +17,22 @@ final class CompleteAppModelTests: XCTestCase {
         model.startDay()
         XCTAssertEqual(model.clockText, "09:00")
         model.setAppActive(false)
-        for _ in 0..<200 { model.tick(seconds: 0.25) }
+        for _ in 0..<300 { model.tick(seconds: 0.25) }
         XCTAssertEqual(model.state.balance, 440)
-        XCTAssertEqual(model.visitProgress, 0)
+        XCTAssertEqual(model.state.livingDay?.minute, 540)
+        XCTAssertEqual(model.livingMinute, 540)
         model.setAppActive(true)
         model.togglePause()
         model.tick(seconds: 0.25)
-        XCTAssertEqual(model.visitProgress, 0)
+        XCTAssertEqual(model.state.livingDay?.minute, 540)
+        XCTAssertEqual(model.livingMinute, 540)
         model.togglePause()
-        for _ in 0..<200 { model.tick(seconds: 0.25) }
+        for _ in 0..<300 { model.tick(seconds: 0.25) }
         XCTAssertTrue(model.showsSummary)
         XCTAssertEqual(model.clockText, "18:00")
         XCTAssertEqual(model.state.balance, 465)
-        XCTAssertEqual(model.state.currentDay?.outcomes.count, 6)
-        for _ in 0..<200 { model.tick(seconds: 0.25) }
+        XCTAssertEqual(model.state.livingDay?.outcomes.count, 12)
+        for _ in 0..<300 { model.tick(seconds: 0.25) }
         XCTAssertEqual(model.state.balance, 465)
         model.prepareNextDay()
         XCTAssertEqual(model.state.calendar.weekdayName, "Tuesday")
@@ -50,20 +52,20 @@ final class CompleteAppModelTests: XCTestCase {
         model.showPanel(.stock)
         XCTAssertTrue(model.confirmStock())
         model.startDay()
-        let token = model.activeVisit?.id
+        let token = try XCTUnwrap(model.state.livingDay).id
         store.failWrites = true
         for _ in 0..<30 { model.tick(seconds: 0.25) }
         XCTAssertTrue(model.isPaused)
         XCTAssertEqual(model.state.balance, 440)
-        XCTAssertEqual(model.state.currentDay?.nextVisitIndex, 0)
-        XCTAssertEqual(model.activeVisit?.id, token)
+        XCTAssertEqual(model.state.livingDay?.minute, 540)
+        XCTAssertEqual(model.state.livingDay?.id, token)
         store.failWrites = false
         model.togglePause()
-        for _ in 0..<30 { model.tick(seconds: 0.25) }
+        for _ in 0..<90 { model.tick(seconds: 0.25) }
         XCTAssertEqual(model.state.balance, 465)
-        XCTAssertEqual(model.state.currentDay?.sales.count, 1)
+        XCTAssertEqual(model.state.livingDay?.sales.count, 1)
         let restored = AppModel(store: store)
-        for _ in 0..<180 { restored.tick(seconds: 0.25) }
+        for _ in 0..<300 { restored.tick(seconds: 0.25) }
         XCTAssertEqual(restored.state.balance, 465)
         XCTAssertTrue(restored.showsSummary)
     }

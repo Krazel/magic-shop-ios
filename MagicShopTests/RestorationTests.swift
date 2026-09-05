@@ -271,7 +271,7 @@ final class RestorationTests: XCTestCase {
         var legacy = engine.state
         legacy.schemaVersion = 3
         let migrated = try JSONDecoder().decode(GameState.self, from: JSONEncoder().encode(legacy))
-        XCTAssertEqual(migrated.schemaVersion, 4)
+        XCTAssertEqual(migrated.schemaVersion, GameState.currentSchemaVersion)
         XCTAssertEqual(migrated.currentDay, engine.state.currentDay)
         XCTAssertEqual(migrated.balance, engine.state.balance)
         XCTAssertEqual(migrated.calendar.timeText, "10:30")

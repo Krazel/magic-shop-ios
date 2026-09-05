@@ -163,10 +163,34 @@ public struct ShopDayState: Identifiable, Codable, Equatable, Sendable {
 
 /// Acknowledged summaries are history, not pending rewards. Revenue was already
 /// credited during the corresponding visitor transaction.
+public enum DaySimulationKind: String, Codable, Sendable { case legacy, living }
+
 public struct DaySummary: Identifiable, Codable, Equatable, Sendable {
     public let id: UUID
     public let dayNumber: Int
     public let outcomes: [VisitOutcome]
+    public let simulation: DaySimulationKind
+    public let seed: UInt64?
+    public var visitorCount: Int { simulation == .living ? LivingShopDay.visitorCount : ShopDayState.visitorCount }
+
+    public init(id: UUID, dayNumber: Int, outcomes: [VisitOutcome],
+                simulation: DaySimulationKind = .legacy, seed: UInt64? = nil) {
+        self.id = id
+        self.dayNumber = dayNumber
+        self.outcomes = outcomes
+        self.simulation = simulation
+        self.seed = seed
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, dayNumber, outcomes, simulation, seed }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        id = try values.decode(UUID.self, forKey: .id)
+        dayNumber = try values.decode(Int.self, forKey: .dayNumber)
+        outcomes = try values.decode([VisitOutcome].self, forKey: .outcomes)
+        simulation = try values.decodeIfPresent(DaySimulationKind.self, forKey: .simulation) ?? .legacy
+        seed = try values.decodeIfPresent(UInt64.self, forKey: .seed)
+    }
 
     public var sales: [SaleReceipt] { outcomes.compactMap(\.sale) }
     public var revenue: Int { sales.reduce(0) { $0 + $1.revenue } }

@@ -1,7 +1,7 @@
 import Foundation
 
 public struct GameState: Codable, Equatable, Sendable {
-    public static let currentSchemaVersion = 4
+    public static let currentSchemaVersion = 5
     public static let startingBalance = 500
 
     public var schemaVersion: Int
@@ -15,6 +15,10 @@ public struct GameState: Codable, Equatable, Sendable {
     public var currentDay: ShopDayState?
     public var dayHistory: [DaySummary]
     public var restoration: ShopRestorationState
+    public var livingDay: LivingShopDay?
+    public var pricing: [ProductKind: Int]
+    public var dirt: [GridPoint: Int]
+    public var manualRepairProgress: [RestorationGroupID: Int]
 
     public init(
         schemaVersion: Int = GameState.currentSchemaVersion,
@@ -27,7 +31,11 @@ public struct GameState: Codable, Equatable, Sendable {
         phase: ShopPhase = .preparing,
         currentDay: ShopDayState? = nil,
         dayHistory: [DaySummary] = [],
-        restoration: ShopRestorationState = .initial
+        restoration: ShopRestorationState = .initial,
+        livingDay: LivingShopDay? = nil,
+        pricing: [ProductKind: Int] = ShopPricing.marketPrices,
+        dirt: [GridPoint: Int] = [:],
+        manualRepairProgress: [RestorationGroupID: Int] = [:]
     ) {
         self.schemaVersion = schemaVersion
         self.shopName = shopName
@@ -40,6 +48,10 @@ public struct GameState: Codable, Equatable, Sendable {
         self.currentDay = currentDay
         self.dayHistory = dayHistory
         self.restoration = restoration
+        self.livingDay = livingDay
+        self.pricing = pricing
+        self.dirt = dirt
+        self.manualRepairProgress = manualRepairProgress
     }
 
     public static var initial: GameState { GameState() }
@@ -48,6 +60,7 @@ public struct GameState: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case schemaVersion, shopName, onboardingCompleted, balance, fixtures, world
         case stock, phase, currentDay, dayHistory, restoration
+        case livingDay, pricing, dirt, manualRepairProgress
     }
 
     public init(from decoder: Decoder) throws {
@@ -99,6 +112,17 @@ public struct GameState: Codable, Equatable, Sendable {
         } else {
             restoration = try container.decode(ShopRestorationState.self, forKey: .restoration)
         }
+        if savedVersion >= 5 {
+            pricing = try container.decode([ProductKind: Int].self, forKey: .pricing)
+            dirt = try container.decode([GridPoint: Int].self, forKey: .dirt)
+            manualRepairProgress = try container.decode([RestorationGroupID: Int].self, forKey: .manualRepairProgress)
+            livingDay = try container.decodeIfPresent(LivingShopDay.self, forKey: .livingDay)
+        } else {
+            pricing = ShopPricing.marketPrices
+            dirt = [:]
+            manualRepairProgress = [:]
+            livingDay = nil
+        }
         try validateIntegrity()
     }
 
@@ -109,6 +133,20 @@ public struct GameState: Codable, Equatable, Sendable {
             throw GameStateValidationError.unsupportedSchemaVersion(schemaVersion)
         }
         guard balance >= 0 else { throw invalid("Negative balance") }
+        guard Set(pricing.keys) == Set(ProductKind.allCases),
+              pricing.allSatisfy({ product, price in
+                  let definition = ProductCatalog.definition(for: product)
+                  return (definition.purchasePrice...(definition.salePrice * 3)).contains(price)
+              }) else { throw invalid("Invalid product pricing") }
+        guard dirt.count <= ShopCare.maximumDirtCells, dirt.allSatisfy({ point, level in
+            guard let cell = world.hitMap.cell(at: point) else { return false }
+            return cell.zone != .outside && cell.staticBlocker == nil && (1...3).contains(level)
+        }) else { throw invalid("Invalid dirt cells") }
+        guard manualRepairProgress.allSatisfy({ group, progress in
+            (1..<ShopCare.repairStrokesRequired).contains(progress) &&
+            !restoration.repairedGroups.contains(group) &&
+            world.hitMap.cells.contains { $0.staticBlocker == RepairCatalog.definition(for: group).blocker }
+        }) else { throw invalid("Invalid manual repair progress") }
         let layout = world.hitMap.layout
         let cellCount = layout.width.multipliedReportingOverflow(by: layout.depth)
         guard layout.width > 0, layout.depth > 0, !cellCount.overflow,
@@ -159,16 +197,26 @@ public struct GameState: Codable, Equatable, Sendable {
         for (index, summary) in dayHistory.enumerated() {
             guard summary.dayNumber == index + 1,
                   dayIDs.insert(summary.id).inserted,
-                  summary.outcomes.count == ShopDayState.visitorCount else {
+                  summary.outcomes.count == summary.visitorCount,
+                  (summary.simulation == .living) == (summary.seed != nil) else {
                 throw invalid("Invalid day history")
             }
             try validateOutcomes(summary.outcomes, dayID: summary.id,
-                                 dayNumber: summary.dayNumber, soldIDs: &soldIDs)
+                                 dayNumber: summary.dayNumber, soldIDs: &soldIDs,
+                                 simulation: summary.simulation)
         }
         switch phase {
         case .preparing:
-            guard currentDay == nil else { throw invalid("Preparing with an active day") }
+            guard currentDay == nil, livingDay == nil else { throw invalid("Preparing with an active day") }
         case .open, .summary:
+            if let day = livingDay {
+                guard currentDay == nil, onboardingCompleted, day.dayNumber == dayHistory.count + 1,
+                      dayIDs.insert(day.id).inserted, (phase == .summary) == day.isFinished else {
+                    throw invalid("Inconsistent living day or phase")
+                }
+                try day.validate(in: self, soldIDs: &soldIDs)
+                break
+            }
             guard onboardingCompleted,
                   let day = currentDay,
                   day.dayNumber == dayHistory.count + 1,
@@ -224,21 +272,23 @@ public struct GameState: Codable, Equatable, Sendable {
         _ outcomes: [VisitOutcome],
         dayID: UUID,
         dayNumber: Int,
-        soldIDs: inout Set<UUID>
+        soldIDs: inout Set<UUID>,
+        simulation: DaySimulationKind = .legacy
     ) throws {
-        guard outcomes.count <= ShopDayState.visitorCount else {
+        let limit = simulation == .living ? LivingShopDay.visitorCount : ShopDayState.visitorCount
+        guard outcomes.count <= limit else {
             throw invalid("Too many visitor outcomes")
         }
         let expected = ShopDayState(id: dayID, dayNumber: dayNumber, openingBalance: 0).visitors
         var revenue = 0
         var costOfGoods = 0
         for (index, outcome) in outcomes.enumerated() {
-            guard outcome.visitID == expected[index].id,
-                  outcome.requestedProduct == expected[index].requestedProduct else {
+            guard outcome.visitID == VisitID(dayID: dayID, index: index),
+                  simulation == .living || outcome.requestedProduct == expected[index].requestedProduct else {
                 throw invalid("Visitor journal is out of order")
             }
             if let sale = outcome.sale {
-                guard sale.product == outcome.requestedProduct,
+                guard (simulation == .living || sale.product == outcome.requestedProduct),
                       sale.revenue >= 0, sale.costOfGoods >= 0,
                       sale.slotIndex >= 0,
                       sale.slotIndex < FixtureCatalog.simpleShelf.stockCapacity,

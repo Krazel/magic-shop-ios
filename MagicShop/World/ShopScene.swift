@@ -22,6 +22,47 @@ final class ShopScene: SKScene {
         let product: ProductKind
     }
 
+    private final class LivingCustomerArt {
+        let root = SKNode()
+        let body = SKSpriteNode()
+        let shadow: SKShapeNode
+        let bubble = SKNode()
+        let bubbleShape: SKShapeNode
+        let icon = SKSpriteNode()
+        let caption = SKLabelNode(fontNamed: "Georgia")
+        let carried = SKSpriteNode()
+        var imageName = ""
+        var bubbleKey = ""
+
+        init(tileWidth: CGFloat, tileHeight: CGFloat) {
+            shadow = SKShapeNode(ellipseOf: CGSize(width: tileWidth * 0.62, height: tileHeight * 0.22))
+            shadow.fillColor = SKColor(white: 0, alpha: 0.20)
+            shadow.strokeColor = .clear
+            shadow.zPosition = 0
+            body.anchorPoint = CGPoint(x: 0.5, y: 0.045)
+            body.zPosition = 1
+            carried.zPosition = 2
+            bubbleShape = SKShapeNode(rectOf: CGSize(width: tileWidth * 2.25, height: tileHeight * 0.76),
+                                      cornerRadius: tileHeight * 0.22)
+            bubbleShape.fillColor = SKColor(red: 0.98, green: 0.93, blue: 0.80, alpha: 0.96)
+            bubbleShape.strokeColor = SKColor(red: 0.69, green: 0.48, blue: 0.22, alpha: 0.90)
+            bubbleShape.lineWidth = 0.8
+            bubble.addChild(bubbleShape)
+            icon.position.x = -tileWidth * 0.77
+            bubble.addChild(icon)
+            caption.fontSize = max(7, tileWidth * 0.30)
+            caption.fontColor = SKColor(red: 0.22, green: 0.18, blue: 0.12, alpha: 1)
+            caption.verticalAlignmentMode = .center
+            caption.position.x = tileWidth * 0.23
+            bubble.addChild(caption)
+            bubble.zPosition = 4
+            root.addChild(shadow)
+            root.addChild(body)
+            root.addChild(carried)
+            root.addChild(bubble)
+        }
+    }
+
     private let plateEdgeShader = SKShader(source: """
         void main() {
             vec2 distanceToEdge = min(v_tex_coord, vec2(1.0) - v_tex_coord);
@@ -30,14 +71,20 @@ final class ShopScene: SKScene {
         }
         """)
     private let environmentRoot = SKNode()
+    private let floorRoot = SKNode()
+    private let floorPreviewRoot = SKNode()
+    private let dirtRoot = SKNode()
     private let furnitureRoot = SKNode()
     private let previewRoot = SKNode()
     private let customerRoot = SKNode()
+    private let livingRoot = SKNode()
     private let feedbackRoot = SKNode()
     private let worldCamera = SKCameraNode()
     private var textures: [String: SKTexture] = [:]
     private var renderedState = GameState.initial
     private var renderedPreview: PlacementDraft?
+    private var renderedFloorPreview: [GridPoint] = []
+    private var renderedFloorPreviewStyle: FloorStyleID?
     private var renderedPreviewValid = false
     private var selectedFixtureID: UUID?
     private var reducedMotion = false
@@ -55,6 +102,11 @@ final class ShopScene: SKScene {
     private var thoughtNode: SKNode?
     private var carriedProduct: SKSpriteNode?
     private var glowNodes: [SKShapeNode] = []
+    private var livingDayID: UUID?
+    private var livingCustomers: [VisitID: LivingCustomerArt] = [:]
+    private var handledLivingOutcomes = Set<VisitID>()
+    private var targetLivingMinute = 540.0
+    private var displayedLivingMinute = 540.0
     private var lastFrameTime: TimeInterval?
     private var cameraState = WorldCameraState()
     private var horizontalOffset: CGFloat = 0
@@ -97,7 +149,7 @@ final class ShopScene: SKScene {
         scaleMode = .resizeFill
         anchorPoint = CGPoint(x: 0.5, y: 0.5)
         backgroundColor = SKColor(red: 0.25, green: 0.20, blue: 0.14, alpha: 1)
-        for node in [environmentRoot, furnitureRoot, previewRoot, customerRoot, feedbackRoot] {
+        for node in [environmentRoot, floorRoot, floorPreviewRoot, dirtRoot, furnitureRoot, previewRoot, customerRoot, livingRoot, feedbackRoot] {
             addChild(node)
         }
         addChild(worldCamera)
@@ -110,9 +162,13 @@ final class ShopScene: SKScene {
         super.didChangeSize(oldSize)
         guard !needsFirstRender, size.width > 0, size.height > 0 else { return }
         rebuildEnvironment()
+        rebuildFloorCare()
+        rebuildFloorPreview()
+        rebuildDirt()
         rebuildFurniture()
         rebuildPreview()
         rebuildCustomer()
+        prepareLivingDay(presentationMinute: targetLivingMinute, rebuild: true)
         apply(cameraState, horizontalOffset: horizontalOffset, contentLift: contentLift)
     }
 
@@ -135,13 +191,20 @@ final class ShopScene: SKScene {
         activeVisit: CustomerVisit?,
         visitProgress: Double,
         lastOutcome: VisitOutcome?,
-        reduceMotion: Bool
+        reduceMotion: Bool,
+        presentationMinute: Double? = nil,
+        floorPreview: [GridPoint] = [],
+        floorPreviewStyle: FloorStyleID? = nil
     ) {
         insertedFixtureIDs = needsFirstRender ? [] : Set(state.fixtures.map(\.id)).subtracting(Set(renderedState.fixtures.map(\.id)))
         insertedStockIDs = needsFirstRender ? [] : Set(state.stock.map(\.id)).subtracting(Set(renderedState.stock.map(\.id)))
         let environmentChanged = needsFirstRender || state.world != renderedState.world
             || state.restoration != renderedState.restoration
-        let furnitureChanged = environmentChanged || state.fixtures != renderedState.fixtures
+            || state.manualRepairProgress != renderedState.manualRepairProgress
+        let floorPreviewChanged = environmentChanged || floorPreview != renderedFloorPreview
+            || floorPreviewStyle != renderedFloorPreviewStyle
+        let dirtChanged = environmentChanged || state.dirt != renderedState.dirt
+        let furnitureChanged = environmentChanged || preview?.fixtureID != renderedPreview?.fixtureID || state.fixtures != renderedState.fixtures
             || state.stock != renderedState.stock || self.selectedFixtureID != selectedFixtureID
             || reducedMotion != reduceMotion
         let previewChanged = environmentChanged || preview != renderedPreview
@@ -149,18 +212,23 @@ final class ShopScene: SKScene {
         let motionChanged = reducedMotion != reduceMotion
         renderedState = state
         renderedPreview = preview
+        renderedFloorPreview = floorPreview
+        renderedFloorPreviewStyle = floorPreviewStyle
         renderedPreviewValid = previewIsValid
         self.selectedFixtureID = selectedFixtureID
         reducedMotion = reduceMotion
         needsFirstRender = false
 
         if motionChanged { feedbackRoot.removeAllChildren() }
-        if environmentChanged { rebuildEnvironment() }
+        if environmentChanged { rebuildEnvironment(); rebuildFloorCare() }
+        if floorPreviewChanged { rebuildFloorPreview() }
+        if dirtChanged { rebuildDirt() }
         if furnitureChanged { rebuildFurniture() }
         if previewChanged { rebuildPreview() }
 
-        if visitPlan?.id != activeVisit?.id {
-            if let visit = activeVisit {
+        let legacyVisit = state.livingDay == nil ? activeVisit : nil
+        if visitPlan?.id != legacyVisit?.id {
+            if let visit = legacyVisit {
                 visitPlan = makeVisitPlan(visit, outcome: lastOutcome)
                 displayedProgress = max(0, min(1, visitProgress))
             } else {
@@ -171,8 +239,9 @@ final class ShopScene: SKScene {
         } else if environmentChanged || motionChanged {
             rebuildCustomer()
         }
+        prepareLivingDay(presentationMinute: presentationMinute, rebuild: environmentChanged || motionChanged)
         targetProgress = visitProgress.isFinite ? max(0, min(1, visitProgress)) : 0
-        currentOutcome = lastOutcome?.visitID == activeVisit?.id ? lastOutcome : nil
+        currentOutcome = lastOutcome?.visitID == legacyVisit?.id ? lastOutcome : nil
         updateCustomer(progress: reducedMotion ? targetProgress : displayedProgress)
 
         if let outcome = currentOutcome, outcome.visitID != displayedOutcomeID {
@@ -189,6 +258,9 @@ final class ShopScene: SKScene {
         } else {
             displayedProgress += (targetProgress - displayedProgress) * min(1, delta * 24)
         }
+        if reducedMotion { displayedLivingMinute = targetLivingMinute }
+        else { displayedLivingMinute += (targetLivingMinute - displayedLivingMinute) * min(1, delta * 20) }
+        updateLivingCustomers(at: displayedLivingMinute)
         updateCustomer(progress: displayedProgress)
         let warmth = reducedMotion ? 0.035 : 0.035 + 0.009 * sin(currentTime * 1.8)
         for glow in glowNodes { glow.alpha = CGFloat(warmth) }
@@ -228,6 +300,61 @@ final class ShopScene: SKScene {
         let cell = GridPoint(x: Int(floor(x)), y: Int(floor(y)))
         guard let metadata = renderedState.world.hitMap.cell(at: cell), metadata.zone != .outside else { return nil }
         return cell
+    }
+
+    /// Unbounded inverse used only by drag previews. Invalid drops remain
+    /// invalid instead of silently sticking to the last valid floor cell.
+    func dragGridPoint(at point: CGPoint) -> GridPoint? {
+        guard backgroundSize.width > 0, backgroundSize.height > 0 else { return nil }
+        let imageX = point.x / backgroundSize.width + 0.5
+        let imageY = 0.5 - point.y / backgroundSize.height
+        let depth = (imageY - FloorCalibration.nearY) / (FloorCalibration.farY - FloorCalibration.nearY)
+        let left = FloorCalibration.nearLeft + (FloorCalibration.farLeft - FloorCalibration.nearLeft) * depth
+        let right = FloorCalibration.nearRight + (FloorCalibration.farRight - FloorCalibration.nearRight) * depth
+        guard right > left else { return nil }
+        let x = (imageX - left) / (right - left) * 11 + CGFloat(starterOrigin.x)
+        let y = depth * 11 + CGFloat(starterOrigin.y)
+        guard x.isFinite, y.isFinite, abs(x) < 10_000, abs(y) < 10_000 else { return nil }
+        return GridPoint(x: Int(floor(x)), y: Int(floor(y)))
+    }
+
+    func previewContains(_ point: CGPoint) -> Bool {
+        guard renderedPreview != nil else { return false }
+        return nodes(at: point).contains { hit in
+            var node: SKNode? = hit
+            while let candidate = node {
+                if candidate === previewRoot { return true }
+                node = candidate.parent
+            }
+            return false
+        }
+    }
+
+    func accessibilityCellFrames() -> [(GridPoint, CGRect)] {
+        renderedState.world.hitMap.cells.filter { $0.zone != .outside }.map {
+            let corners = footprintCorners(origin: $0.point, footprint: GridFootprint(width: 1, depth: 1))
+            return ($0.point, viewRect(for: bounds(of: corners)))
+        }
+    }
+
+    func accessibilityFixtureFrames() -> [(UUID, CGRect)] {
+        furnitureRoot.children.compactMap { node in
+            guard let name = node.name, name.hasPrefix("fixture:"),
+                  let id = UUID(uuidString: String(name.dropFirst(8))) else { return nil }
+            return (id, viewRect(for: node.calculateAccumulatedFrame()))
+        }
+    }
+
+    func accessibilityPreviewFrame() -> CGRect? {
+        guard !previewRoot.children.isEmpty else { return nil }
+        return viewRect(for: previewRoot.calculateAccumulatedFrame())
+    }
+
+    private func viewRect(for rect: CGRect) -> CGRect {
+        let first = convertPoint(toView: CGPoint(x: rect.minX, y: rect.minY))
+        let second = convertPoint(toView: CGPoint(x: rect.maxX, y: rect.maxY))
+        return CGRect(x: min(first.x, second.x), y: min(first.y, second.y),
+                      width: abs(second.x - first.x), height: abs(second.y - first.y))
     }
 
     func fixtureID(at point: CGPoint) -> UUID? {
@@ -279,7 +406,9 @@ final class ShopScene: SKScene {
         environmentRoot.addChild(background)
 
         if !fullyRepaired {
-            for group in renderedState.restoration.repairedGroups { addRepairPatch(group) }
+            for group in RestorationGroupID.allCases where renderedState.repairProgress(for: group) > 0 {
+                addRepairPatch(group)
+            }
         }
         if let expansion = renderedState.restoration.expansion { addAnnex(expansion) }
     }
@@ -322,6 +451,7 @@ final class ShopScene: SKScene {
             mask.addChild(shape)
         }
         crop.maskNode = mask
+        crop.alpha = CGFloat(renderedState.repairProgress(for: group)) / CGFloat(ShopCare.repairStrokesRequired)
         crop.zPosition = -95
         environmentRoot.addChild(crop)
     }
@@ -451,12 +581,79 @@ final class ShopScene: SKScene {
         return annex
     }
 
+    // MARK: - Persisted floor care
+
+    private func rebuildFloorCare() {
+        floorRoot.removeAllChildren()
+        for tile in renderedState.world.floor.tiles where tile.styleID != .wornTerracotta {
+            guard let cell = renderedState.world.hitMap.cell(at: tile.point),
+                  cell.zone != .outside, cell.staticBlocker == nil else { continue }
+            floorRoot.addChild(makeFloorTile(style: tile.styleID, at: tile.point, preview: false))
+        }
+        floorRoot.zPosition = -85
+    }
+
+    private func rebuildFloorPreview() {
+        floorPreviewRoot.removeAllChildren()
+        guard let style = renderedFloorPreviewStyle else { return }
+        for point in Set(renderedFloorPreview) {
+            guard let cell = renderedState.world.hitMap.cell(at: point),
+                  cell.zone != .outside, cell.staticBlocker == nil else { continue }
+            floorPreviewRoot.addChild(makeFloorTile(style: style, at: point, preview: true))
+        }
+        floorPreviewRoot.zPosition = -75
+    }
+
+    private func makeFloorTile(style: FloorStyleID, at point: GridPoint, preview: Bool) -> SKNode {
+        let corners = footprintCorners(origin: point, footprint: GridFootprint(width: 1, depth: 1))
+        let rect = bounds(of: corners)
+        let group = SKNode()
+        let asset = FloorStyleCatalog.definition(for: style)?.textureAssetName ?? "WornTerracottaTile"
+        let sprite = SKSpriteNode(texture: texture(asset))
+        sprite.size = rect.size
+        sprite.position = CGPoint(x: rect.midX, y: rect.midY)
+        let source: [SIMD2<Float>] = [SIMD2(0, 0), SIMD2(1, 0), SIMD2(0, 1), SIMD2(1, 1)]
+        let destination = [corners[0], corners[1], corners[3], corners[2]].map {
+            SIMD2<Float>(Float(($0.x - rect.minX) / rect.width),
+                         Float(($0.y - rect.minY) / rect.height))
+        }
+        sprite.warpGeometry = SKWarpGeometryGrid(columns: 1, rows: 1,
+                                                  sourcePositions: source, destinationPositions: destination)
+        sprite.alpha = preview ? 0.60 : 1
+        group.addChild(sprite)
+        if preview {
+            let outline = SKShapeNode(path: polygon(corners))
+            outline.fillColor = .clear
+            outline.strokeColor = SKColor(red: 1, green: 0.77, blue: 0.30, alpha: 0.9)
+            outline.lineWidth = max(0.8, tileWidth * 0.025)
+            outline.zPosition = 1
+            group.addChild(outline)
+        }
+        return group
+    }
+
+    private func rebuildDirt() {
+        dirtRoot.removeAllChildren()
+        dirtRoot.zPosition = -60
+        for (point, level) in renderedState.dirt {
+            guard level > 0, let cell = renderedState.world.hitMap.cell(at: point),
+                  cell.zone != .outside else { continue }
+            let dust = SKSpriteNode(texture: texture("DustPatch"))
+            setUniformWidth(tileWidth * 0.80, on: dust)
+            dust.yScale = 0.68
+            dust.position = center(of: point)
+            dust.alpha = min(0.42, 0.12 + CGFloat(level) * 0.10)
+            dirtRoot.addChild(dust)
+        }
+    }
+
     // MARK: - Furniture, decorations and physical stock
 
     private func rebuildFurniture() {
         furnitureRoot.removeAllChildren()
         glowNodes.removeAll()
         for fixture in renderedState.fixtures {
+            if fixture.id == renderedPreview?.fixtureID { continue }
             let node = makeFixture(kind: fixture.kind, origin: fixture.origin, rotation: fixture.rotation,
                                    fixtureID: fixture.id, preview: false, valid: true)
             furnitureRoot.addChild(node)
@@ -473,7 +670,7 @@ final class ShopScene: SKScene {
         previewRoot.removeAllChildren()
         guard let draft = renderedPreview else { return }
         previewRoot.addChild(makeFixture(kind: draft.kind, origin: draft.origin, rotation: draft.rotation,
-                                         fixtureID: nil, preview: true, valid: renderedPreviewValid))
+                                         fixtureID: draft.fixtureID, preview: true, valid: renderedPreviewValid))
     }
 
     private func makeFixture(kind: FixtureKind, origin: GridPoint, rotation: FixtureRotation,
@@ -631,6 +828,132 @@ final class ShopScene: SKScene {
         sprite.position = CGPoint(x: position.x - base.x, y: position.y - base.y)
     }
 
+    // MARK: - Persistent simultaneous visitors
+
+    private func prepareLivingDay(presentationMinute: Double?, rebuild: Bool) {
+        guard let day = renderedState.livingDay else {
+            livingRoot.removeAllChildren()
+            livingCustomers.removeAll()
+            livingDayID = nil
+            handledLivingOutcomes.removeAll()
+            return
+        }
+        let requested = presentationMinute ?? Double(day.minute)
+        targetLivingMinute = requested.isFinite
+            ? min(Double(ShopCalendar.closingMinute), max(Double(day.minute), requested))
+            : Double(day.minute)
+        if day.id != livingDayID {
+            livingDayID = day.id
+            livingRoot.removeAllChildren()
+            livingCustomers.removeAll()
+            displayedLivingMinute = targetLivingMinute
+            // A restored save must not replay historical sale effects.
+            handledLivingOutcomes = Set(day.visitors.filter { $0.outcome != nil }.map(\.id))
+        } else if rebuild {
+            livingRoot.removeAllChildren()
+            livingCustomers.removeAll()
+        }
+        updateLivingCustomers(at: reducedMotion ? targetLivingMinute : displayedLivingMinute)
+        for visitor in day.visitors where visitor.outcome != nil {
+            guard handledLivingOutcomes.insert(visitor.id).inserted,
+                  let sale = visitor.sale,
+                  targetLivingMinute < Double(visitor.departureMinute) else { continue }
+            let location = livingPosition(visitor, minute: targetLivingMinute)
+            showReceipt(sale, at: location)
+        }
+    }
+
+    private func livingPosition(_ visitor: LivingVisitor, minute: Double) -> CGPoint {
+        let location = visitor.position(at: minute)
+        let first = center(of: location.from)
+        let second = center(of: location.to)
+        let fraction = CGFloat(min(1, max(0, location.progress)))
+        return CGPoint(x: first.x + (second.x - first.x) * fraction,
+                       y: first.y + (second.y - first.y) * fraction)
+    }
+
+    private func updateLivingCustomers(at minute: Double) {
+        guard let day = renderedState.livingDay else { return }
+        let visible = day.visitors.filter {
+            minute >= Double($0.arrivalMinute) && minute < Double($0.departureMinute)
+        }
+        let ids = Set(visible.map(\.id))
+        for id in Array(livingCustomers.keys) where !ids.contains(id) {
+            livingCustomers.removeValue(forKey: id)?.root.removeFromParent()
+        }
+        for visitor in visible {
+            let art: LivingCustomerArt
+            if let existing = livingCustomers[visitor.id] { art = existing }
+            else {
+                art = LivingCustomerArt(tileWidth: tileWidth, tileHeight: tileHeight)
+                livingCustomers[visitor.id] = art
+                livingRoot.addChild(art.root)
+            }
+            let location = visitor.position(at: minute)
+            let status = visitor.status(at: Int(minute))
+            let walking = location.from != location.to
+            var position = livingPosition(visitor, minute: minute)
+            if reducedMotion {
+                let destination = visitor.stops.first { minute < Double($0.departureMinute) }?.path.last
+                    ?? visitor.exitPath.last
+                if let destination { position = center(of: destination) }
+            }
+            // Small stable lanes keep two visitors from drawing precisely on
+            // top of one another while remaining inside their walkable cells.
+            let lane = CGFloat(visitor.id.index % 3 - 1)
+            position.x += lane * tileWidth * 0.10
+            position.y += CGFloat(visitor.id.index % 2) * tileHeight * 0.07
+            art.root.position = position
+            art.root.zPosition = 500 - position.y * 0.2 + 0.3 + CGFloat(visitor.id.index) * 0.001
+            let arrivingFade = (minute - Double(visitor.arrivalMinute)) / 1.8
+            let leavingFade = (Double(visitor.departureMinute) - minute) / 1.8
+            art.root.alpha = reducedMotion ? 1 : CGFloat(min(1, max(0, min(arrivingFade, leavingFade))))
+
+            let lookFront = location.to.y < location.from.y || status == .leaving
+            let baseName = visitor.id.index.isMultiple(of: 2) ? "CustomerPlum" : "CustomerGreen"
+            let imageName = lookFront ? baseName + "Front" : baseName
+            if art.imageName != imageName {
+                art.imageName = imageName
+                art.body.texture = texture(imageName)
+                setUniformHeight(tileHeight * 1.65, on: art.body)
+            }
+            if location.to.x != location.from.x {
+                art.body.xScale = location.to.x < location.from.x ? -1 : 1
+            }
+            art.body.position.y = reducedMotion || !walking ? 0
+                : CGFloat(sin(minute * 2.4 + Double(visitor.id.index))) * tileHeight * 0.025
+
+            let stop = visitor.stops.first {
+                minute >= Double($0.arrivalMinute) && minute < Double($0.departureMinute)
+            }
+            let displayedUnit = stop.flatMap { stop in
+                renderedState.stock.first { $0.fixtureID == stop.fixtureID
+                    && ($0.product == visitor.preferredProduct || $0.product == visitor.secondaryProduct) }
+                    ?? renderedState.stock.first { $0.fixtureID == stop.fixtureID }
+            }
+            let product = visitor.sale?.product ?? displayedUnit?.product ?? visitor.preferredProduct
+            let caption: String
+            if visitor.sale != nil { caption = "Thank you" }
+            else if visitor.outcome != nil { caption = "Maybe later" }
+            else if let unit = displayedUnit { caption = "$\(renderedState.price(for: unit.product))" }
+            else { caption = status == .comparing ? "Comparing" : "Browsing" }
+            let key = product.rawValue + caption
+            if art.bubbleKey != key {
+                art.bubbleKey = key
+                art.icon.texture = texture(productAsset(product))
+                setUniformHeight(tileHeight * 0.48, on: art.icon)
+                art.caption.text = caption
+                art.carried.texture = texture(productAsset(product))
+                setUniformHeight(tileHeight * 0.46, on: art.carried)
+            }
+            art.bubble.position = CGPoint(x: lane * tileWidth * 0.32,
+                                          y: art.body.size.height + tileHeight * 0.34)
+            art.bubble.isHidden = walking && visitor.outcome == nil
+            art.carried.isHidden = visitor.sale == nil
+            art.carried.position = CGPoint(x: tileWidth * 0.15, y: art.body.size.height * 0.52)
+        }
+    }
+
     // MARK: - One paced, replay-safe customer presentation
 
     private func makeVisitPlan(_ visit: CustomerVisit, outcome: VisitOutcome?) -> VisitPlan {
@@ -741,6 +1064,10 @@ final class ShopScene: SKScene {
     private func showOutcome(_ outcome: VisitOutcome) {
         guard let sale = outcome.sale, let plan = visitPlan else { return }
         let position = plan.route.last.map { center(of: $0) } ?? .zero
+        showReceipt(sale, at: position)
+    }
+
+    private func showReceipt(_ sale: SaleReceipt, at position: CGPoint) {
         let label = SKLabelNode(fontNamed: "Georgia-Bold")
         label.text = "+$\(sale.revenue)"
         label.fontSize = max(12, tileWidth * 0.5)

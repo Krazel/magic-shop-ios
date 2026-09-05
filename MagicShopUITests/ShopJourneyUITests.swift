@@ -31,7 +31,7 @@ final class ShopJourneyUITests: XCTestCase {
         app.buttons["Double speed"].tap()
         app.buttons["Resume day"].tap()
         let tomorrow = app.buttons["prepare-next-day"]
-        XCTAssertTrue(tomorrow.waitForExistence(timeout: 35))
+        XCTAssertTrue(tomorrow.waitForExistence(timeout: 60))
         XCTAssertTrue(tomorrow.isHittable)
         tomorrow.tap()
         XCTAssertTrue(app.staticTexts["Day 2 · Tuesday"].waitForExistence(timeout: 5))
@@ -63,4 +63,96 @@ final class ShopJourneyUITests: XCTestCase {
         capture.lifetime = .keepAlways
         add(capture)
     }
+    @MainActor
+    func testPriceControlsSaveAndRemainReachableWithLargeText() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "pricing", "--large-text"]
+        app.launch()
+        let apply = app.buttons["apply-price"]
+        XCTAssertTrue(apply.waitForExistence(timeout: 10))
+        XCTAssertTrue(apply.isHittable)
+        let increase = app.buttons["Raise price"]
+        if !increase.isHittable { app.scrollViews.firstMatch.swipeUp() }
+        increase.tap()
+        apply.tap()
+        XCTAssertTrue(app.staticTexts["price-saved"].waitForExistence(timeout: 5))
+        attach(app, "Price controls with large text")
+    }
+
+    @MainActor
+    func testFurnitureLongPressDragMovesTheActualFixture() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "drag"]
+        app.launch()
+        let fixture = app.descendants(matching: .any)["fixture-world-00000000-0000-0000-0000-000000000003"].firstMatch
+        XCTAssertTrue(fixture.waitForExistence(timeout: 10))
+        let old = fixture.frame
+        let start = fixture.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65))
+        start.press(forDuration: 0.3, thenDragTo: start.withOffset(CGVector(dx: 75, dy: 0)))
+        XCTAssertTrue(fixture.waitForExistence(timeout: 5))
+        XCTAssertGreaterThan(fixture.frame.midX, old.midX + 20)
+        XCTAssertFalse(app.buttons["confirm-placement"].exists)
+        attach(app, "Furniture after native drag")
+    }
+
+    @MainActor
+    func testFloorStrokePreviewsThenAppliesWithoutHiddenCharge() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "care"]
+        app.launch()
+        XCTAssertTrue(app.buttons["care-floor"].waitForExistence(timeout: 10))
+        app.buttons["care-floor"].tap()
+        let first = app.descendants(matching: .any)["world-cell-3-7"].firstMatch
+        let last = app.descendants(matching: .any)["world-cell-4-7"].firstMatch
+        XCTAssertTrue(first.waitForExistence(timeout: 5))
+        first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).press(forDuration: 0.1,
+            thenDragTo: last.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)))
+        let apply = app.buttons["apply-floor"]
+        XCTAssertTrue(apply.isEnabled)
+        attach(app, "Floor stroke preview")
+        apply.tap()
+        XCTAssertTrue(app.staticTexts["care-feedback"].waitForExistence(timeout: 5))
+        XCTAssertFalse(apply.isEnabled)
+        attach(app, "Floor applied")
+    }
+
+    @MainActor
+    func testCustomersOverlapAndCareWorksWhileOpen() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "living"]
+        app.launch()
+        let status = app.staticTexts["visitor-status"]
+        XCTAssertTrue(status.waitForExistence(timeout: 10))
+        XCTAssertTrue(status.label.contains("3 browsing") || status.label.contains("4 browsing"))
+        XCTAssertTrue(app.buttons["nav-stock"].isEnabled)
+        app.buttons["Care"].tap()
+        XCTAssertTrue(app.buttons["care-clean"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["care-floor"].isEnabled)
+        attach(app, "Care during overlapping visits")
+    }
+
+    @MainActor private func attach(_ app: XCUIApplication, _ name: String) {
+        let capture = XCTAttachment(screenshot: app.screenshot())
+        capture.name = name; capture.lifetime = .keepAlways; add(capture)
+    }
+
+    @MainActor
+    func testManualCleaningRequiresThreeSeparateWorldStrokes() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "care"]
+        app.launch()
+        let tile = app.descendants(matching: .any)["world-cell-1-5"].firstMatch
+        XCTAssertTrue(tile.waitForExistence(timeout: 10))
+        for expected in 1...3 {
+            let start = tile.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.5))
+            let end = tile.coordinate(withNormalizedOffset: CGVector(dx: 0.7, dy: 0.5))
+            start.press(forDuration: 0.1, thenDragTo: end)
+            let feedback = app.staticTexts["care-feedback"]
+            XCTAssertTrue(feedback.waitForExistence(timeout: 5))
+            XCTAssertTrue(expected == 3 ? feedback.label.contains("complete") : feedback.label.contains("\(expected)/3"))
+        }
+        XCTAssertFalse(app.buttons["sweep-rubble"].isEnabled)
+        attach(app, "Manual repair after three native strokes")
+    }
+
 }

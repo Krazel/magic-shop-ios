@@ -31,7 +31,27 @@ public enum ShopAccess {
         return route.reversed()
     }
 
-    private static func traversal(in state: GameState)
+    public static func path(from start: GridPoint, to fixture: PlacedFixture, in state: GameState) -> [GridPoint]? {
+        let search = traversal(in: state, from: start)
+        let adjacent = Set(PlacementRules.occupiedCells(for: fixture).flatMap { neighbors(of: $0) })
+        guard let end = search.order.first(where: { adjacent.contains($0) }) else { return nil }
+        return reconstruct(to: end, parents: search.parents)
+    }
+
+    public static func path(from start: GridPoint, to end: GridPoint, in state: GameState) -> [GridPoint]? {
+        let search = traversal(in: state, from: start)
+        guard search.order.contains(end) else { return nil }
+        return reconstruct(to: end, parents: search.parents)
+    }
+
+    private static func reconstruct(to end: GridPoint, parents: [GridPoint: GridPoint]) -> [GridPoint] {
+        var result = [end]
+        var point = end
+        while let previous = parents[point] { result.append(previous); point = previous }
+        return result.reversed()
+    }
+
+    private static func traversal(in state: GameState, from start: GridPoint? = nil)
         -> (order: [GridPoint], parents: [GridPoint: GridPoint]) {
         let map = state.world.hitMap
         let blockers = state.fixtures.filter { FixtureCatalog.definition(for: $0.kind).blocksWalking }
@@ -47,8 +67,9 @@ public enum ShopAccess {
             if left.y == right.y { return left.x < right.x }
             return left.y < right.y
         }
-        var queue = entrances
-        var visited = Set(entrances)
+        let origins = start.map { walkable.contains($0) ? [$0] : [] } ?? entrances
+        var queue = origins
+        var visited = Set(origins)
         var parents: [GridPoint: GridPoint] = [:]
         var cursor = 0
         while cursor < queue.count {
