@@ -2,8 +2,8 @@
 
 Updated: 2026-09-05. Owner: delegated World implementation lane.
 Scope: MagicShop/World/ShopScene.swift and ShopSceneContainer.swift.
-Product target: 0.2 (1). This document records implementation and evidence; the
-final simulator capture comparison remains an integration check.
+Product target: 0.3 (1). The first sections preserve the verified 0.2 behavior.
+The Living Shop section records the current 0.3 contract and pending checks.
 
 ## Snapshot contract
 
@@ -204,3 +204,152 @@ real screenshots archived at design/runtime/0.2/4087139. A rear painting can
 touch the cutaway edge and joins retain a slight light/grout transition; these
 are minor presentation limits, not gameplay blockers. The later 77cbc09 app
 change only increases the Stock camera lift; World source is identical.
+
+## Living Shop 0.3 — implementation handoff, 2026-09-05
+
+Current reference images are living-open-v2.png and living-care-floors-v1.png in
+[design/approved](../design/approved/), selected by the director under the owner's
+autonomous design authorization. This handoff records source completion; it does
+not claim that the new interactions or visuals have passed the simulator yet.
+The original plate, projections, expansions, fixture art and product surfaces
+retain the verified 0.2 implementation above.
+
+### App and World contract
+
+The Container initializer accepts these parameters in order (optional inputs and
+callbacks have defaults):
+
+```swift
+state, preview, previewIsValid, selectedFixtureID,
+activeVisit, visitProgress, lastOutcome,
+presentationMinute, interactionTool, floorPreview, floorPreviewStyle,
+reduceMotion, isPaused, cameraResetID, contentLift,
+onGridTap, onFixtureTap, onDragStart, onDragMove, onDragEnd, onToolStroke
+```
+
+ShopWorldTool is a presentation enum defined in World, with none, clean and paint.
+Callbacks propose intentions only. The root App model owns preview snapshots,
+placement validation, atomic transactions, tool selection, floor purchase and
+persistence. World does not import a second copy of those rules or charge money.
+
+- onDragStart(UUID) returns Bool and captures either the existing furniture or
+  the current new-placement draft before any movement.
+- onDragMove(GridPoint) updates the proposed origin. The original finger offset
+  within the footprint and initial camera lift are retained through the drag.
+- onDragEnd(true) requests a drop. App commits a valid existing-furniture move,
+  or reverts an invalid one. A new purchase remains a draft until Place.
+- onDragEnd(false) restores the snapshot. Cancellation, interruption, switching
+  tools, a pinch or a two-finger camera pan all cancel an active drag.
+- onToolStroke(GridPoint) is emitted once per cell per gesture, filling cells
+  skipped by fast movement. Clean applies immediately; Paint stages cells for
+  Apply Floor. Repeated contact with a blocker inside the same gesture cannot
+  count as multiple repair passes.
+
+### Native gestures and accessibility
+
+A 0.18-second hold begins dragging an existing fixture. A new placement preview
+can be dragged immediately. Touches on the background pan the camera when no
+fixture or placement is being manipulated; two fingers pan regardless of the
+selected tool, and pinch zoom remains available. Active Clean/Paint routes
+one-finger movement to the selected tool. Floor inversion accepts out-of-bounds
+origins during dragging so an invalid drop cannot silently reuse the last valid
+cell. App validates the final position and restores invalid existing moves.
+
+The real SKView exposes a native accessibility container, not a single flattened
+image. Frames use the same projected geometry and current camera as the world:
+
+| Element | Identifier | Behavior |
+| --- | --- | --- |
+| World container | shop-world | Contains accessible children |
+| Existing fixture | fixture-world-UUID | Selects furniture controls |
+| Placement preview | world-placement-preview | Supplies its current native frame |
+| Eligible world cell while a tool is active | world-cell-X-Y | Cleans or stages that cell |
+| Camera | world-camera | Adjustable zoom and camera custom actions |
+
+Cells cover real interior floor, including initial repair targets; void cells
+are omitted. Root provides button alternatives for moving furniture, repairing
+initial groups and cleaning the next dirty tile. UIKit UI tests can derive drag
+coordinates from these identifiers instead of hardcoding screen positions.
+Accessibility labels on an outer SwiftUI wrapper must not flatten these children.
+
+### Persisted concurrent visitors
+
+GameState.livingDay supplies every visitor's ID, arrival/departure/decision
+minutes, browse-stop fixture IDs, paths and recorded outcome. World renders each
+visitor's position(at:) and status(at:) without generating an independent route
+or random outcome. App's fractional presentationMinute interpolates between
+persisted two-minute updates. The domain owns the 12 irregular arrivals and
+concurrency; World does not infer the schedule from visible nodes.
+
+Each visitor retains its own sprite, depth, thought bubble and carried product.
+Back/front views follow travel direction, and stable small offsets keep people
+sharing a path legible. Browsing bubbles use the actual displayed product and
+price, then the recorded purchase or a polite departure response. Only committed
+sales remove stock and produce a receipt or a carried item. Already-recorded
+outcomes are marked handled when loading a day to avoid replaying sale feedback.
+The final handoff adds an organic native cloud shape matching the Open master.
+
+The legacy currentDay/activeVisit path remains available for an in-progress
+older save. A living day suppresses that single-visitor renderer. Reduce Motion
+removes walking and bobbing, uses the browse destination, and keeps feedback
+static; pausing stops SpriteKit updates and actions.
+
+### Floor materials, dirt and repair progress
+
+Persisted floor styles render as native warped tiles only on real floor cells.
+Unmodified wornTerracotta keeps the original plate. Terracotta, Oak and Checkered
+use FloorTerracotta, FloorWarmOak and FloorCheckerStone from the living-shop art
+manifest. Each cell maps to its exact floor quadrilateral; committed floor has
+no grid or outline. The staged floorPreview uses 0.6 opacity and a fine gold
+outline on selected cells only. Core rejects static-blocker cells and App applies
+the selected batch in a single transaction after Apply Floor.
+
+Persistent dirt uses the existing DustPatch art at restrained opacity scaled by
+level. It renders above floor and below furniture. Initial repair reveals a
+local cleaned background with opacity repairProgress / 3, responding after each
+of the three distinct gestures. The third pass removes the full group in Core;
+all repaired groups switch to the complete repaired background as before.
+
+### Verification status at handoff
+
+- Windows static verification passed after the main implementation: 17 Core
+  sources, 109 declared XCTest methods and version 0.3 (1). This is source and
+  asset validation, not execution of Swift or XCTest.
+- First integrated commit 34225f2 entered CI run 33979026745. Compilation found
+  UILongPressGestureRecognizer.maximumNumberOfTouches is unavailable; root
+  took ownership of World to change it to numberOfTouchesRequired = 1.
+- The native cloud-shape adjustment to ShopScene.swift followed that snapshot
+  and is queued for the next integrated commit. No routing, state, pricing or
+  transaction behavior changed in that final art adjustment.
+- Native gesture tests are prepared by root for existing furniture, a floor
+  stroke from (3,7) to (4,7), and three repair strokes at (1,5). The next CI must
+  demonstrate the expected saved state and the absence of an accidental charge.
+- Runtime review must compare concurrent Open and staged Care/Floor against the
+  current masters, including bubble overlap, paint clipping, responsive debris
+  removal and enough visible floor above the native Care panel. Check drag after
+  pan/zoom, invalid/cancelled drops, two-finger recovery, pause/resume and Reduce
+  Motion. Earlier 0.2 screenshot approval does not satisfy these new checks.
+
+World source ownership returned to root for integration after this handoff.
+
+
+### Final integration verification — 2026-09-05
+
+The handoff status above is historical. The UIKit recognizer property was fixed;
+the world accessibility container is now a UIView host containing SKView, preventing
+SpriteKit from replacing the projected fixture/cell tree. Eight native UI tests
+passed in run 33980579266, including real long-press furniture dragging, floor stroke
+preview followed by an exact $4 debit, and three separate repair strokes. The
+Release simulator build passed. Original and corrected summaries remain archived.
+The independent domain/model suite passed all 109 cases in run 33979280414 and is
+unchanged through final source 6474cab768d53a6deac669a123a2da689933c21f.
+
+Real screenshots show three visible concurrent visitors, native thought clouds,
+correct projected floor clipping and independent manual repair removal. The final
+floor accessibility carousel was recaptured on regular/compact/large-text layouts
+in successful run 33981373681. Final iPhoneOS IPA run 33981375796 succeeded and its
+package/manifest/checksum/arm64 verification passed. Twenty current screenshots and
+seven included native interaction attachments are indexed in the 0.3 archive (23
+images preserved including three superseded floor captures). Exact coverage and
+device-testing limits are in LIVING-SHOP-VERIFICATION.md. No physical-device or
+auditory VoiceOver session is claimed by these simulator checks.

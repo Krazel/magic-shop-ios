@@ -196,4 +196,34 @@ Selected on 2026-09-05 by the project director under the owner's explicit author
 - Floor prices: Terracotta $1, Oak $2 and Checkered $3 per eligible tile. Floor preview is pending until Apply Floor. Clean is the compact companion state with sweeping gestures, initial three-pass repair progress and free recurrent dust removal.
 - Native adaptation: scrollable panel contents, Dynamic Type, VoiceOver labels, safe-area spacing and stepper layout may adapt to device. Retain the bounded teal/gold surfaces and clear actions; do not hide the world interaction area behind controls.
 - Runtime sources/imagesets: [Living Shop art manifest](assets/living-shop/MANIFEST.md). New PNGs are materials/decals only; full-screen masters are never flattened runtime backgrounds.
-- Comparable runtime captures: pending the 0.3 integration/CI capture and visual review. No post-implementation fidelity pass or pixel equality is claimed by archiving these masters.
+- Comparable runtime captures and completed qualitative review are recorded below. Native accessibility adaptations are documented; no pixel equality is claimed.
+
+
+### Living Shop runtime comparison — 0.3 (1), 2026-09-05
+
+Director review complete after real simulator capture and eight passing native UI
+tests. These are app screenshots, separate from the generated masters. Final app
+source is `6474cab768d53a6deac669a123a2da689933c21f`; unchanged states retain their
+earlier tested source, explicitly identified in the manifest.
+
+| Master / state | Current comparable runtime |
+| --- | --- |
+| Living Open v2 | [Three concurrent visitors](runtime/0.3/0b99f37/living-runtime.png) |
+| Living Pricing v1 | [Pricing](runtime/0.3/0b99f37/pricing-runtime.png) |
+| Living Care/Floors v1 | [Floor preview](runtime/0.3/6474cab/floors-runtime.png) |
+| Floor, compact | [Compact floor controls](runtime/0.3/6474cab/floors-compact-runtime.png) |
+| Floor, large text | [Accessible material carousel](runtime/0.3/6474cab/floors-large-text-runtime.png) |
+| Clean companion | [Manual cleaning](runtime/0.3/0b99f37/care-runtime.png) |
+| Applied floor | [Applied materials](runtime/0.3/0b99f37/floor-laid-runtime.png) |
+| Saved price, large text | [Saved $31 price](runtime/0.3/0b99f37/ui-price-saved-large.png) |
+| Gesture result | [Moved furniture](runtime/0.3/0b99f37/ui-drag-after.png) |
+| Gesture result | [Three-stroke cleanup](runtime/0.3/0b99f37/ui-clean-after-strokes.png) |
+
+The material geometry, ornamented bounded panels, customer/product art and world
+interaction area match the established direction. Safe areas, scrolling and the
+large-text carousel adapt the full-screen illustration for actual devices. Live
+computed interest is 65% for the $30 potion example, superseding the illustrative
+70% in the master. Prices, stock and physical world placement come from Core.
+`runtime/0.3/current-manifest.json` contains 20 current images, 23 preserved images,
+SHA-256, canvases and provenance. See `docs/LIVING-SHOP-VERIFICATION.md` for executed
+coverage and physical-device limitations.

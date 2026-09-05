@@ -1,0 +1,47 @@
+[
+  {
+    "file": "design/runtime/0.3/6474cab/floors-compact-runtime.png",
+    "sha256": "dff5d48376c3af985a94fea12c2f79f383233d76efce9ac4261900523e4cec3b",
+    "canvas": [
+      750,
+      1334
+    ],
+    "sourceCommit": "6474cab768d53a6deac669a123a2da689933c21f",
+    "ciRun": "33981373681",
+    "state": "floors-compact-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone SE (3rd generation)",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/6474cab/floors-large-text-runtime.png",
+    "sha256": "aecad2624ab52d829b8772b8fa5dc8a16db0f2400fa028abfecd51f4b0fb6174",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "6474cab768d53a6deac669a123a2da689933c21f",
+    "ciRun": "33981373681",
+    "state": "floors-large-text-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/6474cab/floors-runtime.png",
+    "sha256": "e0a52550da445b1f3cd72252a7dc36b5bd31f5e540f9299aff6a3d5fe3794b75",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "6474cab768d53a6deac669a123a2da689933c21f",
+    "ciRun": "33981373681",
+    "state": "floors-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  }
+]

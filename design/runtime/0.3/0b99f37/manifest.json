@@ -1,0 +1,302 @@
+[
+  {
+    "file": "design/runtime/0.3/0b99f37/care-compact-runtime.png",
+    "sha256": "839a032c39d1b85aa5ee6de047ffb0706ab48edf4a26ca1afca4ae7ac52a1235",
+    "canvas": [
+      750,
+      1334
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "care-compact-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone SE (3rd generation)",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/care-large-text-runtime.png",
+    "sha256": "e388da71260f3b617530977c9b15eaa8e199c11493401a1b7dfd41f15911321c",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "care-large-text-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/care-runtime.png",
+    "sha256": "22cde89ed3859a77306eee108836ff968c70560e049d147024b919209209ca22",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "care-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/drag-runtime.png",
+    "sha256": "dceea557406258c021534d315805173a948b23900efc06424f82f1102b7b005e",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "drag-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/floor-laid-runtime.png",
+    "sha256": "2713b864f30a4b555cebcba374cdb194a069b8fea3cb12af1b97c9fcdbf4e883",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "floor-laid-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/floors-compact-runtime.png",
+    "sha256": "bea3146eb95a909b93470a0a94b94e1c48f2faca62d1980b59d53dd6fe1b47a7",
+    "canvas": [
+      750,
+      1334
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "floors-compact-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone SE (3rd generation)",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/floors-large-text-runtime.png",
+    "sha256": "02001a4201088dc970422eac16b7f139be2a42fc67fea604fe358c54d65ede49",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "floors-large-text-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/floors-runtime.png",
+    "sha256": "abb28c471e618a663aafe5015370bb114170941c4f5ec9864b62456edf402ed0",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "floors-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/living-compact-runtime.png",
+    "sha256": "1c7c78158f581c45a5f30817cd8e2861294c9a9fc6375dd177408bb8c9813c4d",
+    "canvas": [
+      750,
+      1334
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "living-compact-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone SE (3rd generation)",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/living-runtime.png",
+    "sha256": "9291b28ac472dcfa9d1d90c0a1d4e2217e0d70a80e163e23ca9534350dafb25d",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "living-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/pricing-compact-runtime.png",
+    "sha256": "8b5845c593f081ea961ea727644f804a2b14204ee6a4fa5bf9cb5a81fb62242f",
+    "canvas": [
+      750,
+      1334
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "pricing-compact-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone SE (3rd generation)",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/pricing-large-text-runtime.png",
+    "sha256": "81ccf0c481427c37bfa74ba1b0878173ba4fb801a752696aa5bc19a03899394b",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "pricing-large-text-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/pricing-runtime.png",
+    "sha256": "28ff19197fd78cd4238b2c4044910bcc8a76789ba7001a88d87d45fa56aa0d4d",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "pricing-runtime",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; isolated deterministic game-state fixture"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/ui-care-open.png",
+    "sha256": "1090e6704d66500b50354417745735ae603e959206418bdade2dafce4cc277ef",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "ui-care-open",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; native XCTest interaction attachment"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/ui-floor-applied.png",
+    "sha256": "f0b565d47b55045753c634f4185ac93e2a6bafaa03be5526ae9a8832effd3d05",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "ui-floor-applied",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; native XCTest interaction attachment"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/ui-floor-preview.png",
+    "sha256": "f4f486405ad3f4068b7e4e45197fe4b3027feaf59749820c72c7a4c9fb621279",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "ui-floor-preview",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; native XCTest interaction attachment"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/ui-drag-after.png",
+    "sha256": "d609ebee21d9d18e178f6a7a4c9e395995ca49988320cbf07aa7ad733200826d",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "ui-drag-after",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; native XCTest interaction attachment"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/ui-clean-after-strokes.png",
+    "sha256": "9d5632c2a53be93db4f8165a91f3acd4d4b8f2e90067e18f89d405b5b50e8138",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "ui-clean-after-strokes",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; native XCTest interaction attachment"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/ui-price-saved-large.png",
+    "sha256": "53b25ce85de3244e4e7052e71de4fe65b17708a717690bb3f4571e600e7fa92f",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "ui-price-saved-large",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; native XCTest interaction attachment"
+  },
+  {
+    "file": "design/runtime/0.3/0b99f37/ui-restoration-journal.png",
+    "sha256": "a4dc877e83239618c15d7b6b29bce5a1eab175ed11639e13ff7360487e470a1c",
+    "canvas": [
+      1206,
+      2622
+    ],
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c",
+    "ciRun": "33980579266",
+    "state": "ui-restoration-journal",
+    "language": "en",
+    "orientation": "portrait",
+    "device": "iPhone 16 Pro",
+    "source": "real iOS Simulator screenshot; native XCTest interaction attachment"
+  }
+]

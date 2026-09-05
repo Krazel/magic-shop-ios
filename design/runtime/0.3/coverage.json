@@ -1,0 +1,27 @@
+{
+  "appSourceCommit": "6474cab768d53a6deac669a123a2da689933c21f",
+  "domainModel": {
+    "passed": 109,
+    "failed": 0,
+    "skipped": 0,
+    "run": "33979280414",
+    "sourceCommit": "dcfb4498cd10e7bfa5ee973df221472be5c28161",
+    "unchangedThroughFinalSource": true,
+    "originalRun": "114 total passes and three UI accessibility-target failures; original summary preserved"
+  },
+  "nativeUI": {
+    "passed": 8,
+    "failed": 0,
+    "skipped": 0,
+    "run": "33980579266",
+    "sourceCommit": "0b99f3727bc5977c1cadb94010295c8786d6340c"
+  },
+  "finalPresentation": {
+    "run": "33981373681",
+    "sourceCommit": "6474cab768d53a6deac669a123a2da689933c21f",
+    "result": "SUCCESS",
+    "checks": "Release simulator build and normal/compact/accessibility floor captures",
+    "tests": "Intentionally not repeated for the isolated final floor-card presentation change"
+  },
+  "boundary": "117 distinct cases covered across the two test runs, not 117 tests executed on final source. Physical installation and auditory VoiceOver session not executed."
+}

@@ -44,14 +44,18 @@ loans, crafting, accounts, ads, tracking, purchases or network calls.
 - Journal: restoration goals, calendar rules and recent trading results.
 - Dynamic Type and Reduce Motion use the device's accessibility preferences.
 
-## Candidate 0.3 (build 1) — in verification
+## Candidate 0.3 (build 1) — verified
 
-The current delivery adds direct manipulation, floor materials, manual cleaning,
-overlapping visitors and player pricing. See `docs/LIVING-SHOP-PLAN.md` and
-`docs/LIVING-SHOP-DOMAIN.md`. Native CI and gesture/visual QA are required before
-calling this delivery verified. The previous 0.2 evidence and IPA remain intact
-in `docs/COMPLETE-GAME-VERIFICATION.md` and `design/runtime/0.2/`.
-This is a local testing build, not a public store release.
+Direct manipulation, floor materials, manual cleaning, overlapping visitors and
+player pricing are implemented and verified. Domain/model coverage passed 109
+tests; all eight native UI tests passed in the subsequent focused run. The final
+floor accessibility adjustment passed a Release build and normal/compact/large-text
+capture review. The exact-source unsigned arm64 IPA passed checksum and package
+verification. See `docs/LIVING-SHOP-VERIFICATION.md` for source commits, CI runs,
+coverage boundaries and delivery path. This is a local testing candidate for
+Sideloadly; physical installation and store release are separate checks.
+The previous 0.2 evidence and IPA remain intact in
+`docs/COMPLETE-GAME-VERIFICATION.md` and `design/runtime/0.2/`.
 
 Approved masters and the director's delegated visual choices are retained in
 `design/approved/` with hashes and authority in `design/APPROVALS.md`.
