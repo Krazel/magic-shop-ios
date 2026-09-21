@@ -135,6 +135,7 @@ final class RestorationTests: XCTestCase {
             var saved = engine.state
             let style = FloorStyleID(rawValue: "personalFloor")
             saved.world.floor.setStyleID(style, at: GridPoint(x: 7, y: 7))
+            saved.dirt[GridPoint(x: 7, y: 7)] = 2
             engine = GameEngine(state: saved)
             for group in RestorationGroupID.allCases { try engine.repair(group) }
             let before = engine.state
@@ -148,6 +149,37 @@ final class RestorationTests: XCTestCase {
             XCTAssertEqual(engine.state.fixtures.first?.id, table.id)
             XCTAssertEqual(engine.state.fixtures.first?.origin, GridPoint(x: 4 + shift.x, y: 4))
             XCTAssertEqual(engine.state.world.floor.styleID(at: GridPoint(x: 7 + shift.x, y: 7)), style)
+            XCTAssertEqual(engine.state.dirt, [GridPoint(x: 7 + shift.x, y: 7): 2])
+
+            // The painted architecture must leave all five saved connections
+            // open. A narrow visual doorway would contradict these routes.
+            let outward: WallSide
+            let inward: WallSide
+            let offset: GridPoint
+            switch direction {
+            case .left:
+                outward = .left; inward = .right; offset = GridPoint(x: -1, y: 0)
+            case .right:
+                outward = .right; inward = .left; offset = GridPoint(x: 1, y: 0)
+            case .rear:
+                outward = .rear; inward = .front; offset = GridPoint(x: 0, y: 1)
+            }
+            let reachable = ShopAccess.reachableCells(in: engine.state)
+            XCTAssertEqual(expansion.starterConnectionCells.count, 5)
+            for connection in expansion.starterConnectionCells {
+                let inside = GridPoint(x: connection.x + shift.x, y: connection.y + shift.y)
+                let annex = GridPoint(x: inside.x + offset.x, y: inside.y + offset.y)
+                let outsideWall = GridPoint(x: annex.x + offset.x * 4, y: annex.y + offset.y * 4)
+                let innerCell = try XCTUnwrap(engine.state.world.hitMap.cell(at: inside))
+                let annexCell = try XCTUnwrap(engine.state.world.hitMap.cell(at: annex))
+                let outerCell = try XCTUnwrap(engine.state.world.hitMap.cell(at: outsideWall))
+                XCTAssertTrue(reachable.contains(inside))
+                XCTAssertTrue(reachable.contains(annex))
+                XCTAssertTrue(reachable.contains(outsideWall))
+                XCTAssertFalse(innerCell.adjacentWalls.contains(outward))
+                XCTAssertFalse(annexCell.adjacentWalls.contains(inward))
+                XCTAssertTrue(outerCell.adjacentWalls.contains(outward))
+            }
             XCTAssertEqual(engine.state.world.hitMap.cells.filter { $0.zone != .outside }.count, 146)
             XCTAssertEqual(engine.state.world.hitMap.cells.filter { $0.zone == .outside }.count, 30)
             XCTAssertEqual(engine.state.world.hitMap.cell(at: GridPoint(x: 5 + shift.x, y: 0))?.zone, .entrance)

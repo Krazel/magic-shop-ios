@@ -204,6 +204,37 @@ final class ShopJourneyUITests: XCTestCase {
         XCTAssertTrue((camera.value as? String)?.contains("Zoom ") == true)
     }
 
+    @MainActor
+    func testDisplaysInEveryAnnexRemainSelectableAndStocked() throws {
+        for direction in ["left", "right", "rear"] {
+            let app = XCUIApplication()
+            app.launchArguments = ["--visual-state", "annex-\(direction)"]
+            app.launch()
+            let fixture = app.descendants(matching: .any)["fixture-world-10000000-0000-0000-0000-000000000001"].firstMatch
+            XCTAssertTrue(fixture.waitForExistence(timeout: 10), direction)
+            XCTAssertTrue((fixture.value as? String)?.contains("Glow Potion displayed") == true, direction)
+            let overviewFrame = fixture.frame
+            attach(app, "Occupied \(direction) annex before interaction")
+            fixture.tap()
+            let returnItem = app.buttons["Return for $10"]
+            XCTAssertTrue(returnItem.waitForExistence(timeout: 5), direction)
+            returnItem.tap()
+            XCTAssertTrue(app.buttons["confirm-stock"].waitForExistence(timeout: 5), direction)
+            app.buttons["confirm-stock"].tap()
+            XCTAssertTrue(returnItem.waitForExistence(timeout: 5), direction)
+            expectation(for: NSPredicate(format: "value CONTAINS %@", "Glow Potion displayed"), evaluatedWith: fixture)
+            waitForExpectations(timeout: 5)
+            attach(app, "\(direction) annex display restocked through native controls")
+            // Holding a stocked annex display without moving the finger must
+            // not shift its saved position when the placement preview opens.
+            fixture.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.65)).press(forDuration: 0.35)
+            XCTAssertTrue(app.buttons["next-step-action"].waitForExistence(timeout: 5), direction)
+            XCTAssertEqual(fixture.frame.midX, overviewFrame.midX, accuracy: 5, direction)
+            XCTAssertEqual(fixture.frame.midY, overviewFrame.midY, accuracy: 5, direction)
+            app.terminate()
+        }
+    }
+
     @MainActor private func attach(_ app: XCUIApplication, _ name: String) {
         let capture = XCTAttachment(screenshot: app.screenshot())
         capture.name = name; capture.lifetime = .keepAlways; add(capture)

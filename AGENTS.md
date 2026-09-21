@@ -51,3 +51,13 @@ Deliver native test/capture evidence and a verified unsigned Sideloadly IPA.
 The current portfolio record is D1 PR-011 in Krazel Studio; reconcile its current
 revision and preserve unrelated fields. No library deployment, TestFlight,
 store publication, monetization or SDK scope is opened.
+
+## Current visual correction — 0.4.1, 2026-09-21
+The owner rejected the attached-looking annex and confirmed a request to
+rethink its appearance. Execute docs/EXPANSION-REVISION.md under the existing
+delegated visual authority. Keep schema 5, the same three 5×5 layouts and every
+saved fixture/floor/stock value. Replace the distorted whole-room warp with
+coherent architectural planes and a wide flush opening. The director-selected
+references are recorded in design/APPROVALS.md; do not invent individual owner
+approval of them. Root integrates App/QA/CI; World and art lanes remain disjoint.
+Native captures of all directions and the verified IPA are required for closure.

@@ -1,0 +1,192 @@
+{
+  "date": "2026-09-21",
+  "tool": "built-in image_gen",
+  "authority": "Project director selection under explicit owner delegation; no new individual owner image review",
+  "runtimeParity": "Pending native screenshot comparison",
+  "assets": [
+    {
+      "name": "left-alcove-v1",
+      "kind": "proposal",
+      "selected": false,
+      "decision": "Rejected: rear annex wall remained half-height.",
+      "source": "design/proposals/expansion-v2/left-alcove-v1.png",
+      "prompt": "design/proposals/expansion-v2/left-alcove-v1.prompt.txt",
+      "width": 851,
+      "height": 1848,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "CF53ED1BD637B613AA4DB56B7D62B6586E919A1FE322E14EE3A555BAA381938C",
+      "referenceInputs": [
+        "design/runtime/0.4/a701788/freeplay-runtime.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-c120739b-8ea6-4f19-a5af-cb2773052048.png"
+    },
+    {
+      "name": "left-alcove-v2",
+      "kind": "reference",
+      "selected": true,
+      "decision": "Selected by project director under delegated authority.",
+      "source": "design/proposals/expansion-v2/left-alcove-v2.png",
+      "prompt": "design/proposals/expansion-v2/left-alcove-v2.prompt.txt",
+      "width": 851,
+      "height": 1848,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "39FA3296B7EC3164823860153121F7FA58202193A6C08EAE190D3B684D98FA07",
+      "referenceInputs": [
+        "design/proposals/expansion-v2/left-alcove-v1.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-e9f2b9f4-d62b-4af3-983b-91c56c709653.png"
+    },
+    {
+      "name": "AnnexFloorTerracotta",
+      "kind": "material",
+      "selected": true,
+      "decision": "Selected material matching the architectural direction.",
+      "source": "design/assets/expansion-v2/AnnexFloorTerracotta.png",
+      "prompt": "design/assets/expansion-v2/AnnexFloorTerracotta.prompt.txt",
+      "width": 1254,
+      "height": 1254,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "60A929821F1839EEF6331F33ACBF9DBBF73B08CD8A16C68D44BD630756AC7D39",
+      "referenceInputs": [
+        "design/proposals/expansion-v2/left-alcove-v1.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-dc96ce8c-3bac-4f4a-8ddc-e64ab09cb5f9.png",
+      "runtimeImageset": "MagicShop/Resources/Assets.xcassets/AnnexFloorTerracotta.imageset"
+    },
+    {
+      "name": "AnnexWallPlasterTeal",
+      "kind": "material",
+      "selected": true,
+      "decision": "Selected material matching the architectural direction.",
+      "source": "design/assets/expansion-v2/AnnexWallPlasterTeal.png",
+      "prompt": "design/assets/expansion-v2/AnnexWallPlasterTeal.prompt.txt",
+      "width": 1254,
+      "height": 1254,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "51A6F982CC17C3568474D16800FA320EA8129FF64CCA9F1781F0C608EC4AAC00",
+      "referenceInputs": [
+        "design/proposals/expansion-v2/left-alcove-v1.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-c7f78e73-e61e-40ba-a17d-783ba8101a9f.png",
+      "runtimeImageset": "MagicShop/Resources/Assets.xcassets/AnnexWallPlasterTeal.imageset"
+    },
+    {
+      "name": "AnnexWallCapTeal",
+      "kind": "material",
+      "selected": true,
+      "decision": "Selected material matching the architectural direction.",
+      "source": "design/assets/expansion-v2/AnnexWallCapTeal.png",
+      "prompt": "design/assets/expansion-v2/AnnexWallCapTeal.prompt.txt",
+      "width": 1254,
+      "height": 1254,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "40ED2DB096C327434ABB849023D8C25AAEDAD3598B67E1CB5517A7438E880999",
+      "referenceInputs": [
+        "design/proposals/expansion-v2/left-alcove-v1.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-5667a61e-f087-476f-ba4c-7fa7e57d80b8.png",
+      "runtimeImageset": "MagicShop/Resources/Assets.xcassets/AnnexWallCapTeal.imageset"
+    },
+    {
+      "name": "AnnexThresholdStone",
+      "kind": "material",
+      "selected": true,
+      "decision": "Selected material matching the architectural direction.",
+      "source": "design/assets/expansion-v2/AnnexThresholdStone.png",
+      "prompt": "design/assets/expansion-v2/AnnexThresholdStone.prompt.txt",
+      "width": 1254,
+      "height": 1254,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "F0653DC1F3992AC8C5CCD1C1AB37C873151AAEB1EB7415352137A384151DF486",
+      "referenceInputs": [
+        "design/proposals/expansion-v2/left-alcove-v1.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-eae16a28-add9-4f62-bdaa-10e4fcb70e2c.png",
+      "runtimeImageset": "MagicShop/Resources/Assets.xcassets/AnnexThresholdStone.imageset"
+    },
+    {
+      "name": "right-alcove-v1",
+      "kind": "proposal",
+      "selected": false,
+      "decision": "Superseded: raise annex rear wall another36–40px.",
+      "source": "design/proposals/expansion-v2/right-alcove-v1.png",
+      "prompt": "design/proposals/expansion-v2/right-alcove-v1.prompt.txt",
+      "width": 851,
+      "height": 1848,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "0BFD1C8AEEE87FB87B49751F0F6FEFD970B6C656BCFC1F8BDF420E32B611530C",
+      "referenceInputs": [
+        "design/runtime/0.2/4087139/restored-right-runtime.png",
+        "design/proposals/expansion-v2/left-alcove-v2.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-c65ceb05-26d8-4852-a37d-cc2c5140cef2.png"
+    },
+    {
+      "name": "rear-alcove-v1",
+      "kind": "proposal",
+      "selected": false,
+      "decision": "Superseded for current native UI proportions; retained as architectural support.",
+      "source": "design/proposals/expansion-v2/rear-alcove-v1.png",
+      "prompt": "design/proposals/expansion-v2/rear-alcove-v1.prompt.txt",
+      "width": 851,
+      "height": 1848,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "2F2E98FF5848F41CF4A7E87B69B2333B55D3AEC3283DFE69A97A5A1F17DE2A38",
+      "referenceInputs": [
+        "design/runtime/0.2/4087139/restored-rear-runtime.png",
+        "design/proposals/expansion-v2/left-alcove-v2.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-f05cbc37-a807-4e70-a92f-9481410b15b7.png"
+    },
+    {
+      "name": "right-alcove-v2",
+      "kind": "reference",
+      "selected": true,
+      "decision": "Selected by project director under delegated authority.",
+      "source": "design/proposals/expansion-v2/right-alcove-v2.png",
+      "prompt": "design/proposals/expansion-v2/right-alcove-v2.prompt.txt",
+      "width": 851,
+      "height": 1847,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "1DAB158AE993CEE419FD7A140D4A01577AE1D51C0681EFF186AB0C71673D17B9",
+      "referenceInputs": [
+        "design/proposals/expansion-v2/right-alcove-v1.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-4e906e52-caab-41dd-939c-2556b2be50dc.png"
+    },
+    {
+      "name": "rear-alcove-v2",
+      "kind": "proposal",
+      "selected": false,
+      "decision": "Rejected: generated edit did not restore requested lower-panel placement.",
+      "source": "design/proposals/expansion-v2/rear-alcove-v2.png",
+      "prompt": "design/proposals/expansion-v2/rear-alcove-v2.prompt.txt",
+      "width": 851,
+      "height": 1848,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "92BD4B144711065E759CAA3EAEFA3788DFB19A4B9D4FFDCB60E1B7DF0488D00E",
+      "referenceInputs": [
+        "design/proposals/expansion-v2/rear-alcove-v1.png",
+        "design/proposals/expansion-v2/left-alcove-v2.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-88cd7b1f-a62a-4ddc-95e5-75178d628b5a.png"
+    },
+    {
+      "name": "rear-alcove-v3",
+      "kind": "reference",
+      "selected": true,
+      "decision": "Selected for architecture and current interface, with original main-room projection and native UI/factual state explicitly preserved at implementation.",
+      "source": "design/proposals/expansion-v2/rear-alcove-v3.png",
+      "prompt": "design/proposals/expansion-v2/rear-alcove-v3.prompt.txt",
+      "width": 851,
+      "height": 1848,
+      "pixelFormat": "Format24bppRgb",
+      "sha256": "CC55FD083BEDCD9D2D5C3AF4CEE940D381B8291DE7DBA699C15BDFD4A97E7DE8",
+      "referenceInputs": [
+        "design/proposals/expansion-v2/left-alcove-v2.png",
+        "design/proposals/expansion-v2/rear-alcove-v1.png"
+      ],
+      "generationSource": "$CODEX_HOME/generated_images/01a06e65-3852-7053-a87d-2c481f877daf/exec-5ba6a3aa-90f8-411b-95ea-3e2b1185904b.png"
+    }
+  ]
+}

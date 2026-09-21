@@ -1,5 +1,44 @@
 # Magic Shop — Visual Approvals
 
+## Architectural expansion correction — 2026-09-21
+
+The owner explicitly rejected the attached-looking annex and requested a
+different solution. The director selected a contiguous showroom with a wide
+opening, full-height cream/teal walls and a flush pale-stone threshold under the
+owner's standing delegated visual authority. This is not a claim that the owner
+reviewed the generated image individually. The first, short-walled proposal is
+retained as rejected history in `design/proposals/expansion-v2/`.
+
+- State: restored shop with left annex, preparation, English iPhone portrait.
+- Current canonical image: `design/approved/expansion-left-v2.png`, 851×1848.
+- Selected: 2026-09-21, director under explicit delegation.
+- SHA-256: `39FA3296B7EC3164823860153121F7FA58202193A6C08EAE190D3B684D98FA07`.
+- Supersedes the previous complete-game annex architecture only. Original
+  starter shop, native controls and historical images remain preserved.
+- Invariants: five-cell traversable opening; existing floor footprint and save
+  positions; wall extrusion independent of floor perspective; jambs at endpoints
+  outside the usable floor; no step, narrow doorway or central obstruction.
+- Native adaptations: factual state text and furnishings, camera fit for each
+  orientation, compact/Dynamic Type panel scrolling and original native HUD.
+  Minor generated resynthesis of unchanged starter artwork is not a requested
+  replacement of the original preserved plate.
+- Materials: `design/assets/expansion-v2/`; provenance in
+  `docs/EXPANSION-ART.md`. Comparable runtime captures pending.
+
+The right orientation uses the same architectural contract, independently
+reviewed before implementation: `design/approved/expansion-right-v2.png`,
+851×1848, English iPhone portrait, selected by director 2026-09-21.
+SHA-256: `1DAB158AE993CEE419FD7A140D4A01577AE1D51C0681EFF186AB0C71673D17B9`.
+
+The rear orientation is `design/approved/expansion-rear-v3.png`, 851×1848,
+English iPhone portrait, selected by director 2026-09-21. SHA-256:
+`CC55FD083BEDCD9D2D5C3AF4CEE940D381B8291DE7DBA699C15BDFD4A97E7DE8`.
+The opening must remove the original wall's entire height; the room remains
+below the calendar. Preserve the original starter projection and its 11×11
+geometry rather than copying the generated main-room widening. Its native HUD
+and preparation controls remain governed by the existing shopkeeper reference.
+Rear proposals v1/v2 are historical, not additional current references.
+
 ## Starter shop overview
 
 - Status: current and approved

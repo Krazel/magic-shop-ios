@@ -33,9 +33,23 @@ extension AppModel {
             if name == "repair-rubble" { _ = try engine.repair(.rubble) }
             if name == "repair-boards" { _ = try engine.repair(.brokenBoards) }
             if name == "repair-papers" { _ = try engine.repair(.discardedPapers) }
-            if name.hasPrefix("restored") || name == "freeplay" {
-                let direction: ExpansionDirection = name == "restored-right" ? .right : name == "restored-rear" ? .rear : .left
+            if name.hasPrefix("restored") || name.hasPrefix("annex-") || name == "freeplay" {
+                let direction: ExpansionDirection = name.hasSuffix("right") ? .right : name.hasSuffix("rear") ? .rear : .left
                 engine = try restoredVisualEngine(direction: direction)
+            }
+            if name.hasPrefix("annex-"), let expansion = engine.state.restoration.expansion {
+                let origin = expansion.roomOrigin
+                let tables = engine.state.fixtures.filter { $0.kind == .basicDisplayTable }
+                for (index, table) in tables.prefix(2).enumerated() {
+                    try engine.moveFixture(fixtureID: table.id,
+                        origin: GridPoint(x: origin.x + 1 + index * 2, y: origin.y + 2), rotation: .north)
+                }
+                if let table = tables.first {
+                    _ = try engine.confirm(engine.makeStockDraft(product: .glowPotion, fixtureID: table.id, slotIndex: 0))
+                }
+                for y in 0..<2 { for x in 1..<3 {
+                    _ = try engine.paintFloor(at: GridPoint(x: origin.x + x, y: origin.y + y), style: .warmOak)
+                } }
             }
             if ["living", "pricing", "care", "floors", "floor-laid", "drag", "living-summary", "preparation", "paused-stock"].contains(name) {
                 engine = GameEngine()
@@ -106,8 +120,9 @@ extension AppModel {
         var engine = GameEngine()
         try engine.completeOnboarding(shopName: "Moon & Mortar")
         var tables: [PlacedFixture] = []
-        for point in [GridPoint(x: 2, y: 3), GridPoint(x: 4, y: 3), GridPoint(x: 6, y: 3), GridPoint(x: 7, y: 7)] {
-            tables.append(try engine.confirm(engine.makePlacementDraft(kind: .basicDisplayTable, origin: point)))
+        for (index, point) in [GridPoint(x: 2, y: 3), GridPoint(x: 4, y: 3), GridPoint(x: 6, y: 3), GridPoint(x: 7, y: 7)].enumerated() {
+            let id = UUID(uuidString: "10000000-0000-0000-0000-00000000000\(index + 1)")!
+            tables.append(try engine.confirm(engine.makePlacementDraft(kind: .basicDisplayTable, origin: point, fixtureID: id)))
         }
         let shelf = try engine.confirm(engine.makePlacementDraft(kind: .simpleShelf, origin: GridPoint(x: 4, y: 10)))
         for _ in 0..<4 {
