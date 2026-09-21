@@ -132,19 +132,19 @@ struct ShopSceneContainer: UIViewRepresentable {
             state: state, preview: preview, previewIsValid: previewIsValid,
             selectedFixtureID: selectedFixtureID, activeVisit: activeVisit,
             visitProgress: visitProgress, lastOutcome: lastOutcome,
-            reduceMotion: reduceMotion, presentationMinute: presentationMinute,
+            reduceMotion: reduceMotion, presentationPaused: isPaused, presentationMinute: presentationMinute,
             floorPreview: floorPreview, floorPreviewStyle: floorPreviewStyle
         )
         if coordinator.resetID != cameraResetID {
             coordinator.resetID = cameraResetID
             coordinator.resetCamera()
         }
+        view.worldDescription = "\(state.fixtures.count) pieces of furniture, \(state.stock.count) items stocked."
         coordinator.applyCamera()
         view.isPaused = isPaused
         view.updateWorldAccessibility(scene: coordinator.scene, fixtures: state.fixtures,
                                       preview: preview, tool: interactionTool,
                                       onFixtureTap: onFixtureTap, onToolStroke: onToolStroke)
-        view.worldDescription = "\(state.fixtures.count) pieces of furniture, \(state.stock.count) items stocked. Zoom \(Int(100 / coordinator.cameraState.zoom)) percent."
     }
 
     static func dismantleUIView(_ view: ShopAccessibleView, coordinator: Coordinator) {
@@ -380,6 +380,7 @@ struct ShopSceneContainer: UIViewRepresentable {
         func applyCamera() {
             scene.apply(cameraState, horizontalOffset: hasExpansion ? horizontalOffset : 0,
                         contentLift: dragContentLift ?? contentLift)
+            accessibleView?.cameraZoomPercent = Int((100 / cameraState.zoom).rounded())
             accessibleView?.updateCameraFrames(scene: scene)
         }
 
@@ -422,6 +423,7 @@ struct ShopSceneContainer: UIViewRepresentable {
 final class ShopAccessibleView: UIView {
     private let spriteView = SKView()
     var worldDescription = ""
+    var cameraZoomPercent = 100
     var ignoresSiblingOrder: Bool {
         get { spriteView.ignoresSiblingOrder }
         set { spriteView.ignoresSiblingOrder = newValue }
@@ -508,6 +510,7 @@ final class ShopAccessibleView: UIView {
             fixtureElements[fixture.id] = element
             element.accessibilityIdentifier = "fixture-world-\(fixture.id.uuidString)"
             element.accessibilityLabel = FixtureCatalog.definition(for: fixture.kind).displayName
+            element.dynamicValue = { [weak scene] in scene?.accessibilityStockValue(for: fixture.id) }
             element.accessibilityHint = "Select to open furniture controls. Touch and hold to drag."
             element.accessibilityTraits = .button
             element.accessibilityFrameInContainerSpace = visible
@@ -515,18 +518,21 @@ final class ShopAccessibleView: UIView {
             elements.append(element)
         }
         if let preview = currentPreview, let frame = scene.accessibilityPreviewFrame() {
-            previewElement.accessibilityIdentifier = "world-placement-preview"
-            previewElement.accessibilityLabel = "\(previewElementLabel), \(FixtureCatalog.definition(for: preview.kind).displayName)"
-            previewElement.accessibilityHint = "Drag to arrange, or use the placement direction buttons."
-            previewElement.accessibilityTraits = .image
-            previewElement.accessibilityFrameInContainerSpace = frame.intersection(bounds)
-            elements.append(previewElement)
+            let visible = frame.intersection(bounds)
+            if !visible.isNull, !visible.isInfinite, visible.width > 1, visible.height > 1 {
+                previewElement.accessibilityIdentifier = "world-placement-preview"
+                previewElement.accessibilityLabel = "\(previewElementLabel), \(FixtureCatalog.definition(for: preview.kind).displayName)"
+                previewElement.accessibilityHint = "Drag to arrange, or use the placement direction buttons."
+                previewElement.accessibilityTraits = .image
+                previewElement.accessibilityFrameInContainerSpace = visible
+                elements.append(previewElement)
+            }
         }
         cameraElement.accessibilityIdentifier = "world-camera"
         cameraElement.accessibilityLabel = "Shop floor camera"
         cameraElement.accessibilityTraits = [.image, .adjustable]
         cameraElement.accessibilityHint = "Swipe up or down to zoom. More actions move or reset the camera. Build, Stock and Care also provide buttons for arranging and cleaning."
-        cameraElement.accessibilityValue = worldDescription
+        cameraElement.accessibilityValue = "\(worldDescription) Zoom \(cameraZoomPercent) percent."
         cameraElement.accessibilityFrameInContainerSpace = bounds
         cameraElement.accessibilityCustomActions = accessibilityCustomActions
         cameraElement.adjust = { [weak self] in self?.adjustZoom?($0) }
@@ -540,6 +546,11 @@ final class ShopAccessibleView: UIView {
 
 final class ShopWorldAccessibilityElement: UIAccessibilityElement {
     var activate: (() -> Bool)?
+    var dynamicValue: (() -> String?)?
+    override var accessibilityValue: String? {
+        get { dynamicValue?() ?? super.accessibilityValue }
+        set { super.accessibilityValue = newValue }
+    }
     var adjust: ((Bool) -> Void)?
     override func accessibilityActivate() -> Bool { activate?() ?? false }
     override func accessibilityIncrement() { adjust?(true) }

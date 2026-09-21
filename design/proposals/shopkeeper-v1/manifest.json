@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-09-21",
+  "product": "Magic Shop",
+  "targetVersion": "0.4",
+  "tool": "built-in image_gen",
+  "authority": "Director selection under the owner's explicit delegated design authorization; no individual owner image review is claimed.",
+  "sourceAppCommit": "6474cab768d53a6deac669a123a2da689933c21f",
+  "sourceRepositoryHead": "2ec24643acc6e66bd59cc631bf21151bf17efbdb",
+  "language": "English",
+  "device": "iPhone portrait",
+  "requestedCanvas": {
+    "width": 1206,
+    "height": 2622
+  },
+  "images": [
+    {
+      "id": "preparation-v1",
+      "proposal": "preparation-v1.png",
+      "canonical": "../../approved/shopkeeper-preparation-v1.png",
+      "status": "selected",
+      "width": 851,
+      "height": 1849,
+      "sha256": "9DBA62373730D37263D2E3527DDDEEA50003D030D1DEFF083738DB747E537EBF",
+      "prompt": "preparation-v1-prompt.txt",
+      "references": [
+        "../../runtime/0.3/0b99f37/drag-runtime.png"
+      ]
+    },
+    {
+      "id": "summary-v1",
+      "proposal": "summary-v1.png",
+      "status": "historical-not-selected",
+      "width": 851,
+      "height": 1849,
+      "sha256": "D8B1A302B3004C93FEE77467D2C6E0BE206D5F24991818948C81A6DD0479717A",
+      "prompt": "summary-v1-prompt.txt",
+      "references": [
+        "../../runtime/0.2/4087139/summary-runtime.png",
+        "../../runtime/0.3/0b99f37/drag-runtime.png"
+      ]
+    },
+    {
+      "id": "summary-v2",
+      "proposal": "summary-v2.png",
+      "canonical": "../../approved/shopkeeper-summary-v1.png",
+      "status": "selected",
+      "width": 851,
+      "height": 1848,
+      "sha256": "C01884FE990F4FFC3CFDE3AA926834C074E97B2997CBC42AA44256D7D9345F8A",
+      "prompt": "summary-v2-prompt.txt",
+      "references": [
+        "summary-v1.png"
+      ]
+    }
+  ],
+  "newRuntimeAssets": [],
+  "runtimeVerification": "Pending implementation and real compact/normal/accessibility captures."
+}

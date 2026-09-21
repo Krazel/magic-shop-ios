@@ -380,6 +380,113 @@ final class LivingShopTests: XCTestCase {
         XCTAssertEqual(try roundTrip(engine.state), engine.state)
     }
 
+    func testNormalDailySeedsReachRestorationFromFiveHundredAndContinueAfterDiskRelaunch() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MagicShopJourney-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = FileGameStateStore(fileURL: directory.appendingPathComponent("state.json"))
+        var session = try GameSession(store: store)
+        XCTAssertEqual(session.engine.state.balance, 500)
+        let tableID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
+        let shelfID = UUID(uuidString: "00000000-0000-0000-0000-000000000002")!
+        let slots: [(ProductKind, UUID, Int)] = [
+            (.luckyCharm, tableID, 0), (.glowPotion, shelfID, 0), (.pocketSpellbook, shelfID, 1)
+        ]
+        try session.commit { engine in
+            try engine.completeOnboarding(shopName: "Everyday Magic")
+            for repair in RepairCatalog.all {
+                let point = try XCTUnwrap(engine.state.world.hitMap.cells.first {
+                    $0.staticBlocker == repair.blocker
+                }).point
+                for _ in 0..<ShopCare.repairStrokesRequired { try engine.cleanCell(at: point) }
+            }
+            try engine.confirm(PlacementDraft(fixtureID: tableID, kind: .basicDisplayTable,
+                                              origin: GridPoint(x: 4, y: 4)))
+            try engine.confirm(PlacementDraft(fixtureID: shelfID, kind: .simpleShelf,
+                                              origin: GridPoint(x: 4, y: 10)))
+        }
+        var completion: RestorationCompletion?
+        for number in 1...4 {
+            if number == 4 {
+                XCTAssertEqual(session.engine.state.restorationProgress.successfulTradingDays, 3)
+                try session.commit { engine in
+                    try engine.expandShop(toward: .right)
+                    let decorations: [(FixtureKind, GridPoint)] = [
+                        (.pottedFern, GridPoint(x: 2, y: 6)),
+                        (.starRug, GridPoint(x: 3, y: 6)),
+                        (.brassLantern, GridPoint(x: 4, y: 6))
+                    ]
+                    for (index, item) in decorations.enumerated() {
+                        let id = UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", 50 + index))!
+                        try engine.confirm(PlacementDraft(fixtureID: id, kind: item.0, origin: item.1))
+                    }
+                }
+                XCTAssertTrue(session.engine.state.hasCompletedRestoration)
+                completion = try XCTUnwrap(session.engine.state.restoration.completion)
+                let restored = session.engine.state
+                session = try GameSession(store: store)
+                XCTAssertEqual(session.engine.state, restored)
+                print("SHOPKEEPER restored: balance=\(restored.balance), completedDays=\(restored.completedDays)")
+            }
+
+            let dayID = UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", 1000 + number))!
+            let day = try session.commit { engine in
+                for (index, slot) in slots.enumerated() {
+                    if engine.state.stock.contains(where: { $0.fixtureID == slot.1 && $0.slotIndex == slot.2 }) {
+                        continue
+                    }
+                    let stockID = UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d",
+                                                         2000 + number * 10 + index))!
+                    try engine.confirm(StockDraft(stockID: stockID, product: slot.0,
+                                                  fixtureID: slot.1, slotIndex: slot.2))
+                }
+                return try engine.openLivingDay(dayID: dayID)
+            }
+            XCTAssertEqual(day.seed, LivingShopDay.defaultSeed(dayNumber: number))
+            XCTAssertEqual(session.engine.state.pricing, ShopPricing.marketPrices)
+            let openingBalance = session.engine.state.balance
+            var uninterrupted = GameEngine(state: session.engine.state)
+            try uninterrupted.advanceLivingDay(expectedDayID: dayID, expectedMinute: 540, toMinute: 1080)
+            try session.commit {
+                try $0.advanceLivingDay(expectedDayID: dayID, expectedMinute: 540, toMinute: 720)
+            }
+            let savedAtNoon = session.engine.state
+            session = try GameSession(store: store)
+            XCTAssertEqual(session.engine.state, savedAtNoon)
+            try session.commit {
+                try $0.advanceLivingDay(expectedDayID: dayID, expectedMinute: 720, toMinute: 1080)
+            }
+            XCTAssertEqual(session.engine.state, uninterrupted.state)
+            XCTAssertEqual(session.engine.state.phase, .summary)
+            XCTAssertEqual(session.engine.state.calendar.timeText, "18:00")
+            let closed = session.engine.state
+            session = try GameSession(store: store)
+            XCTAssertEqual(session.engine.state, closed)
+            let summary = try session.commit { try $0.acknowledgeLivingDaySummary(dayID: dayID) }
+            XCTAssertGreaterThan(summary.customersServed, 0)
+            XCTAssertEqual(summary.outcomes.count, 12)
+            XCTAssertEqual(session.engine.state.balance, openingBalance + summary.revenue)
+            XCTAssertEqual(summary.productResults.reduce(0) { $0 + $1.profit }, summary.profit)
+            XCTAssertEqual(session.engine.state.completedDays, number)
+            XCTAssertEqual(session.engine.state.calendar.dayNumber, number + 1)
+            XCTAssertEqual(session.engine.state.phase, .preparing)
+            print("SHOPKEEPER day=\(number) units=\(summary.customersServed) revenue=\(summary.revenue) " +
+                  "cost=\(summary.costOfGoods) profit=\(summary.profit) balance=\(session.engine.state.balance)")
+        }
+
+        let final = session.engine.state
+        XCTAssertTrue(final.hasCompletedRestoration)
+        XCTAssertTrue(final.restorationProgress.isComplete)
+        XCTAssertEqual(final.restoration.completion, completion)
+        XCTAssertEqual(final.dayHistory.map(\.simulation), Array(repeating: .living, count: 4))
+        let fixtureValue = final.fixtures.reduce(0) { $0 + FixtureCatalog.definition(for: $1.kind).price }
+        let inventoryValue = final.stock.reduce(0) { $0 + $1.purchaseCost }
+        let earnedProfit = final.dayHistory.reduce(0) { $0 + $1.profit }
+        XCTAssertEqual(final.balance + fixtureValue + inventoryValue + ExpansionState.price,
+                       GameState.startingBalance + earnedProfit)
+        XCTAssertEqual(try store.load(), final)
+        XCTAssertEqual(final.schemaVersion, 5)
+    }
     func testImportedAcquisitionCostCannotOverflowDuringSecondLivingSale() throws {
         let ready = try saleReadyEngine()
         var state = ready.state

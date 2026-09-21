@@ -1,0 +1,14 @@
+Use case: precise-object-edit / ui-mockup.
+Edit this complete English iPhone portrait game screenshot. Keep EVERY part of the shop illustration, original canvas, camera, room, furniture, top HUD, calendar, native navigation, frame, heading, totals and fixed button exactly unchanged. No new art and no enlargement of the panel. Change ONLY the product breakdown typography arrangement and the Tomorrow copy inside the teal panel:
+Keep three product rows with the exact same small icons. Replace the Product / Sold / Profit table headers with a single modest header 'By product'. Each row becomes two lines: product name on first line, compact descriptive caption immediately below. Exact content:
+'Glow Potion'
+'3 sold · $45 margin'
+'Lucky Charm'
+'2 sold · $50 margin'
+'Pocket Spellbook'
+'1 sold · $40 margin'
+The small painted icon stays at the left of its row, name and caption to the right. Readable cream names, softer cream captions. No separate numeric columns. Slim existing separators may remain.
+Keep 'Tomorrow'. Replace its body with exact text:
+'5 visitors came looking for Glow Potion. Try keeping some on display tomorrow.'
+Allow two or three natural lines. This reports observed product interest; do not invent lost-sales claims or reasons why visitors left.
+Keep the native subtle scroll indicator and the fixed, fully visible 'Prepare Day 4' footer. Keep Day complete, Day 3 · 6 items sold, Sales $235, Stock cost $100 and Profit $135 exactly. Render clean legible text, comfortable padding, no overlaps or clipping. Maintain identical full portrait canvas and all other pixels/art as faithfully as possible.

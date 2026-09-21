@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       capture_only:
-        description: 'Capture living shop, care and pricing after an already tested presentation adjustment'
+        description: 'Capture shopkeeper guidance and controls after an already tested presentation adjustment'
         type: boolean
         default: false
       interaction_check:
@@ -26,7 +26,7 @@ jobs:
   build-and-test:
     name: Build and test Magic Shop
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 40
 
     steps:
       - name: Check out repository
@@ -114,19 +114,19 @@ jobs:
           xcrun simctl bootstatus "$SIMULATOR_UDID" -b
           xcrun simctl status_bar "$SIMULATOR_UDID" override --time '9:41' --batteryState charged --batteryLevel 100
           xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
-          STATES="onboarding overview build placement stock living living-summary pricing care floors floor-laid drag improvements decor journal restored-right"
-          if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="living pricing care floors floor-laid stock"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="living pricing care floors floor-laid drag"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="floors"; fi
+          STATES="onboarding overview preparation build placement stock living living-summary pricing care floors floor-laid drag improvements decor journal restored-right freeplay paused-stock"
+          if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock freeplay"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock drag"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE"
             sleep 3
             xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/$STATE-runtime.png"
           done
-          LARGE_STATES="stock pricing care floors"
-          if [ "${{ inputs.interaction_check }}" = "true" ]; then LARGE_STATES="pricing care floors"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then LARGE_STATES="floors"; fi
+          LARGE_STATES="stock pricing care floors preparation living-summary"
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then LARGE_STATES="preparation living-summary pricing care"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then LARGE_STATES="preparation living-summary pricing care"; fi
           for STATE in $LARGE_STATES; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE" --large-text
@@ -148,14 +148,15 @@ jobs:
             echo 'Compact simulator unavailable on this runner' >> "$RUNNER_TEMP/VisualQA/capture-manifest.txt"
             exit 0
           fi
+          xcrun simctl shutdown "$SIMULATOR_UDID" || true
           xcrun simctl boot "$SMALL_UDID" || true
           xcrun simctl bootstatus "$SMALL_UDID" -b
           xcrun simctl status_bar "$SMALL_UDID" override --time '9:41' --batteryState charged --batteryLevel 100
           xcrun simctl install "$SMALL_UDID" "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
-          STATES="onboarding stock placement pricing care floors living"
-          if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="living pricing care floors floor-laid stock"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="pricing care floors living"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="floors"; fi
+          STATES="onboarding stock placement pricing care floors living preparation living-summary freeplay"
+          if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock freeplay"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SMALL_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SMALL_UDID" com.example.MagicShop --visual-state "$STATE"
@@ -175,12 +176,12 @@ jobs:
         if: success()
         run: |
           APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
-          ARTIFACT_ROOT="$RUNNER_TEMP/MagicShop-0.3-build-1-CI"
+          ARTIFACT_ROOT="$RUNNER_TEMP/MagicShop-0.4-build-1-CI"
           mkdir -p "$ARTIFACT_ROOT"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$ARTIFACT_ROOT/MagicShop-simulator.app.zip"
           cat > "$ARTIFACT_ROOT/build-manifest.txt" <<EOF
           App: Magic Shop
-          Marketing version: 0.3
+          Marketing version: 0.4
           Build: 1
           Commit: $GITHUB_SHA
           CI run: $GITHUB_RUN_ID
@@ -192,8 +193,8 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: MagicShop-0.3-build-1-${{ github.sha }}-Simulator-QA
-          path: ${{ runner.temp }}/MagicShop-0.3-build-1-CI/
+          name: MagicShop-0.4-build-1-${{ github.sha }}-Simulator-QA
+          path: ${{ runner.temp }}/MagicShop-0.4-build-1-CI/
           if-no-files-found: error
           retention-days: 14
 

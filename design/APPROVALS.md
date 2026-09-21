@@ -227,3 +227,24 @@ computed interest is 65% for the $30 potion example, superseding the illustrativ
 `runtime/0.3/current-manifest.json` contains 20 current images, 23 preserved images,
 SHA-256, canvases and provenance. See `docs/LIVING-SHOP-VERIFICATION.md` for executed
 coverage and physical-device limitations.
+
+
+## Shopkeeper 0.4 — current director-selected masters
+
+Selected on 2026-09-21 by the project director under the owner's explicit authorization of autonomous design and the 0.4 improvement scope. The owner did not individually review these generated images; no such review is claimed. These are visual specifications, not real app or store screenshots.
+
+| Screen/state | Canonical image | Device/canvas | Orientation/language | SHA-256 |
+| --- | --- | --- | --- | --- |
+| Preparation; next restoration objective, 1/3 | [Shopkeeper preparation v1](approved/shopkeeper-preparation-v1.png) | iPhone, 851×1849 actual (1206×2622 requested) | Portrait, English | `9DBA62373730D37263D2E3527DDDEEA50003D030D1DEFF083738DB747E537EBF` |
+| Day complete; product sales/margins and observed-interest advice | [Shopkeeper summary v1](approved/shopkeeper-summary-v1.png) | iPhone, 851×1848 actual (1206×2622 requested) | Portrait, English | `C01884FE990F4FFC3CFDE3AA926834C074E97B2997CBC42AA44256D7D9345F8A` |
+
+- These govern the changed 0.4 preparation hint and day-complete panel. They supersede the earlier generic preparation hint and commerce day-summary UI for those states only; all older masters and runtime images remain preserved as history. Existing world/art masters continue to govern the room.
+- Source runtime: preparation [0.3 drag/overview](runtime/0.3/0b99f37/drag-runtime.png); summary [0.2 native summary](runtime/0.2/4087139/summary-runtime.png), whose panel family remains in 0.3.
+- Exact prompts, proposal history, arithmetic, asset inventory, fidelity caveats and native adaptation targets: [Shopkeeper manifest](proposals/shopkeeper-v1/MANIFEST.md), [machine-readable record](proposals/shopkeeper-v1/manifest.json).
+- Existing product sprites and OrnatePanel are reused; no new runtime bitmap. Full-screen images are never flattened runtime screens.
+- Accessibility may adapt wrapping, scroll area height, footer layout and secondary actions. Preserve the bounded panel, readable text, unobstructed world controls and fixed next-day action. Respect native safe areas over incidental ImageGen margins.
+- Day, amounts, progress, counts, product margins and Tomorrow advice come from live Core data. Observed requested-product interest must not be labeled lost sales or treated as proof of the reason a visitor left.
+- The authorized CalendarBar pause action belongs to the open state; preparing/closed examples correctly omit it.
+- Comparable 0.4 runtime captures: pending implementation and simulator verification; this selection does not claim final UI parity or physical-device verification.
+
+- Director-confirmed native preparation adaptation: retain Improve as a fourth secondary access for expansion/planning and add a brief two-line explanation of three sweeping passes. Standard-size actions may share a row; their text ceiling follows the existing navigation policy (xxxLarge), with full accessibility labels and at least 44-point touch areas. This preserves the selected direction and does not claim an additional owner image review.

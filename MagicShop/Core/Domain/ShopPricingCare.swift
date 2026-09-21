@@ -29,6 +29,7 @@ public enum ShopPricing {
 }
 
 public enum ShopCare {
+    public static let minimumRecoverableCapital = 60
     public static let maximumDirtCells = 64
     public static let maximumDirtLevel = 3
     public static let repairStrokesRequired = 3

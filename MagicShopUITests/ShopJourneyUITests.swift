@@ -133,6 +133,77 @@ final class ShopJourneyUITests: XCTestCase {
         attach(app, "Care during overlapping visits")
     }
 
+    @MainActor
+    func testNextStepOpensTheMatchingManualCareTask() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "preparation"]
+        app.launch()
+        let next = app.buttons["next-step-action"]
+        XCTAssertTrue(next.waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["next-step-title"].label.contains("1/3"))
+        next.tap()
+        XCTAssertTrue(app.buttons["care-clean"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["sweep-rubble"].isEnabled)
+        app.buttons["sweep-brokenBoards"].tap()
+        XCTAssertTrue(app.staticTexts["care-feedback"].label.contains("1/3"))
+        attach(app, "Next step leads to manual care")
+    }
+
+    @MainActor
+    func testClosingReportKeepsTomorrowReachableWithLargeText() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "living-summary", "--large-text"]
+        app.launch()
+        let next = app.buttons["prepare-next-day"]
+        XCTAssertTrue(next.waitForExistence(timeout: 10))
+        XCTAssertTrue(next.isHittable)
+        let details = app.scrollViews["day-report-details"]
+        details.swipeUp()
+        XCTAssertTrue(app.staticTexts["Tomorrow"].waitForExistence(timeout: 5))
+        XCTAssertTrue(next.isHittable)
+        attach(app, "Closing report with large text")
+        next.tap()
+        XCTAssertTrue(app.staticTexts["Day 2 · Tuesday"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["next-step-action"].isHittable)
+    }
+
+    @MainActor
+    func testRestockingWhilePausedDisplaysTheProductImmediately() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "living"]
+        app.launch()
+        XCTAssertTrue(app.buttons["Resume day"].waitForExistence(timeout: 10))
+        app.buttons["nav-stock"].tap()
+        let returnItem = app.buttons["Return for $20"]
+        XCTAssertTrue(returnItem.waitForExistence(timeout: 5))
+        returnItem.tap()
+        app.buttons["confirm-stock"].tap()
+        XCTAssertTrue(app.buttons["Resume day"].isHittable)
+        let fixture = app.descendants(matching: .any)["fixture-world-00000000-0000-0000-0000-000000000003"].firstMatch
+        let visible = NSPredicate(format: "value CONTAINS %@", "Glow Potion displayed")
+        expectation(for: visible, evaluatedWith: fixture)
+        waitForExpectations(timeout: 5)
+        attach(app, "Product visible while the shop stays paused")
+        app.buttons["Prices"].tap()
+        XCTAssertTrue(app.buttons["Resume day"].isHittable)
+        app.buttons["Raise price"].tap()
+        app.buttons["apply-price"].tap()
+        XCTAssertTrue(app.staticTexts["price-saved"].exists)
+    }
+
+    @MainActor
+    func testCameraAccessibilityValueTracksNativePinchDuringPreparation() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--visual-state", "drag"]
+        app.launch()
+        let camera = app.descendants(matching: .any)["world-camera"].firstMatch
+        XCTAssertTrue(camera.waitForExistence(timeout: 10))
+        let before = camera.value as? String
+        camera.pinch(withScale: 1.15, velocity: 0.8)
+        XCTAssertNotEqual(camera.value as? String, before)
+        XCTAssertTrue((camera.value as? String)?.contains("Zoom ") == true)
+    }
+
     @MainActor private func attach(_ app: XCUIApplication, _ name: String) {
         let capture = XCTAttachment(screenshot: app.screenshot())
         capture.name = name; capture.lifetime = .keepAlways; add(capture)

@@ -44,7 +44,17 @@ loans, crafting, accounts, ads, tracking, purchases or network calls.
 - Journal: restoration goals, calendar rules and recent trading results.
 - Dynamic Type and Reduce Motion use the device's accessibility preferences.
 
-## Candidate 0.3 (build 1) — verified
+## Current iteration 0.4 (build 1) — native verification pending
+
+Adds contextual restoration guidance and a product-by-product closing report;
+protects trading capital during permanent improvements; fixes outside drops,
+paused restocking and camera accessibility. Pricing and cleaning controls stay
+clear on smaller layouts, and the calendar retains pause while panels are open.
+The existing save schema 5 and artwork remain. See `docs/SHOPKEEPER-PLAN.md`,
+`docs/SHOPKEEPER-DOMAIN.md` and `docs/SHOPKEEPER-WORLD.md` for scope and evidence.
+The previous delivery remains recoverable until native CI and visual QA close.
+
+## Previous candidate 0.3 (build 1) — verified
 
 Direct manipulation, floor materials, manual cleaning, overlapping visitors and
 player pricing are implemented and verified. Domain/model coverage passed 109

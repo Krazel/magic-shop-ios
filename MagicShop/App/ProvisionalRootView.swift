@@ -123,6 +123,11 @@ private struct CalendarBar: View {
             }
             Spacer(minLength: 4)
             Text(model.clockText).font(.system(.title3, design: .serif, weight: .bold)).monospacedDigit()
+            if model.isTrading {
+                Button(action: model.togglePause) {
+                    Image(systemName: model.isPaused ? "play.fill" : "pause.fill").frame(width: 44, height: 44)
+                }.accessibilityLabel(model.isPaused ? "Resume day" : "Pause day")
+            }
             if model.state.phase == .preparing {
                 Button { model.showPanel(.journal) } label: {
                     Image(systemName: "book.closed.fill").frame(width: 44, height: 44)
@@ -151,9 +156,7 @@ private struct TradingStatus: View {
                 Button { model.isFast.toggle() } label: {
                     Text(model.isFast ? "2×" : "1×").frame(width: 44, height: 44)
                 }.accessibilityLabel(model.isFast ? "Normal speed" : "Double speed")
-                Button(action: model.togglePause) {
-                    Image(systemName: model.isPaused ? "play.fill" : "pause.fill").frame(width: 44, height: 44)
-                }.accessibilityLabel(model.isPaused ? "Resume day" : "Pause day")
+
             }
             ProgressView(value: model.tradingProgress, total: 1)
                 .tint(MagicPalette.gold).accessibilityLabel("Trading day progress")
@@ -392,31 +395,20 @@ private struct PricingPanel: View {
     var body: some View {
         VStack(spacing: 8) {
             PanelHeading(title: "Pricing", icon: "tag.fill")
+            HStack {
+                Image(product.assetName).resizable().scaledToFit().frame(width: 40, height: 44)
+                Picker("Product price", selection: $product) {
+                    ForEach(ProductCatalog.all, id: \.kind) { Text($0.displayName).tag($0.kind) }
+                }.pickerStyle(.menu).tint(MagicPalette.ink).frame(maxWidth: .infinity, minHeight: 44)
+            }.padding(6).parchmentCard()
             ScrollView {
                 VStack(spacing: 12) {
-                    HStack {
-                        Image(product.assetName).resizable().scaledToFit().frame(width: 40, height: 44)
-                        Picker("Product price", selection: $product) {
-                            ForEach(ProductCatalog.all, id: \.kind) { Text($0.displayName).tag($0.kind) }
-                        }.pickerStyle(.menu).tint(MagicPalette.ink).frame(maxWidth: .infinity, minHeight: 44)
-                    }.padding(6).parchmentCard()
                     HStack {
                         priceFact("Stock cost", quote.cost)
                         Rectangle().fill(MagicPalette.gold).frame(width: 1, height: 36)
                         priceFact("Market price", quote.marketPrice)
                     }
                     GoldDivider()
-                    Text("Your price").font(.system(.headline, design: .serif))
-                    HStack(spacing: 20) {
-                        Button { draftPrice = max(quote.minimumPrice, draftPrice - 1); saved = false } label: {
-                            Image(systemName: "minus").frame(width: 48, height: 48).overlay(Circle().stroke(MagicPalette.gold))
-                        }.accessibilityLabel("Lower price").disabled(draftPrice <= quote.minimumPrice)
-                        Text("$\(draftPrice)").font(.system(.largeTitle, design: .serif, weight: .bold)).monospacedDigit()
-                            .lineLimit(1).minimumScaleFactor(0.5).frame(minWidth: 95).accessibilityIdentifier("asking-price")
-                        Button { draftPrice = min(quote.maximumPrice, draftPrice + 1); saved = false } label: {
-                            Image(systemName: "plus").frame(width: 48, height: 48).overlay(Circle().stroke(MagicPalette.gold))
-                        }.accessibilityLabel("Raise price").disabled(draftPrice >= quote.maximumPrice)
-                    }.foregroundStyle(MagicPalette.gold)
                     Text(comparison).font(.subheadline)
                     VStack(spacing: 6) {
                         HStack { Text("Estimated interest"); Spacer(); Text("\(quote.estimatedDemandPercent)%").monospacedDigit() }
@@ -439,6 +431,17 @@ private struct PricingPanel: View {
                     }
                 }.padding(.bottom, 5)
             }
+            Text("Your price").font(.system(.headline, design: .serif))
+            HStack(spacing: 20) {
+                Button { draftPrice = max(quote.minimumPrice, draftPrice - 1); saved = false } label: {
+                    Image(systemName: "minus").frame(width: 48, height: 48).overlay(Circle().stroke(MagicPalette.gold))
+                }.accessibilityLabel("Lower price").disabled(draftPrice <= quote.minimumPrice)
+                Text("$\(draftPrice)").font(.system(.largeTitle, design: .serif, weight: .bold)).monospacedDigit()
+                    .lineLimit(1).minimumScaleFactor(0.5).frame(minWidth: 95).accessibilityIdentifier("asking-price")
+                Button { draftPrice = min(quote.maximumPrice, draftPrice + 1); saved = false } label: {
+                    Image(systemName: "plus").frame(width: 48, height: 48).overlay(Circle().stroke(MagicPalette.gold))
+                }.accessibilityLabel("Raise price").disabled(draftPrice >= quote.maximumPrice)
+            }.foregroundStyle(MagicPalette.gold)
             Text(saved ? "Saved price: $\(draftPrice)" : "Your price: $\(draftPrice)")
                 .font(.caption).foregroundStyle(saved ? MagicPalette.mint : MagicPalette.parchment)
                 .lineLimit(1).minimumScaleFactor(0.7)
@@ -529,7 +532,6 @@ private struct CarePanel: View {
     }
     private var cleanControls: some View {
         VStack(spacing: 5) {
-            Text("Drag to sweep; each worn area needs 3 passes. Two fingers move the view.").font(.caption).multilineTextAlignment(.center)
             HStack(spacing: 7) {
                 ForEach(RepairCatalog.all) { repair in
                     let progress = model.state.repairProgress(for: repair.id)
@@ -544,6 +546,7 @@ private struct CarePanel: View {
                         .accessibilityLabel(repair.displayName).accessibilityValue("\(progress) of 3 passes")
                 }
             }
+            Text("Drag to sweep; each worn area needs 3 passes. Two fingers move the view.").font(.caption).multilineTextAlignment(.center)
             if model.dirtyTileCount > 0 {
                 Button("Sweep a dusty tile · \(model.dirtyTileCount) left", action: model.cleanNextDust)
                     .font(.caption.bold()).frame(minHeight: 44)
@@ -582,45 +585,82 @@ private struct SummaryPanel: View {
     @EnvironmentObject private var model: AppModel
     var body: some View {
         if let summary = model.daySummary {
-            VStack(spacing: 12) {
-                Image(systemName: "moon.stars.fill").font(.title).foregroundStyle(MagicPalette.gold).accessibilityHidden(true)
+            VStack(spacing: 9) {
+                Image(systemName: "moon.stars.fill").font(.title2).foregroundStyle(MagicPalette.gold).accessibilityHidden(true)
                 Text("Day complete").font(.system(.title, design: .serif, weight: .bold))
-                Text("Day \(summary.dayNumber) · \(summary.customersServed) items sold").font(.system(.headline, design: .serif))
+                Text("Day \(summary.dayNumber) · \(summary.customersServed) items sold")
+                    .font(.system(.subheadline, design: .serif))
                 GoldDivider()
-                VStack(spacing: 8) {
-                    summaryRow("Sales", summary.revenue)
-                    summaryRow("Stock cost", summary.costOfGoods)
-                    summaryRow("Profit", summary.profit)
-                }.font(.system(.title3, design: .serif)).padding(.horizontal, 20)
-                Text(summary.customersServed == summary.visitorCount ? "Every visitor found a little magic." : "\(summary.customersWithoutPurchase) visitors left without buying. Try adjusting prices or your mix of products tomorrow.")
-                    .font(.callout).multilineTextAlignment(.center)
+                ScrollView {
+                    VStack(spacing: 10) {
+                        VStack(spacing: 5) {
+                            summaryRow("Sales", summary.revenue)
+                            summaryRow("Stock cost", summary.costOfGoods)
+                            summaryRow("Profit", summary.profit).foregroundStyle(MagicPalette.gold)
+                        }.font(.system(.headline, design: .serif)).padding(.horizontal, 8)
+                        GoldDivider()
+                        Text("By product").font(.system(.headline, design: .serif))
+                            .foregroundStyle(MagicPalette.gold).frame(maxWidth: .infinity, alignment: .leading)
+                        ForEach(summary.productResults) { result in
+                            HStack(spacing: 10) {
+                                Image(result.product.assetName).resizable().scaledToFit()
+                                    .frame(width: 32, height: 38).accessibilityHidden(true)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(ProductCatalog.definition(for: result.product).displayName)
+                                        .font(.system(.subheadline, design: .serif, weight: .bold))
+                                    Text("\(result.unitsSold) sold · $\(result.profit) margin").font(.caption)
+                                }
+                                Spacer(minLength: 0)
+                            }.padding(.horizontal, 9).padding(.vertical, 3)
+                                .accessibilityElement(children: .combine)
+                                .accessibilityIdentifier("summary-product-\(result.product.rawValue)")
+                        }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Tomorrow").font(.system(.headline, design: .serif)).foregroundStyle(MagicPalette.gold)
+                            Text(model.tomorrowAdvice).font(.caption)
+                            Text("\(summary.customersWithoutPurchase) visitors left without buying. Interests are not promised sales.")
+                                .font(.caption2).foregroundStyle(MagicPalette.parchment.opacity(0.8))
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    }.padding(.bottom, 3)
+                }.accessibilityIdentifier("day-report-details")
                 Button("Prepare Day \(summary.dayNumber + 1)", action: model.prepareNextDay)
                     .buttonStyle(GoldButtonStyle()).accessibilityIdentifier("prepare-next-day")
                 InlineMessage()
-            }.foregroundStyle(MagicPalette.parchment).padding(22).magicPanel(corner: 32)
+            }.foregroundStyle(MagicPalette.parchment).padding(16).magicPanel(corner: 32)
         }
     }
-    private func summaryRow(_ name: String, _ value: Int) -> some View { HStack { Text(name); Spacer(); Text("$\(value)").monospacedDigit() } }
+    private func summaryRow(_ name: String, _ value: Int) -> some View {
+        HStack { Text(name); Spacer(); Text("$\(value)").monospacedDigit() }
+    }
 }
 
 private struct PreparationHint: View {
     @EnvironmentObject private var model: AppModel
+    @Environment(\.dynamicTypeSize) private var textSize
     var body: some View {
-        VStack(spacing: 6) {
-            Text(model.state.hasCompletedRestoration ? "Your little shop is restored ✦" : model.state.fixtures.isEmpty ? "A little magic starts here" : model.state.stock.isEmpty ? "Your displays are waiting" : "Ready when you are")
-                .font(.system(.headline, design: .serif))
-            Text(model.state.fixtures.isEmpty ? "BUILD a display, STOCK an item, then OPEN your doors." : model.state.stock.isEmpty ? "Stock a few curious things. Each slot holds one item." : "Hold and drag furniture. Set your prices, then welcome curious visitors.")
-                .font(.caption).multilineTextAlignment(.center)
-            HStack {
-                Button("Improve the shop") { model.showPanel(.improvements) }.frame(minHeight: 44)
-                Spacer()
+        VStack(spacing: 7) {
+            ScrollView {
+                VStack(spacing: 6) {
+                    HStack(spacing: 7) {
+                        Image(systemName: "sparkles").foregroundStyle(MagicPalette.gold)
+                        Text("Next little step")
+                    }.font(.system(.title3, design: .serif, weight: .bold))
+                    Text(model.nextStepTitle).font(.system(.subheadline, design: .serif, weight: .bold))
+                        .accessibilityIdentifier("next-step-title")
+                    Text(model.nextStepDetail).font(.caption).multilineTextAlignment(.center)
+                }.frame(maxWidth: .infinity)
+            }.frame(height: textSize.isAccessibilitySize ? 120 : 85)
+            Button(model.nextStepActionTitle, action: model.followNextStep)
+                .buttonStyle(GoldButtonStyle(secondary: true)).accessibilityIdentifier("next-step-action")
+            HStack(spacing: 8) {
+                Button("Improve") { model.showPanel(.improvements) }.frame(maxWidth: .infinity, minHeight: 44)
                 if !model.state.fixtures.isEmpty {
-                    Button("Arrange") { model.showPanel(.fixture) }.frame(minHeight: 44)
-                    Spacer()
+                    Button("Arrange") { model.showPanel(.fixture) }.frame(maxWidth: .infinity, minHeight: 44)
                 }
-                Button("Prices") { model.showPanel(.pricing) }.frame(minHeight: 44)
-                Button("Care") { model.showPanel(.care) }.frame(minHeight: 44)
+                Button("Prices") { model.showPanel(.pricing) }.frame(maxWidth: .infinity, minHeight: 44)
+                Button("Care") { model.showPanel(.care) }.frame(maxWidth: .infinity, minHeight: 44)
             }.font(.caption.bold()).foregroundStyle(MagicPalette.gold)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             InlineMessage()
         }.foregroundStyle(MagicPalette.parchment).padding(.horizontal, 14).padding(.top, 12).magicPanel(corner: 20)
     }

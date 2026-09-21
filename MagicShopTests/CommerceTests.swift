@@ -360,6 +360,50 @@ final class CommerceTests: XCTestCase {
         XCTAssertNoThrow(try engine.state.validateIntegrity())
     }
 
+    func testProductResultsSeparateRequestedInterestFromActualHistoricalSales() throws {
+        let dayID = UUID()
+        let fixtureID = UUID()
+        let outcomes = (0..<LivingShopDay.visitorCount).map { index -> VisitOutcome in
+            let sale: SaleReceipt?
+            switch index {
+            case 0:
+                sale = SaleReceipt(stockID: UUID(), product: .luckyCharm, fixtureID: fixtureID,
+                                   slotIndex: 0, revenue: 51, costOfGoods: 19)
+            case 1:
+                sale = SaleReceipt(stockID: UUID(), product: .glowPotion, fixtureID: fixtureID,
+                                   slotIndex: 0, revenue: 30, costOfGoods: 7)
+            default:
+                sale = nil
+            }
+            return VisitOutcome(visitID: VisitID(dayID: dayID, index: index),
+                requestedProduct: index < 2 ? .glowPotion : .pocketSpellbook, sale: sale)
+        }
+        let summary = DaySummary(id: dayID, dayNumber: 1, outcomes: outcomes, simulation: .living, seed: 1)
+        let results = summary.productResults
+        XCTAssertEqual(results.map(\.id), ProductKind.allCases)
+        XCTAssertEqual(results.map(\.unitsSold), [1, 1, 0])
+        XCTAssertEqual(results.map(\.requestedCount), [2, 0, 10])
+        XCTAssertEqual(results.map(\.revenue), [30, 51, 0])
+        XCTAssertEqual(results.map(\.costOfGoods), [7, 19, 0])
+        XCTAssertEqual(results.map(\.profit), [23, 32, 0])
+        XCTAssertEqual(results.reduce(0) { $0 + $1.unitsSold }, summary.customersServed)
+        XCTAssertEqual(results.reduce(0) { $0 + $1.revenue }, summary.revenue)
+        XCTAssertEqual(results.reduce(0) { $0 + $1.costOfGoods }, summary.costOfGoods)
+        XCTAssertEqual(results.reduce(0) { $0 + $1.profit }, summary.profit)
+        XCTAssertEqual(results.reduce(0) { $0 + $1.requestedCount }, summary.outcomes.count)
+
+        let data = try JSONEncoder().encode(summary)
+        let reloaded = try JSONDecoder().decode(DaySummary.self, from: data)
+        XCTAssertEqual(reloaded.productResults, results)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        XCTAssertNil(json["productResults"])
+        let empty = DaySummary(id: UUID(), dayNumber: 1, outcomes: [])
+        XCTAssertEqual(empty.productResults.map(\.id), ProductKind.allCases)
+        XCTAssertTrue(empty.productResults.allSatisfy {
+            $0.unitsSold == 0 && $0.requestedCount == 0 && $0.revenue == 0 &&
+            $0.costOfGoods == 0 && $0.profit == 0
+        })
+    }
     private func newShop() -> GameEngine {
         GameEngine(state: GameState(shopName: "Moon & Mortar", onboardingCompleted: true))
     }

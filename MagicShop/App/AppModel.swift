@@ -137,6 +137,77 @@ final class AppModel: ObservableObject {
         return "Looking for \(ProductCatalog.definition(for: visit.requestedProduct).displayName)"
     }
 
+    private enum NextStep { case display, stock, repair, decorate, trade, expand, enjoy }
+    private var nextStep: NextStep {
+        if stockFixtures.isEmpty { return .display }
+        if state.stock.isEmpty { return .stock }
+        let progress = state.restorationProgress
+        if state.hasCompletedRestoration { return .enjoy }
+        if progress.repairedGroups < 3 { return .repair }
+        if progress.decorationVariety < 3 { return .decorate }
+        if progress.successfulTradingDays < 3 { return .trade }
+        if !progress.hasExpansion { return .expand }
+        return .enjoy
+    }
+    var nextStepTitle: String {
+        let progress = state.restorationProgress
+        switch nextStep {
+        case .display: return "Build your first display"
+        case .stock: return "Bring your displays to life"
+        case .repair: return "Restore the room · \(progress.repairedGroups)/3"
+        case .decorate: return "Make it yours · \(min(progress.decorationVariety, 3))/3"
+        case .trade: return "Grow your trade · \(min(progress.successfulTradingDays, 3))/3"
+        case .expand: return "A cozy room to grow"
+        case .enjoy: return "Your next great day"
+        }
+    }
+    var nextStepDetail: String {
+        switch nextStep {
+        case .display: return "A $50 table and a $10 potion are all you need to start."
+        case .stock: return "Choose a display and stock an item. Unsold items stay overnight."
+        case .repair: return "Clear another worn area to make space for displays. Three sweeps, no cost."
+        case .decorate: return "Choose three different decorations to give your shop its own character."
+        case .trade: return "Complete three days with sales. Refill displays while visitors browse."
+        case .expand: return "Add a $250 room when you are ready. Keep enough working capital to trade."
+        case .enjoy:
+            let sales = state.dayHistory.map(\.customersServed).max() ?? 0
+            let profit = state.dayHistory.map(\.profit).max() ?? 0
+            return "Your records: \(sales) sales in a day · $\(profit) profit. Try a new product mix or price to beat your best."
+        }
+    }
+    var nextStepActionTitle: String {
+        switch nextStep {
+        case .display: return "Choose a display"
+        case .stock: return "Stock the shop"
+        case .repair: return "Care for the shop"
+        case .decorate: return "Choose decorations"
+        case .trade: return "Open for visitors"
+        case .expand: return "Plan your new room"
+        case .enjoy: return "Try a new mix"
+        }
+    }
+    func followNextStep() {
+        guard state.phase == .preparing else { return }
+        switch nextStep {
+        case .display: openBuild(); selectCategory(.tables)
+        case .stock, .enjoy: showPanel(.stock)
+        case .repair: showPanel(.care); carePaint = false
+        case .decorate: openBuild(); selectCategory(.decor)
+        case .trade: startDay()
+        case .expand: showPanel(.improvements)
+        }
+    }
+    var tomorrowAdvice: String {
+        guard let summary = daySummary else { return "Try a different mix of products tomorrow." }
+        let counts = ProductKind.allCases.map { product in
+            (product, summary.outcomes.filter { $0.requestedProduct == product }.count)
+        }
+        guard let top = counts.max(by: { $0.1 < $1.1 }), top.1 > 0 else {
+            return "Stock a few curious things and compare your prices with the market."
+        }
+        return "\(top.1) visitors came looking for \(ProductCatalog.definition(for: top.0).displayName). Try keeping some on display tomorrow."
+    }
+
     @discardableResult
     func submitOnboarding() -> Bool {
         guard session != nil else { _ = restoreSavedSession(); return false }
@@ -220,8 +291,12 @@ final class AppModel: ObservableObject {
         guard var draft = placementDraft else { return }
         mutation(&draft)
         let footprint = FixtureCatalog.definition(for: draft.kind).footprint.rotated(draft.rotation)
-        draft.origin = GridPoint(x: min(max(0, draft.origin.x), engine.layout.width - footprint.width),
-                                 y: min(max(0, draft.origin.y), engine.layout.depth - footprint.depth))
+        // Finger drops must be validated where they land. Only the directional
+        // button controls clamp at the room boundary; an outside drag must revert.
+        if dragSnapshot == nil {
+            draft.origin = GridPoint(x: min(max(0, draft.origin.x), engine.layout.width - footprint.width),
+                                     y: min(max(0, draft.origin.y), engine.layout.depth - footprint.depth))
+        }
         flow.updatePlacement(draft); inlineMessage = nil
     }
     func cancelCurrentPlacement() {

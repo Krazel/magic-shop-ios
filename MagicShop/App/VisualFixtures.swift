@@ -33,11 +33,11 @@ extension AppModel {
             if name == "repair-rubble" { _ = try engine.repair(.rubble) }
             if name == "repair-boards" { _ = try engine.repair(.brokenBoards) }
             if name == "repair-papers" { _ = try engine.repair(.discardedPapers) }
-            if name.hasPrefix("restored") {
+            if name.hasPrefix("restored") || name == "freeplay" {
                 let direction: ExpansionDirection = name == "restored-right" ? .right : name == "restored-rear" ? .rear : .left
                 engine = try restoredVisualEngine(direction: direction)
             }
-            if ["living", "pricing", "care", "floors", "floor-laid", "drag", "living-summary"].contains(name) {
+            if ["living", "pricing", "care", "floors", "floor-laid", "drag", "living-summary", "preparation", "paused-stock"].contains(name) {
                 engine = GameEngine()
                 try engine.completeOnboarding(shopName: "Moon & Mortar")
                 let table = try engine.confirm(engine.makePlacementDraft(kind: .basicDisplayTable,
@@ -51,7 +51,7 @@ extension AppModel {
                 _ = try engine.confirm(engine.makeStockDraft(product: .pocketSpellbook, fixtureID: shelf.id, slotIndex: 0))
                 _ = try engine.confirm(engine.makeStockDraft(product: .glowPotion, fixtureID: shelf.id, slotIndex: 1))
                 try engine.setPrice(30, for: .glowPotion)
-                if ["living", "living-summary"].contains(name) {
+                if ["living", "living-summary", "paused-stock"].contains(name) {
                     let day = try engine.openLivingDay(seed: 42)
                     let minute = name == "living-summary" ? 1080 : (600...1000).first(where: { minute in
                         day.visitors.filter { $0.arrivalMinute + 3 <= minute && minute < $0.departureMinute - 3 }.count >= 3
@@ -62,9 +62,21 @@ extension AppModel {
                     for y in 4...7 { for x in 3...6 { _ = try engine.paintFloor(at: GridPoint(x: x, y: y), style: .warmOak) } }
                 }
             }
+            if name == "preparation" {
+                for _ in 0..<3 { _ = try engine.cleanCell(at: GridPoint(x: 1, y: 5)) }
+            }
+            if name == "freeplay", let table = engine.state.fixtures.first(where: { $0.kind == .basicDisplayTable }) {
+                _ = try engine.confirm(engine.makeStockDraft(product: .glowPotion, fixtureID: table.id, slotIndex: 0))
+            }
             let model = AppModel(store: InMemoryGameStateStore(initialState: engine.state))
             switch name {
             case "living": model.togglePause()
+            case "paused-stock":
+                model.togglePause(); model.showPanel(.stock)
+                model.chooseFixture(UUID(uuidString: "00000000-0000-0000-0000-000000000003")!)
+                model.returnSelectedStock()
+                model.selectedProduct = .glowPotion
+                _ = model.confirmStock()
             case "pricing": model.showPanel(.pricing)
             case "care": model.showPanel(.care)
             case "floors", "floor-laid":

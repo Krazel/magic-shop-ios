@@ -165,6 +165,18 @@ public struct ShopDayState: Identifiable, Codable, Equatable, Sendable {
 /// credited during the corresponding visitor transaction.
 public enum DaySimulationKind: String, Codable, Sendable { case legacy, living }
 
+/// Derived from committed outcomes. Requests describe initial interest, not
+/// missed sales: a customer may buy another product or only be browsing.
+public struct ProductDayResult: Identifiable, Equatable, Sendable {
+    public var id: ProductKind { product }
+    public let product: ProductKind
+    public let unitsSold: Int
+    public let revenue: Int
+    public let costOfGoods: Int
+    public var profit: Int { revenue - costOfGoods }
+    public let requestedCount: Int
+}
+
 public struct DaySummary: Identifiable, Codable, Equatable, Sendable {
     public let id: UUID
     public let dayNumber: Int
@@ -198,6 +210,18 @@ public struct DaySummary: Identifiable, Codable, Equatable, Sendable {
     public var profit: Int { revenue - costOfGoods }
     public var customersServed: Int { sales.count }
     public var customersWithoutPurchase: Int { outcomes.count - sales.count }
+
+    /// Includes products with no requests or sales, in stable catalog order.
+    /// Historical receipts retain their actual prices and acquisition costs.
+    public var productResults: [ProductDayResult] {
+        ProductKind.allCases.map { product in
+            let sold = sales.filter { $0.product == product }
+            return ProductDayResult(product: product, unitsSold: sold.count,
+                revenue: sold.reduce(0) { $0 + $1.revenue },
+                costOfGoods: sold.reduce(0) { $0 + $1.costOfGoods },
+                requestedCount: outcomes.filter { $0.requestedProduct == product }.count)
+        }
+    }
 }
 
 public enum CommerceError: Error, Equatable, Sendable {

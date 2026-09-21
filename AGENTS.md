@@ -40,3 +40,14 @@ recurring dirt, overlapping curious customers, and editable prices relative to m
 demand estimates. Execute docs/LIVING-SHOP-PLAN.md under the existing delegated visual
 authority. This supersedes 0.2 mechanics and old no-floor-rendering exclusions within scope.
 Preserve 0.2 saves/artifacts and masters. No store or external service phase is opened.
+
+
+## Current continuation — 0.4, 2026-09-21
+The owner requests a more polished, functional and interesting existing game.
+Execute docs/SHOPKEEPER-PLAN.md with the existing delegated visual authority.
+Keep previous saves/art/artifacts, the native offline iPhone game and English.
+Root integrates; bounded agents own Core, World and reference art separately.
+Deliver native test/capture evidence and a verified unsigned Sideloadly IPA.
+The current portfolio record is D1 PR-011 in Krazel Studio; reconcile its current
+revision and preserve unrelated fields. No library deployment, TestFlight,
+store publication, monetization or SDK scope is opened.

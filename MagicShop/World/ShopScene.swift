@@ -111,6 +111,8 @@ final class ShopScene: SKScene {
     private var renderedPreviewValid = false
     private var selectedFixtureID: UUID?
     private var reducedMotion = false
+    private var presentationPaused = false
+    private var animatesInsertions: Bool { !reducedMotion && !presentationPaused }
     private var needsFirstRender = true
     private var insertedFixtureIDs = Set<UUID>()
     private var insertedStockIDs = Set<UUID>()
@@ -215,6 +217,7 @@ final class ShopScene: SKScene {
         visitProgress: Double,
         lastOutcome: VisitOutcome?,
         reduceMotion: Bool,
+        presentationPaused: Bool = false,
         presentationMinute: Double? = nil,
         floorPreview: [GridPoint] = [],
         floorPreviewStyle: FloorStyleID? = nil
@@ -230,6 +233,8 @@ final class ShopScene: SKScene {
         let furnitureChanged = environmentChanged || preview?.fixtureID != renderedPreview?.fixtureID || state.fixtures != renderedState.fixtures
             || state.stock != renderedState.stock || self.selectedFixtureID != selectedFixtureID
             || reducedMotion != reduceMotion
+            // Finish any insertion that was in flight before SpriteKit pauses.
+            || (presentationPaused && !self.presentationPaused)
         let previewChanged = environmentChanged || preview != renderedPreview
             || previewIsValid != renderedPreviewValid || reducedMotion != reduceMotion
         let motionChanged = reducedMotion != reduceMotion
@@ -240,6 +245,7 @@ final class ShopScene: SKScene {
         renderedPreviewValid = previewIsValid
         self.selectedFixtureID = selectedFixtureID
         reducedMotion = reduceMotion
+        self.presentationPaused = presentationPaused
         needsFirstRender = false
 
         if motionChanged { feedbackRoot.removeAllChildren() }
@@ -366,6 +372,27 @@ final class ShopScene: SKScene {
                   let id = UUID(uuidString: String(name.dropFirst(8))) else { return nil }
             return (id, viewRect(for: node.calculateAccumulatedFrame()))
         }
+    }
+
+    /// Read the actual presentation node so accessibility never describes an
+    /// invisible, paused insertion as already displayed. The value is queried
+    /// live, including when an ordinary insertion finishes between App updates.
+    func accessibilityStockValue(for fixtureID: UUID) -> String? {
+        guard let fixture = renderedState.fixtures.first(where: { $0.id == fixtureID }),
+              FixtureCatalog.definition(for: fixture.kind).stockCapacity > 0,
+              let group = furnitureRoot.childNode(withName: "fixture:\(fixtureID.uuidString)") else { return nil }
+        let units = renderedState.stock.filter { $0.fixtureID == fixtureID }
+            .sorted { $0.slotIndex < $1.slotIndex }
+        guard !units.isEmpty else { return "Empty display" }
+        return units.map { unit in
+            let node = group.childNode(withName: "stock:\(unit.id.uuidString)")
+            let displayed = node.map {
+                !$0.isHidden && !group.isHidden && $0.alpha * group.alpha >= 0.99
+                    && abs($0.xScale * group.xScale) >= 0.99
+            } ?? false
+            return ProductCatalog.definition(for: unit.product).displayName
+                + (displayed ? " displayed" : " arriving")
+        }.joined(separator: ", ")
     }
 
     func accessibilityPreviewFrame() -> CGRect? {
@@ -680,7 +707,7 @@ final class ShopScene: SKScene {
             let node = makeFixture(kind: fixture.kind, origin: fixture.origin, rotation: fixture.rotation,
                                    fixtureID: fixture.id, preview: false, valid: true)
             furnitureRoot.addChild(node)
-            if insertedFixtureIDs.contains(fixture.id), !reducedMotion {
+            if insertedFixtureIDs.contains(fixture.id), animatesInsertions {
                 node.setScale(0.92)
                 let settle = SKAction.scale(to: 1, duration: 0.18)
                 settle.timingMode = .easeOut
@@ -775,6 +802,7 @@ final class ShopScene: SKScene {
         if let fixtureID {
             for unit in renderedState.stock where unit.fixtureID == fixtureID {
                 let product = SKSpriteNode(texture: texture(productAsset(unit.product)))
+                product.name = "stock:\(unit.id.uuidString)"
                 setUniformWidth(tileWidth * 0.68, on: product)
                 if product.size.height > tileHeight * 0.82 {
                     setUniformHeight(tileHeight * 0.82, on: product)
@@ -786,7 +814,7 @@ final class ShopScene: SKScene {
                     * (kind == .basicDisplayTable ? 0.67 : (unit.slotIndex == 0 ? 0.45 : 0.15)))
                 product.zPosition = 2
                 group.addChild(product)
-                if insertedStockIDs.contains(unit.id), !reducedMotion {
+                if insertedStockIDs.contains(unit.id), animatesInsertions {
                     product.setScale(0.65)
                     product.alpha = 0
                     let settle = SKAction.scale(to: 1, duration: 0.20)

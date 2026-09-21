@@ -4,6 +4,90 @@ import XCTest
 
 final class AppModelTests: XCTestCase {
     @MainActor
+    func testOutsideWorldDropsRevertWithoutChargingOrMovingStock() async throws {
+        let store = InMemoryGameStateStore()
+        let model = AppModel(store: store)
+        model.shopNameInput = "Safe Edges"
+        XCTAssertTrue(model.submitOnboarding())
+        model.beginPlacement(kind: .basicDisplayTable)
+        XCTAssertTrue(model.confirmCurrentPlacement())
+        model.showPanel(.stock)
+        XCTAssertTrue(model.confirmStock())
+        let id = try XCTUnwrap(model.selectedFixtureID)
+        let original = model.state
+        for point in [GridPoint(x: -1, y: 4), GridPoint(x: 11, y: 4),
+                      GridPoint(x: 5, y: -1), GridPoint(x: 5, y: 11)] {
+            XCTAssertTrue(model.beginWorldDrag(id))
+            model.setPlacementOrigin(point)
+            XCTAssertEqual(model.placementDraft?.origin, point)
+            XCTAssertFalse(model.isPlacementValid)
+            model.finishWorldDrag(true)
+            XCTAssertEqual(model.state, original)
+            XCTAssertEqual(try store.load(), original)
+            XCTAssertNil(model.placementDraft)
+        }
+        // Directional controls still stop at the edge instead of getting lost.
+        model.chooseFixture(id)
+        model.beginMovingSelectedFixture()
+        model.movePlacement(deltaX: -100, deltaY: 0)
+        XCTAssertEqual(model.placementDraft?.origin.x, 0)
+        model.cancelCurrentPlacement()
+        XCTAssertEqual(model.state, original)
+    }
+
+    @MainActor
+    func testNextStepRoutesFromFirstDisplayThroughManualRepairs() async throws {
+        let model = AppModel(store: InMemoryGameStateStore())
+        model.shopNameInput = "A Little Direction"
+        XCTAssertTrue(model.submitOnboarding())
+        model.followNextStep()
+        XCTAssertEqual(model.flow.route, .buildCatalog)
+        XCTAssertEqual(model.selectedCategory, .tables)
+        model.beginPlacement(kind: .basicDisplayTable)
+        XCTAssertTrue(model.confirmCurrentPlacement())
+        model.followNextStep()
+        XCTAssertEqual(model.panel, .stock)
+        XCTAssertTrue(model.confirmStock())
+        model.closeBuild()
+        model.followNextStep()
+        XCTAssertEqual(model.panel, .care)
+        XCTAssertFalse(model.carePaint)
+        for group in RestorationGroupID.allCases {
+            for _ in 0..<3 { model.cleanGroup(group) }
+        }
+        XCTAssertEqual(model.state.restorationProgress.repairedGroups, 3)
+        let before = model.state.balance
+        model.closeBuild()
+        model.followNextStep()
+        XCTAssertEqual(model.flow.route, .buildCatalog)
+        XCTAssertEqual(model.selectedCategory, .decor)
+        XCTAssertEqual(model.state.balance, before)
+    }
+
+    @MainActor
+    func testPauseStillProtectsClockWhileManagingPricesAndCare() async throws {
+        let model = AppModel(store: InMemoryGameStateStore())
+        model.shopNameInput = "Unhurried Spells"
+        XCTAssertTrue(model.submitOnboarding())
+        model.beginPlacement(kind: .basicDisplayTable)
+        XCTAssertTrue(model.confirmCurrentPlacement())
+        model.showPanel(.stock)
+        XCTAssertTrue(model.confirmStock())
+        model.startDay()
+        model.showPanel(.pricing)
+        model.togglePause()
+        let minute = model.livingMinute
+        XCTAssertTrue(model.applyPrice(30, for: .glowPotion))
+        model.showPanel(.care)
+        for _ in 0..<60 { model.tick(seconds: 0.25) }
+        XCTAssertEqual(model.livingMinute, minute)
+        XCTAssertEqual(model.state.price(for: .glowPotion), 30)
+        model.togglePause()
+        model.tick(seconds: 0.25)
+        XCTAssertGreaterThan(try XCTUnwrap(model.livingMinute), try XCTUnwrap(minute))
+    }
+
+    @MainActor
     func testPurchaseFailureCancelAndRetryNeverChargeTwice() async throws {
         let store = FailingSessionStore()
         let model = AppModel(store: store)

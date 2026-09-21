@@ -1,0 +1,13 @@
+Use case: ui-mockup / precise-object-edit.
+Asset type: complete English iPhone portrait screen visual specification for the existing Magic Shop iOS game, version 0.4.
+Input image 1 is the exact native 0.3 screenshot to edit, not just general inspiration. Preserve its entire background artwork, elevated 2D cutaway camera, square room, perspective, teal and cream walls, warm terracotta floor, tiny correctly scaled furniture and products, front shop facade, native safe areas, top HUD capsules, calendar bar, and bottom BUILD / STOCK / OPEN buttons. Do NOT redraw or expand the room, change geometry, add furniture, add grid overlays, or enlarge sprites. No physical phone bezel. Full canvas same portrait ratio 1206x2622, uncropped.
+Primary request: replace only the small lower preparation hint panel with a compact, elegantly bounded native-style teal and gold 'next objective' panel. This is a small UI upgrade within the identical approved art family, not a redesign.
+State: preparing Day 3, Wednesday, 09:00. Top shop name 'Moon & Mortar', balance '$180'. Calendar exact title 'Day 3 · Wednesday'; subline 'PREPARING · Opens at 09:00'; time '09:00'; preserve journal icon. The initial rubble pile at left has been cleared (one of three repairs), but right-side boards and papers remain; keep all other room art and sprites in exactly the same place. Only remove the small left rubble pile and fill with matching original floor.
+New panel sits immediately above the unchanged navigation, its bottom at exactly the old panel bottom, at most about 20% screen height. It may cover the lower facade a little but must not obscure the usable floor or products. Strong rounded dark teal surface with very thin bounded gold outline, same native panel proportions and calm material as source, no huge ornate crest or protruding spikes. All text comfortably fits and remains crisp. Small gold sparkle beside heading, cream bold serif heading and human-readable supporting text.
+Exact panel text, in this order:
+'Next little step'
+'Restore the room · 1/3'
+'Clear another worn area to make space for displays.'
+A full-width tasteful teal/gold primary button reading 'Care for the shop'.
+Below it, one row of evenly spaced small secondary actions: 'Arrange'     'Prices'     'Care'
+Keep enough space between actions and button. No repeated Improve the shop action. Do not add extra labels, ads, settings or monetization. Bottom navigation remains visually identical, with icons and exact BUILD, STOCK, OPEN labels. Preserve all original shop illustration outside the one small repaired floor spot and specified UI text/panel changes.

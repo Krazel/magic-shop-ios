@@ -65,7 +65,7 @@ Assert-True (-not $package.Contains('MagicShop/World')) 'Package.swift must not 
 
 $project = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop.xcodeproj\project.pbxproj') -Raw
 Assert-True ($project.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0;')) 'iOS deployment target must be 16.0.'
-Assert-True ($project.Contains('MARKETING_VERSION = 0.3;')) 'Marketing version must be 0.3.'
+Assert-True ($project.Contains('MARKETING_VERSION = 0.4;')) 'Marketing version must be 0.4.'
 Assert-True ($project.Contains('CURRENT_PROJECT_VERSION = 1;')) 'Build number must be 1.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.application";')) 'App target is missing.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.bundle.unit-test";')) 'Unit-test target is missing.'
@@ -83,7 +83,7 @@ Assert-True (-not $sideloadWorkflow.Contains('pull_request:')) 'Sideloadly IPA w
 Assert-True (-not $sideloadWorkflow.Contains('push:')) 'Sideloadly IPA workflow must not run on push.'
 Assert-True ($sideloadWorkflow.Contains('runs-on: macos-15')) 'Sideloadly IPA workflow must use a macOS runner.'
 Assert-True ($sideloadWorkflow.Contains('build-sideloadly-ipa.sh')) 'Sideloadly IPA workflow must use the reviewed build script.'
-Assert-True ($sideloadWorkflow.Contains('MagicShop-0.3-build-1-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
+Assert-True ($sideloadWorkflow.Contains('MagicShop-0.4-build-1-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
 Assert-True ($sideloadWorkflow.Contains('actions/upload-artifact@v4')) 'Sideloadly IPA artifact is not retained.'
 
 $sideloadScript = Get-Content -LiteralPath (Join-Path $projectRoot 'scripts\build-sideloadly-ipa.sh') -Raw
@@ -338,6 +338,14 @@ foreach ($assetName in @('FloorTerracotta','FloorWarmOak','FloorCheckerStone','D
         Assert-True ((Get-FileHash -LiteralPath $source).Hash -eq (Get-FileHash -LiteralPath $runtime).Hash) "Living-shop source/runtime mismatch: $assetName"
     }
 }
+$shopkeeperApprovals = @{
+ 'shopkeeper-preparation-v1.png'='9DBA62373730D37263D2E3527DDDEEA50003D030D1DEFF083738DB747E537EBF'
+ 'shopkeeper-summary-v1.png'='C01884FE990F4FFC3CFDE3AA926834C074E97B2997CBC42AA44256D7D9345F8A'
+}
+foreach ($entry in $shopkeeperApprovals.GetEnumerator()) {
+ $path = Join-Path $projectRoot "design\approved\$($entry.Key)"
+ Assert-True ((Test-Path -LiteralPath $path) -and (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -eq $entry.Value) "Shopkeeper reference changed or missing: $($entry.Key)"
+}
 if ($failures.Count -gt 0) {
     Write-Output 'STATIC VERIFICATION: FAIL'
     foreach ($failure in $failures) { Write-Output "- $failure" }
@@ -349,7 +357,7 @@ Write-Output "- Required files: $($requiredFiles.Count)"
 Write-Output "- Core Swift files: $($coreSwift.Count)"
 Write-Output "- XCTest methods declared: $testCount"
 Write-Output '- Package.swift excludes SwiftUI/SpriteKit sources'
-Write-Output '- iOS 16.0, version 0.3, build 1'
+Write-Output '- iOS 16.0, version 0.4, build 1'
 Write-Output '- Git repository and unsigned macOS iOS CI workflow verified'
 Write-Output '- Manual unsigned iphoneos IPA workflow for Sideloadly verified'
 Write-Output '- Seven owner approval hashes verified; complete-game runtime images have archived sources and real sprite alpha'

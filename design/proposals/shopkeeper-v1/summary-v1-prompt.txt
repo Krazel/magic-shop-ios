@@ -1,0 +1,23 @@
+Use case: ui-mockup / precise-object-edit.
+Asset type: complete English iPhone portrait screen visual specification for the existing Magic Shop iOS game, version 0.4.
+Input image 1 is the exact native day-summary screenshot to edit. Input image 2 is a supporting reference ONLY for the three tiny painted products (blue potion, golden green charm, purple book), identical room family and native HUD. Preserve input 1's entire shop artwork, square room, elevated 2D cutaway camera and perspective, cream/teal walls, warm terracotta, tiny wooden shelf, shop facade behind overlay, native safe areas and existing BUILD / STOCK / OPEN navigation. Do NOT rebuild, expand, mirror, move the room, invent artwork, add giant characters or grid overlays. No external physical phone bezel. Full screen same portrait ratio as 1206x2622 source, uncropped.
+Primary request: improve only the day-complete panel, adding a compact per-product sales breakdown and a factual tomorrow suggestion. Use the established bounded ornamental gold frame and deep teal textured interior, rounded corners and native cream serif typography. The frame must be entirely contained, never overlap text, never have protruding spires. Preserve top HUD proportions and navigation.
+State: shop 'Moon & Mortar', balance '$415'. Calendar: 'Day 3 · Wednesday', subline 'CLOSED · See you tomorrow', time '18:00'. Calendar stays at top outside panel. The same shop remains visible from calendar to about 43% screen height. Panel occupies about 43%-87% of screen, above unchanged dimmed bottom navigation. Full panel content must be comfortably readable, with a clearly separate pinned footer for CTA; content above footer is a native scroll area, indicated by a subtle small scroll indicator, not a second inner ornamented frame. No clipped half-rows.
+Panel hierarchy:
+Small gold moon and stars icon, heading 'Day complete'.
+Subheading 'Day 3 · 6 items sold'.
+Small gold divider.
+Three clear summary rows:
+'Sales'       '$235'
+'Stock cost'  '$100'
+'Profit'      '$135'
+Use slightly stronger gold accent on total Profit.
+Then a compact product table, one row per product with small painted product icon, cream name, sold count, and profit amount. Labels above numeric columns 'Sold' and 'Profit'. Exact three rows:
+blue potion icon, 'Glow Potion', '3', '$45'
+gold/green charm icon, 'Lucky Charm', '2', '$50'
+purple book icon, 'Pocket Spellbook', '1', '$40'
+These are total product profits, not revenue. Sum profits $135 and units6. Use slim gold separators if helpful, keep readable.
+Then a modest gold 'Tomorrow' heading with exact neutral factual text:
+'Glow Potion sold 3 units today. Restock it before opening.'
+Do not infer reasons why anyone bought or left; no claims about pricing or visitors' intentions.
+Pinned footer, separated from scrollable contents by padding and a thin gold line, has a large full-width native teal button with bounded gold trim and exact label 'Prepare Day 4'. Keep the CTA fully visible and comfortably tappable. No second CTA, no ads, settings, charts, monetization or extra text. Do not flatten or simplify the existing illustrated shop style; the desired result is the same real app with a better-organized summary panel.

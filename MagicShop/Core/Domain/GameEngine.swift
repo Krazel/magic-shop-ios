@@ -296,6 +296,24 @@ extension GameEngine {
         return Set(history + active + living)
     }
 
+    /// All non-refundable spending preserves a recoverable table-and-potion
+    /// budget. Cap each contribution before adding, including historical stock
+    /// costs, so imported large values never overflow an aggregate.
+    private func validateIrreversibleSpending(_ cost: Int) throws {
+        guard state.balance >= cost else {
+            throw CommerceError.insufficientFunds(required: cost, available: state.balance)
+        }
+        let required = ShopCare.minimumRecoverableCapital
+        var capital = min(required, state.balance - cost)
+        for fixture in state.fixtures where capital < required {
+            capital += min(required - capital, FixtureCatalog.definition(for: fixture.kind).price)
+        }
+        for unit in state.stock where capital < required {
+            capital += min(required - capital, unit.purchaseCost)
+        }
+        guard capital >= required else { throw LivingShopError.workingCapitalRequired }
+    }
+
     private func balanceAdding(_ amount: Int) throws -> Int {
         let result = state.balance.addingReportingOverflow(amount)
         guard !result.overflow else { throw CommerceError.balanceOverflow }
@@ -313,9 +331,7 @@ extension GameEngine {
         guard state.world.hitMap.cells.contains(where: { $0.staticBlocker == definition.blocker }) else {
             throw RestorationError.noRepairableCells(group)
         }
-        guard state.balance >= definition.price else {
-            throw CommerceError.insufficientFunds(required: definition.price, available: state.balance)
-        }
+        try validateIrreversibleSpending(definition.price)
     }
 
     /// Call only on confirmation. The whole authored blocker group is cleared,
@@ -347,9 +363,7 @@ extension GameEngine {
         guard state.world.hitMap.layout == .starter else {
             throw RestorationError.unsupportedStarterLayout
         }
-        guard state.balance >= ExpansionState.price else {
-            throw CommerceError.insufficientFunds(required: ExpansionState.price, available: state.balance)
-        }
+        try validateIrreversibleSpending(ExpansionState.price)
         let connection = ExpansionState(direction: direction).starterConnectionCells
         let occupied = state.world.hitMap.dynamicOccupancy(fixtures: state.fixtures)
         guard connection.allSatisfy({ occupied[$0] == nil }),
@@ -407,20 +421,7 @@ extension GameEngine {
         guard let cell = state.world.hitMap.cell(at: point), cell.zone != .outside,
               cell.staticBlocker == nil else { throw LivingShopError.invalidCareCell }
         if state.world.floor.styleID(at: point) == style { return 0 }
-        guard state.balance >= cost else {
-            throw CommerceError.insufficientFunds(required: cost, available: state.balance)
-        }
-        // A permanent cosmetic purchase may not consume the last recoverable
-        // table-and-potion capital. Stock and fixtures can still be returned.
-        let required = cost + 60
-        var capital = min(required, state.balance)
-        for fixture in state.fixtures where capital < required {
-            capital += min(required - capital, FixtureCatalog.definition(for: fixture.kind).price)
-        }
-        for unit in state.stock where capital < required {
-            capital += min(required - capital, unit.purchaseCost)
-        }
-        guard capital >= required else { throw LivingShopError.workingCapitalRequired }
+        try validateIrreversibleSpending(cost)
         state.world.floor.setStyleID(style, at: point)
         state.balance -= cost
         return cost

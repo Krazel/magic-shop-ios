@@ -314,6 +314,122 @@ final class RestorationTests: XCTestCase {
         XCTAssertThrowsError(try invalid.validateIntegrity())
     }
 
+    func testFloorSpendingCannotLeaveExpansionWithoutRecoverableTradingCapital() throws {
+        var engine = freshShop()
+        let cells = engine.state.world.hitMap.cells.filter {
+            $0.zone != .outside && $0.staticBlocker == nil
+        }.prefix(80)
+        XCTAssertEqual(cells.count, 80)
+        for cell in cells { try engine.paintFloor(at: cell.point, style: .checkerStone) }
+        XCTAssertEqual(engine.state.balance, 260)
+        try manuallyRepairAll(in: &engine)
+        engine = try reloaded(engine)
+        let before = engine.state
+        for direction in ExpansionDirection.allCases {
+            XCTAssertThrowsError(try engine.validateExpansion(toward: direction)) {
+                XCTAssertEqual($0 as? LivingShopError, .workingCapitalRequired)
+            }
+            XCTAssertThrowsError(try engine.expandShop(toward: direction)) {
+                XCTAssertEqual($0 as? LivingShopError, .workingCapitalRequired)
+            }
+            XCTAssertEqual(engine.state, before)
+        }
+        // The rejected expansion leaves enough actual money to trade.
+        let table = try place(.basicDisplayTable, at: GridPoint(x: 4, y: 4), in: &engine)
+        try engine.confirm(StockDraft(product: .glowPotion, fixtureID: table.id, slotIndex: 0))
+        XCTAssertNoThrow(try engine.openLivingDay())
+    }
+
+    func testPaidRepairsPreserveTheSameCapitalBoundaryAndManualRepairRemainsFree() throws {
+        for repair in RepairCatalog.all {
+            var poor = GameEngine(state: GameState(balance: repair.price - 1))
+            let poorBefore = poor.state
+            XCTAssertThrowsError(try poor.repair(repair.id)) {
+                XCTAssertEqual($0 as? CommerceError,
+                    .insufficientFunds(required: repair.price, available: repair.price - 1))
+            }
+            XCTAssertEqual(poor.state, poorBefore)
+
+            var borderline = GameEngine(state: GameState(balance: repair.price + 59))
+            let before = borderline.state
+            XCTAssertThrowsError(try borderline.validateRepair(repair.id)) {
+                XCTAssertEqual($0 as? LivingShopError, .workingCapitalRequired)
+            }
+            XCTAssertThrowsError(try borderline.repair(repair.id))
+            XCTAssertEqual(borderline.state, before)
+            let point = try XCTUnwrap(before.world.hitMap.cells.first {
+                $0.staticBlocker == repair.blocker
+            }).point
+            for _ in 0..<ShopCare.repairStrokesRequired { try borderline.cleanCell(at: point) }
+            XCTAssertEqual(borderline.state.balance, before.balance)
+            XCTAssertTrue(borderline.state.restoration.repairedGroups.contains(repair.id))
+
+            var exact = GameEngine(state: GameState(balance: repair.price + 60))
+            try exact.repair(repair.id)
+            XCTAssertEqual(exact.state.balance, ShopCare.minimumRecoverableCapital)
+        }
+    }
+
+    func testExpansionAcceptsExactlySixtyCashOrRefundableAssetsWithoutRequiringExtraCash() throws {
+        var cleared = freshShop()
+        try manuallyRepairAll(in: &cleared)
+        for balance in [309, 310] {
+            var state = cleared.state
+            state.balance = balance
+            var engine = GameEngine(state: state)
+            if balance == 309 {
+                XCTAssertThrowsError(try engine.expandShop(toward: .right))
+                XCTAssertEqual(engine.state, state)
+            } else {
+                try engine.expandShop(toward: .right)
+                XCTAssertEqual(engine.state.balance, 60)
+            }
+        }
+
+        let table = try place(.basicDisplayTable, at: GridPoint(x: 4, y: 4), in: &cleared)
+        let unit = try cleared.confirm(StockDraft(product: .glowPotion, fixtureID: table.id, slotIndex: 0))
+        var state = cleared.state
+        state.balance = ExpansionState.price
+        var engine = GameEngine(state: state)
+        try engine.expandShop(toward: .right)
+        XCTAssertEqual(engine.state.balance, 0)
+        XCTAssertNoThrow(try engine.state.validateIntegrity())
+        try engine.returnStock(stockID: unit.id)
+        try engine.sellEmptyFixture(fixtureID: table.id)
+        XCTAssertEqual(engine.state.balance, 60)
+        let replacement = try place(.basicDisplayTable, at: table.origin, in: &engine)
+        try engine.confirm(StockDraft(product: .glowPotion, fixtureID: replacement.id, slotIndex: 0))
+        XCTAssertNoThrow(try engine.openLivingDay())
+    }
+
+    func testPermanentSpendingCapsImportedRefundValuesBeforeAddingThem() throws {
+        var engine = freshShop()
+        try manuallyRepairAll(in: &engine)
+        let table = try place(.basicDisplayTable, at: GridPoint(x: 4, y: 4), in: &engine)
+        var state = engine.state
+        state.balance = ExpansionState.price + 3
+        state.stock = [StockItem(product: .glowPotion, fixtureID: table.id,
+                                 slotIndex: 0, purchaseCost: Int.max)]
+        engine = GameEngine(state: state)
+        try engine.paintFloor(at: GridPoint(x: 6, y: 6), style: .checkerStone)
+        try engine.expandShop(toward: .right)
+        XCTAssertEqual(engine.state.balance, 0)
+        XCTAssertEqual(engine.state.stock.first?.purchaseCost, Int.max)
+        XCTAssertEqual(try reloaded(engine).state, engine.state)
+
+        var wealthy = GameEngine(state: GameState(balance: Int.max))
+        try wealthy.repair(.rubble)
+        XCTAssertEqual(wealthy.state.balance, Int.max - RepairCatalog.definition(for: .rubble).price)
+    }
+
+    private func manuallyRepairAll(in engine: inout GameEngine) throws {
+        for repair in RepairCatalog.all {
+            let point = try XCTUnwrap(engine.state.world.hitMap.cells.first {
+                $0.staticBlocker == repair.blocker
+            }).point
+            for _ in 0..<ShopCare.repairStrokesRequired { try engine.cleanCell(at: point) }
+        }
+    }
     private func freshShop() -> GameEngine {
         GameEngine(state: GameState(shopName: "Moon & Mortar", onboardingCompleted: true))
     }
