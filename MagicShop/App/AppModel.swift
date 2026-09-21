@@ -476,7 +476,7 @@ final class AppModel: ObservableObject {
         case let LivingShopError.invalidPrice(minimum, maximum): return "Choose a price from $\(minimum) to $\(maximum)."
         case LivingShopError.invalidCareCell: return "Choose a clear tile inside your shop. Sweep worn areas before laying a floor."
         case LivingShopError.invalidFloorStyle: return "Choose one of the three floor materials."
-        case LivingShopError.workingCapitalRequired: return "Keep enough value for a $50 display and $10 stock. Trade a little more before laying this floor."
+        case LivingShopError.workingCapitalRequired: return "Keep enough value for a $50 display and $10 stock. Trade a little more before making this improvement."
         case LivingShopError.noWalkableEntrance: return "Clear a path from the entrance before opening."
         case LivingShopError.unexpectedMinute, LivingShopError.invalidMinuteRange: return "The day could not advance. Resume to try again."
         case ShopNameValidationError.empty: return "Enter a name for your shop."

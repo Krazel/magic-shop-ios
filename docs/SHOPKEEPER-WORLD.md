@@ -37,7 +37,7 @@ when no adjacent wall exists. A fully offscreen preview now omits its accessibil
 element instead of assigning CGRect.null as its frame; returning into view restores
 the same placement identifier. No clipping is applied to the raw placement origin.
 
-## W2 — Restocking while paused leaves a product invisible (P2, corrected)
+## W2 — Restocking while paused leaves stale pixels (P2, corrected in source; recapture pending)
 
 Baseline cause: ShopScene.makeFixture sets an inserted product to alpha 0 and
 scale 0.65, then runs a 0.20-second insertion action. The Container pauses SKView
@@ -52,7 +52,8 @@ Correction:
 - Newly inserted stock, furniture and decorations settle immediately while
   presentation is paused, just as they already do for Reduce Motion.
 - Entering pause rebuilds furniture once to finish any insertion in flight.
-  Customer time, sale logic, receipt actions and SKView remain paused.
+  Customer time, sale logic and scene actions remain paused. SKView continues
+  drawing direct changes to product nodes, cleaning and camera position.
 - Ordinary unpaused insertion animation retains its existing duration and art.
 - Named stock nodes provide live accessibility values on their existing fixture
   element. This reads actual node opacity/scale, not just saved inventory.
@@ -70,7 +71,8 @@ Native verification for root:
 
 A live accessibility value uses `Product name arriving` only while an ordinary
 insertion has not settled; it becomes `Product name displayed` after the actual
-node reaches full appearance, even between App model updates. This is a useful
+node reaches full appearance, even between App model updates. This describes
+the node tree and does not prove a refreshed framebuffer. This is a useful
 VoiceOver inventory description and a presentation assertion, not a test-only
 flag. It does not prove freedom from overlap/occlusion; screenshot review remains
 necessary for that.
@@ -108,3 +110,46 @@ Verification for root:
   claim an executed iOS test, a new successful compile or final screenshot QA.
 - Root will run the integrated tests, capture paused restocking and verify the
   final exact-source IPA. Existing 0.3 evidence remains historical and intact.
+
+## W2 runtime follow-up — frozen framebuffer in cb6532c
+
+CI 35632416755 passed all 130 tests, but the paused-restocking attachment exposed
+an additional rendering failure. The Stock card contained a Glow Potion while
+the central table still showed its previous Lucky Charm; Stock's camera lift
+was also absent. The earlier node-alpha fix and accessibility value were correct
+in memory, but did not refresh the pixels. The test pass was insufficient to close
+this visual defect.
+
+Evidence: [paused restock attachment](../outputs/ci/35632416755/diagnostics/attachments/852E2BFB-BAB3-4D65-8CF8-7E1EF222DD87.png).
+Root owns its permanent archive and the comparable new capture.
+
+The cause is the Container forwarding player pause to SKView.isPaused. Apple's
+[SKView pause documentation](https://developer.apple.com/documentation/spritekit/skview/ispaused)
+explains that this holds the scene content fixed onscreen. In contrast,
+[SKNode pause](https://developer.apple.com/documentation/spritekit/sknode/ispaused)
+controls action processing through the node tree.
+
+The World follow-up removes the host's SKView pause proxy. ShopScene.render sets
+its inherited isPaused flag instead, keeping action processing paused while the
+view continues drawing camera and node changes. The update callback explicitly
+returns while presentationPaused, and pause transitions clear lastFrameTime so
+resume cannot interpolate elapsed paused time. The existing App timer pause,
+Reduce Motion and immediate insertion policy remain intact. No Core, App, test,
+asset, project or workflow file changed in this World follow-up.
+
+Required runtime verification on the new integrated source:
+
+- Repeat paused Stock return/refill and compare the actual table pixels with the
+  product card. Glow Potion must replace Lucky Charm without resuming the day.
+- Open/close management panels and pan/zoom while paused: the camera must draw its
+  current projection, including Stock's lift. AX geometry alone is not proof.
+- Compare clock, sales and visitor locations before/after waiting paused. They
+  must remain stable. Resume should continue once without a time catch-up jump.
+- Clean a dirty cell during paused trading and check that its dust actually fades
+  with the saved level. Recheck Reduce Motion with paused restocking.
+
+Local static validation after this follow-up: PASS, 38 required files, 17 Core
+sources, 118 declared domain/model test methods, version 0.4 (1), and original
+asset hashes preserved. Compilation, runtime captures and final IPA are still
+integration checks owned by root; the prior 130-test pass does not establish
+success for the new source.

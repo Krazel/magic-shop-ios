@@ -141,7 +141,6 @@ struct ShopSceneContainer: UIViewRepresentable {
         }
         view.worldDescription = "\(state.fixtures.count) pieces of furniture, \(state.stock.count) items stocked."
         coordinator.applyCamera()
-        view.isPaused = isPaused
         view.updateWorldAccessibility(scene: coordinator.scene, fixtures: state.fixtures,
                                       preview: preview, tool: interactionTool,
                                       onFixtureTap: onFixtureTap, onToolStroke: onToolStroke)
@@ -432,10 +431,6 @@ final class ShopAccessibleView: UIView {
         get { spriteView.preferredFramesPerSecond }
         set { spriteView.preferredFramesPerSecond = newValue }
     }
-    var isPaused: Bool {
-        get { spriteView.isPaused }
-        set { spriteView.isPaused = newValue }
-    }
     override init(frame: CGRect) {
         super.init(frame: frame)
         isMultipleTouchEnabled = true
@@ -443,6 +438,8 @@ final class ShopAccessibleView: UIView {
         isAccessibilityElement = false
         spriteView.frame = bounds
         spriteView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        // Keep rendering active during a player pause; ShopScene pauses its
+        // own actions and interpolation. UIKit suspends an inactive app.
         spriteView.backgroundColor = .clear
         spriteView.isAccessibilityElement = false
         spriteView.accessibilityElementsHidden = true

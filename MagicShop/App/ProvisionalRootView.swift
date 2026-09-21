@@ -651,7 +651,7 @@ private struct PreparationHint: View {
                 }.frame(maxWidth: .infinity)
             }.frame(height: textSize.isAccessibilitySize ? 120 : 85)
             Button(model.nextStepActionTitle, action: model.followNextStep)
-                .buttonStyle(GoldButtonStyle(secondary: true)).accessibilityIdentifier("next-step-action")
+                .buttonStyle(GoldButtonStyle()).accessibilityIdentifier("next-step-action")
             HStack(spacing: 8) {
                 Button("Improve") { model.showPanel(.improvements) }.frame(maxWidth: .infinity, minHeight: 44)
                 if !model.state.fixtures.isEmpty {

@@ -116,8 +116,8 @@ jobs:
           xcrun simctl install "$SIMULATOR_UDID" "$APP_PATH"
           STATES="onboarding overview preparation build placement stock living living-summary pricing care floors floor-laid drag improvements decor journal restored-right freeplay paused-stock"
           if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock freeplay"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock drag"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock freeplay"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock freeplay"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE"
@@ -125,8 +125,9 @@ jobs:
             xcrun simctl io "$SIMULATOR_UDID" screenshot "$RUNNER_TEMP/VisualQA/$STATE-runtime.png"
           done
           LARGE_STATES="stock pricing care floors preparation living-summary"
-          if [ "${{ inputs.interaction_check }}" = "true" ]; then LARGE_STATES="preparation living-summary pricing care"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then LARGE_STATES="preparation living-summary pricing care"; fi
+          if [ "${{ inputs.capture_only }}" = "true" ]; then LARGE_STATES="preparation living-summary pricing care paused-stock freeplay"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then LARGE_STATES="preparation living-summary pricing care paused-stock freeplay"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then LARGE_STATES="preparation living-summary pricing care paused-stock freeplay"; fi
           for STATE in $LARGE_STATES; do
             xcrun simctl terminate "$SIMULATOR_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SIMULATOR_UDID" com.example.MagicShop --visual-state "$STATE" --large-text
@@ -155,8 +156,8 @@ jobs:
           xcrun simctl install "$SMALL_UDID" "$RUNNER_TEMP/DerivedData/Build/Products/Release-iphonesimulator/MagicShop.app"
           STATES="onboarding stock placement pricing care floors living preparation living-summary freeplay"
           if [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock freeplay"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock"; fi
-          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock freeplay"; fi
+          if [ "${{ inputs.interaction_check }}" = "true" ] && [ "${{ inputs.capture_only }}" = "true" ]; then STATES="preparation living-summary pricing care paused-stock freeplay"; fi
           for STATE in $STATES; do
             xcrun simctl terminate "$SMALL_UDID" com.example.MagicShop || true
             xcrun simctl launch "$SMALL_UDID" com.example.MagicShop --visual-state "$STATE"

@@ -245,7 +245,11 @@ final class ShopScene: SKScene {
         renderedPreviewValid = previewIsValid
         self.selectedFixtureID = selectedFixtureID
         reducedMotion = reduceMotion
+        if self.presentationPaused != presentationPaused { lastFrameTime = nil }
         self.presentationPaused = presentationPaused
+        // Pause actions on the scene tree, not SKView's framebuffer. Direct
+        // stock, cleaning and camera changes must still be drawn while paused.
+        isPaused = presentationPaused
         needsFirstRender = false
 
         if motionChanged { feedbackRoot.removeAllChildren() }
@@ -280,6 +284,10 @@ final class ShopScene: SKScene {
     }
 
     override func update(_ currentTime: TimeInterval) {
+        guard !presentationPaused else {
+            lastFrameTime = nil
+            return
+        }
         let delta = min(0.1, max(0, currentTime - (lastFrameTime ?? currentTime)))
         lastFrameTime = currentTime
         if reducedMotion {
