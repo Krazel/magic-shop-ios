@@ -44,7 +44,7 @@ loans, crafting, accounts, ads, tracking, purchases or network calls.
 - Journal: restoration goals, calendar rules and recent trading results.
 - Dynamic Type and Reduce Motion use the device's accessibility preferences.
 
-## Current iteration 0.4 (build 1) — native verification pending
+## Current candidate 0.4 (build 1) — verified
 
 Adds contextual restoration guidance and a product-by-product closing report;
 protects trading capital during permanent improvements; fixes outside drops,
@@ -52,7 +52,12 @@ paused restocking and camera accessibility. Pricing and cleaning controls stay
 clear on smaller layouts, and the calendar retains pause while panels are open.
 The existing save schema 5 and artwork remain. See `docs/SHOPKEEPER-PLAN.md`,
 `docs/SHOPKEEPER-DOMAIN.md` and `docs/SHOPKEEPER-WORLD.md` for scope and evidence.
-The previous delivery remains recoverable until native CI and visual QA close.
+Native verification passed 118 domain/model cases and all 12 UI cases, with a
+second 12-case UI run after the final rendering correction. Real normal, compact
+and large-text captures were reviewed; the exact-source arm64 IPA is verified.
+See `docs/SHOPKEEPER-VERIFICATION.md` for runs, coverage boundaries, screenshots
+and the local Sideloadly file. Physical installation remains a separate check.
+The previous delivery stays recoverable.
 
 ## Previous candidate 0.3 (build 1) — verified
 

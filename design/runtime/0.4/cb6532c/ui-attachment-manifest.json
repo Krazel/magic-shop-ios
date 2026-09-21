@@ -1,0 +1,146 @@
+[
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "26DC8E40-EDFD-4998-9D54-63D64788A079.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Closing report with large text_0_11EB4724-C02A-46A6-A1AE-2FBDBBADCE0F.png",
+        "timestamp" : 1790012270.152
+      }
+    ],
+    "testIdentifier" : "ShopJourneyUITests/testClosingReportKeepsTomorrowReachableWithLargeText()",
+    "testIdentifierURL" : "test://com.apple.xcode/MagicShop/MagicShopUITests/ShopJourneyUITests/testClosingReportKeepsTomorrowReachableWithLargeText"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "564EB90C-FE91-4524-96EE-A72A8823179E.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Care during overlapping visits_0_00234DBF-EC5B-47FA-92DA-9AB9D1AEF75E.png",
+        "timestamp" : 1790012279.09
+      }
+    ],
+    "testIdentifier" : "ShopJourneyUITests/testCustomersOverlapAndCareWorksWhileOpen()",
+    "testIdentifierURL" : "test://com.apple.xcode/MagicShop/MagicShopUITests/ShopJourneyUITests/testCustomersOverlapAndCareWorksWhileOpen"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "ED02F231-7D22-4F69-909E-D8332F194C19.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Floor applied_0_A31C1DF7-C741-4BFB-AE77-150D246AA227.png",
+        "timestamp" : 1790012290.381
+      },
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "E79490EA-8210-4EFC-9272-A62E1697B83D.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Floor stroke preview_0_0D3A2894-A6EE-4CE1-AB19-262A76C105B7.png",
+        "timestamp" : 1790012288.562
+      }
+    ],
+    "testIdentifier" : "ShopJourneyUITests/testFloorStrokePreviewsThenAppliesWithoutHiddenCharge()",
+    "testIdentifierURL" : "test://com.apple.xcode/MagicShop/MagicShopUITests/ShopJourneyUITests/testFloorStrokePreviewsThenAppliesWithoutHiddenCharge"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "2F328A65-6DE9-47D7-9940-D2F43862D234.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Furniture after native drag_0_C6240D99-A4CA-4D37-95EE-69F6BCB44296.png",
+        "timestamp" : 1790012297.9
+      }
+    ],
+    "testIdentifier" : "ShopJourneyUITests/testFurnitureLongPressDragMovesTheActualFixture()",
+    "testIdentifierURL" : "test://com.apple.xcode/MagicShop/MagicShopUITests/ShopJourneyUITests/testFurnitureLongPressDragMovesTheActualFixture"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "FCE2E267-54BD-4074-BB4B-E7F5E3B79E28.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Manual repair after three native strokes_0_64042B72-B946-444D-BD97-4DF00006F97C.png",
+        "timestamp" : 1790012311.272
+      }
+    ],
+    "testIdentifier" : "ShopJourneyUITests/testManualCleaningRequiresThreeSeparateWorldStrokes()",
+    "testIdentifierURL" : "test://com.apple.xcode/MagicShop/MagicShopUITests/ShopJourneyUITests/testManualCleaningRequiresThreeSeparateWorldStrokes"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "1253796B-8498-487C-98E7-9454F10F529F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Next step leads to manual care_0_E3F34173-6BCB-45B6-BA96-A85C3198D02D.png",
+        "timestamp" : 1790012318.657
+      }
+    ],
+    "testIdentifier" : "ShopJourneyUITests/testNextStepOpensTheMatchingManualCareTask()",
+    "testIdentifierURL" : "test://com.apple.xcode/MagicShop/MagicShopUITests/ShopJourneyUITests/testNextStepOpensTheMatchingManualCareTask"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "0C0A5EE2-2BAD-4ECC-BB1C-81F827A349A3.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Price controls with large text_0_2F52FC2A-FAD5-44D1-AF02-12220183E722.png",
+        "timestamp" : 1790012325.836
+      }
+    ],
+    "testIdentifier" : "ShopJourneyUITests/testPriceControlsSaveAndRemainReachableWithLargeText()",
+    "testIdentifierURL" : "test://com.apple.xcode/MagicShop/MagicShopUITests/ShopJourneyUITests/testPriceControlsSaveAndRemainReachableWithLargeText"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "852E2BFB-BAB3-4D65-8CF8-7E1EF222DD87.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Product visible while the shop stays paused_0_B7B87B2F-EE40-4A69-9DFA-EE4682097D3E.png",
+        "timestamp" : 1790012393.849
+      }
+    ],
+    "testIdentifier" : "ShopJourneyUITests/testRestockingWhilePausedDisplaysTheProductImmediately()",
+    "testIdentifierURL" : "test://com.apple.xcode/MagicShop/MagicShopUITests/ShopJourneyUITests/testRestockingWhilePausedDisplaysTheProductImmediately"
+  },
+  {
+    "attachments" : [
+      {
+        "configurationName" : "Test Scheme Action",
+        "deviceId" : "DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9",
+        "deviceName" : "iPhone 16 Pro",
+        "exportedFileName" : "015F4180-B0CF-4AA7-AF43-9CA7993DAA2F.png",
+        "isAssociatedWithFailure" : false,
+        "suggestedHumanReadableName" : "Restoration completion journal_0_54DFE32F-20F3-47E4-A6D2-A843E9A58210.png",
+        "timestamp" : 1790012404.75
+      }
+    ],
+    "testIdentifier" : "ShopJourneyUITests/testRestoredShopOpensItsCompletionJournal()",
+    "testIdentifierURL" : "test://com.apple.xcode/MagicShop/MagicShopUITests/ShopJourneyUITests/testRestoredShopOpensItsCompletionJournal"
+  }
+]

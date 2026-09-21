@@ -1,0 +1,36 @@
+{
+  "version": "0.4",
+  "build": 1,
+  "app_commit": "5e4a4998ecbb8e5b5e4f3f40b91a6e71c0feaf11",
+  "unique_passing_cases": 130,
+  "full_suite": {
+    "run": "35632416755",
+    "commit": "cb6532cbc2f7e46eda71b508dae7fb6087b1217a",
+    "passed": 130,
+    "failed": 0,
+    "skipped": 0,
+    "domain_model": 118,
+    "ui": 12
+  },
+  "final_ui_regression": {
+    "run": "35635145547",
+    "commit": "a7017884307c3beeafc00167716fde5dde8db6f6",
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0
+  },
+  "coverage_boundary": "Core and all test source unchanged after full suite. AppModel only changes working-capital error wording. Final regression covers World pause/render and UI layout changes; 130 distinct passing cases, not 142 unique cases or 130 rerun at final source. After a701788, only compact Stock camera lift changes; Core, World, AppModel and tests are unchanged. Final Release/IPA builds and compact/accessibility captures verify that offset.",
+  "device_ipa_run": "35637673069",
+  "physical_device_tested": false,
+  "final_presentation": {
+    "run": "35637669014",
+    "commit": "5e4a4998ecbb8e5b5e4f3f40b91a6e71c0feaf11",
+    "release_build": "PASS",
+    "xctest": "Intentionally not repeated for one compact camera offset.",
+    "reviewed_final_captures": [
+      "paused-stock-compact-runtime.png",
+      "paused-stock-large-text-runtime.png"
+    ],
+    "rejected_capture": "paused-stock-runtime.png is a white launch frame; retain prior valid a701788 normal capture."
+  }
+}

@@ -1,0 +1,5 @@
+Commit: 5e4a4998ecbb8e5b5e4f3f40b91a6e71c0feaf11
+Run: 35637669014
+Simulator: DC4CD8B3-4457-4153-9087-A0D7A2F9BFD9
+Source: real simulator app with isolated deterministic game-state fixtures
+Compact simulator: 22A3039C-6A45-47F4-82D4-80C58CA94379

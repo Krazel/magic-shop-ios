@@ -101,7 +101,7 @@ Verification for root:
 - Existing fixture/cell IDs and their projected frames remain available after
   camera changes. Re-run the existing native drag, floor and clean cases.
 
-## Verification status
+## Initial static verification (historical)
 
 - Source and static validation after the two World fixes: PASS on Windows,
   38 required files, 17 Core sources and 109 declared domain/model test methods.
@@ -120,7 +120,7 @@ was also absent. The earlier node-alpha fix and accessibility value were correct
 in memory, but did not refresh the pixels. The test pass was insufficient to close
 this visual defect.
 
-Evidence: [paused restock attachment](../outputs/ci/35632416755/diagnostics/attachments/852E2BFB-BAB3-4D65-8CF8-7E1EF222DD87.png).
+Evidence: [paused restock attachment](../design/runtime/0.4/cb6532c/ui-product-visible-while-the-shop-stays-paused.png).
 Root owns its permanent archive and the comparable new capture.
 
 The cause is the Container forwarding player pause to SKView.isPaused. Apple's
@@ -153,3 +153,30 @@ sources, 118 declared domain/model test methods, version 0.4 (1), and original
 asset hashes preserved. Compilation, runtime captures and final IPA are still
 integration checks owned by root; the prior 130-test pass does not establish
 success for the new source.
+
+## Integrated native closure — a701788
+
+Run 35635145547 executed all 12 native UI cases successfully after the World
+correction; zero failures or skips. The same source produced the verified
+arm64 iPhoneOS IPA in run 35635149027.
+
+Both root and the visual reviewer inspected the actual post-return/refill
+attachment: the selected central table now displays the blue Glow Potion,
+the Stock camera lift is drawn, the selection outline is visible, and the
+game clock still reads 10:39. This closes the observed frozen-frame defect;
+it is not merely an assertion about the accessibility node's value.
+
+Permanent comparison: [before](../design/runtime/0.4/cb6532c/ui-product-visible-while-the-shop-stays-paused.png)
+and [after](../design/runtime/0.4/a701788/ui-product-visible-while-the-shop-stays-paused.png).
+The final UI regression also passes native furniture drag, manual clean,
+floor preview/apply and idle-camera pinch. AppModel pause logic passed in the
+unchanged 118-case domain/model suite. Dedicated physical-device, auditory
+VoiceOver and additional Reduce Motion gesture sessions were not performed;
+source guards remain in place. Full evidence is in SHOPKEEPER-VERIFICATION.md.
+
+Final app 5e4a499 changes only the App's Stock camera lift on compact viewports;
+World is unchanged from the passing a701788 UI regression. The compact and
+accessibility images from CI 35637669014 show the selected table and potion
+below the calendar, closing the final occlusion. See the verification report
+for the excluded normal launch-frame acquisition and retained prior evidence.
+Delivered device IPA run: 35637673069.

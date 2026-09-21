@@ -80,19 +80,13 @@ cost, profit and cash, plus cash at restoration. Exact visitor receipts and
 cash amounts are deliberately not golden assertions; conservation, playable
 completion and persistence behavior are the contract.
 
-An independent arithmetic replay of the current deterministic generator predicts:
-
-| Stage | Units sold | Revenue | Cost of sold stock | Profit | Cash |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Day 1 | 3 | $140 | $60 | $80 | $380 |
-| Day 2 | 3 | $140 | $60 | $80 | $460 |
-| Day 3 | 3 | $140 | $60 | $80 | $540 |
-| Expansion and three decorations | — | — | — | — | $155 |
-| Day 4, continued play | 2 | $70 | $30 | $40 | $165 |
-
-Day 4 is predicted to retain the $30 spellbook. These are arithmetic
-expectations, not executed Swift results; the authoritative observations are
-the XCTest log from macOS CI. No balance change is justified by this path.
+The native four-day test passed in the full run 35632416755 on source cb6532c,
+as part of 118 domain/model cases and 12 UI cases with zero failures or skips.
+This verifies a viable restoration strategy, accounting conservation and disk
+relaunch continuity. Per-day cash is deliberately not a golden assertion and
+is not presented here as an observed CI amount: the public console exports
+case results, not this test's captured stdout. The prior arithmetic prediction
+remains recoverable in commit cb6532c; it is not a balancing guarantee.
 
 ## Verification and limits
 
@@ -102,6 +96,5 @@ paid-repair boundary and free fallback, exactly recoverable assets, huge importe
 cost overflow safety, honest product grouping and history roundtrip, and the
 four-day disk-backed journey.
 
-Windows verification checks source structure and whitespace only. Swift/XCTest
-execution and iOS build remain the root task's macOS CI responsibility. UI
+Windows verification checks source structure and whitespace only. Native build and all domain/model cases passed in run 35632416755. UI
 presentation, hints, rendering, gestures and AppModel are owned by other lanes.

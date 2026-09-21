@@ -245,7 +245,7 @@ Selected on 2026-09-21 by the project director under the owner's explicit author
 - Accessibility may adapt wrapping, scroll area height, footer layout and secondary actions. Preserve the bounded panel, readable text, unobstructed world controls and fixed next-day action. Respect native safe areas over incidental ImageGen margins.
 - Day, amounts, progress, counts, product margins and Tomorrow advice come from live Core data. Observed requested-product interest must not be labeled lost sales or treated as proof of the reason a visitor left.
 - The authorized CalendarBar pause action belongs to the open state; preparing/closed examples correctly omit it.
-- Comparable 0.4 runtime captures: pending implementation and simulator verification; this selection does not claim final UI parity or physical-device verification.
+- Comparable 0.4 runtime captures and qualitative review are complete below; this does not claim pixel equality or physical-device verification.
 
 - Director-confirmed native preparation adaptation: retain Improve as a fourth secondary access for expansion/planning and add a brief two-line explanation of three sweeping passes. Standard-size actions may share a row; their text ceiling follows the existing navigation policy (xxxLarge), with full accessibility labels and at least 44-point touch areas. This preserves the selected direction and does not claim an additional owner image review.
 - Runtime-driven summary adaptation (2026-09-21): the closed-day panel may use
@@ -254,3 +254,41 @@ Selected on 2026-09-21 by the project director under the owner's explicit author
   point. Preserve type sizes, the fixed next-day button and scrollable compact/
   accessibility content. Remove redundant explanatory copy after the factual
   non-buying visitor count. This corrects the initial capture's two-row view.
+
+
+### Shopkeeper runtime comparison — 0.4 (1), 2026-09-21
+
+Full UI/capture source `a7017884307c3beeafc00167716fde5dde8db6f6`, CI 35635145547.
+These are real app screenshots, separate from the generated masters.
+
+| Master / state | Comparable runtime |
+| --- | --- |
+| Preparation v1 | [Next restoration step](runtime/0.4/a701788/preparation-runtime.png) |
+| Summary v1 | [Three products and Tomorrow](runtime/0.4/a701788/living-summary-runtime.png) |
+| Summary, compact | [Compact report](runtime/0.4/a701788/living-summary-compact-runtime.png) |
+| Summary, accessibility after scrolling | [Tomorrow and fixed action](runtime/0.4/a701788/ui-closing-report-with-large-text.png) |
+| Pricing | [Fixed price controls](runtime/0.4/a701788/pricing-runtime.png) |
+| Care | [Repair counters first](runtime/0.4/a701788/care-large-text-runtime.png) |
+| Paused stock, actual interaction | [Replaced product rendered](runtime/0.4/a701788/ui-product-visible-while-the-shop-stays-paused.png) |
+| Restored free play | [Records and product mix](runtime/0.4/a701788/freeplay-runtime.png) |
+
+Review confirms the room/material/typography direction, teal preparation action,
+clear repair progress and per-product report. Native safe areas, extra Improve
+access, factual game values and scrollable compact/accessibility content are
+intentional adaptations. The closed-day report's larger panel exposes all three
+products and advice on the normal device; there is no need to manipulate the
+world behind that report. No new bitmap assets or flattened mockups are used.
+The manifest contains 32 current images and 38 preserved images, including the
+initial stale paused frame and smaller report as historical comparisons.
+Full test/IPA evidence and limits: `../docs/SHOPKEEPER-VERIFICATION.md`.
+
+Final compact Stock correction: source `5e4a4998ecbb8e5b5e4f3f40b91a6e71c0feaf11`,
+CI 35637669014. A 120-point Stock camera lift below 700-point viewport height
+keeps the selected table and potion below the calendar. Normal height retains
+180 points. [Compact](runtime/0.4/5e4a499/paused-stock-compact-runtime.png) and
+[accessibility](runtime/0.4/5e4a499/paused-stock-large-text-runtime.png) pass review.
+The new normal-size file is a rejected white launch-frame acquisition; it is
+archived but not current evidence. The unchanged normal layout keeps its valid
+[a701788 capture](runtime/0.4/a701788/paused-stock-runtime.png). Source, rejection
+and current selection are explicit in the manifest; no three-valid-final-frame
+claim is made. This closes the observed selected-table occlusion on iPhone SE.
