@@ -1,0 +1,133 @@
+{
+  "status": "rejected visual finish; 126 domain/model and 13 UI passed, one UI failed opening Care",
+  "source": "67eb7dacaaee3cd6fedebec919f3a4e8f4d5a7d1",
+  "run": 35666931133,
+  "issues": [
+    "abrupt rear-wall lighting joins",
+    "repeated dark zigzags on side walls",
+    "rear cap corner separation",
+    "rear facade and front floor hidden beneath preparation panel"
+  ],
+  "captures": [
+    {
+      "file": "expanded-left-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "b150fc0d20e0aae8a816c125d9b1c144c4468a593c6d3f6f6246fb6890b5db15"
+    },
+    {
+      "file": "expanded-left-large-text-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "45031dbe9ad4075913706999f65637a27b49db809d343a1935dae78f9063d5f1"
+    },
+    {
+      "file": "expanded-left-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "a82dfe87665b68c71b9bd14b62d615be1d3ffbd47881f536cab50c739a367cbd"
+    },
+    {
+      "file": "expanded-rear-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "d38bfaae9cd0dd1a6c64226f79050bd10408cee061a6701e0b2e2ca368819f75"
+    },
+    {
+      "file": "expanded-rear-large-text-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "96f1a57623215155e60c6efe7110043a8f7ff5836b0a24e6732b47521421bbf2"
+    },
+    {
+      "file": "expanded-rear-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "421fccc37ed2fb09d3910c9260407d61d5f3ea0b63edec1b15c88de21012bb42"
+    },
+    {
+      "file": "expanded-right-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "a076d551ad551d8cc328707f9cb1ea506923bf9948725c74ebe2ce7aa1914929"
+    },
+    {
+      "file": "expanded-right-large-text-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "5cd8b31a121198f6daa478f0b9c0547ee87cc362319f55d7afb28ee5b20e846c"
+    },
+    {
+      "file": "expanded-right-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "0a44b60e96e3ae9dcce04054845f90d7a2c8a81a3c777fedb66a260fa956bbea"
+    },
+    {
+      "file": "restored-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "be8ddd0bc3dc9952b9e6fef92da8b8af6182a67dcd26207e61e8663f3a3fbaa2"
+    },
+    {
+      "file": "restored-rear-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "e1e08efe9a69a60bd8a548e7c470b29666881531257ad137a39f555bcbe62969"
+    },
+    {
+      "file": "restored-rear-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "864777df34fc62bea897aa12666e37ca33d6f1938e88a5608e9ad96212ecfcf1"
+    },
+    {
+      "file": "restored-right-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "d887d6e41018e2408f6585a3aedc14e1f91bbfb3dcf21e6d9678bf79508f506e"
+    },
+    {
+      "file": "restored-right-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "275069e62ee1dbccd4c871442dcd405cdb82b54fe646de018e9eef8ffe510a7d"
+    },
+    {
+      "file": "restored-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "8ae0812e12d2f58dcb3cc3981bcb87046a88bbf12a7708e13d85bea3ff510190"
+    }
+  ]
+}

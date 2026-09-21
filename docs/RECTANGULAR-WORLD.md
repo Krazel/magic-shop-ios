@@ -1,129 +1,152 @@
 # One rectangular shop — World implementation
 
-Date: 2026-09-22. Status: implemented after exact owner approval of all three
-images ("Sí, aplica las tres"). Static verification passes. Native compile,
-interaction tests and visual comparison remain root's acceptance gate.
-World changed only ShopScene.swift and this report; no Core, App, tests, assets,
-Git or workflow operation belongs to this lane.
+Date: 2026-09-22. Status: implemented after the owner's exact approval of all
+three images ("Sí, aplica las tres"). The first native Release compiled, but
+its visual finish was rejected. The corrections below pass static verification;
+a new native capture and interaction check remain root's acceptance gate.
 
-## Approved direction
+This lane changes only MagicShop/World/ShopScene.swift and this report. Core,
+App, tests, assets, Git and workflows belong to other lanes.
 
-The owner replaced the adjoining-room concept with one larger rectangle. The
-chosen wall moves entirely to the new exterior; there is no wing, neck, doorway,
-internal wall, post or threshold. References:
+## Approved direction and domain contract
 
-- `design/approved/rectangular-right-v1.png`
-- `design/approved/rectangular-left-v1.png`
-- `design/approved/rectangular-rear-v2.png`
+References:
 
-Root first selected the direction, then obtained the owner's exact approval of
-the three full images after the automatic visual-approval block. The owner also
-explicitly authorized the saved-map adaptation after root explained it. These
-gates are resolved; no final implementation occurred while they were pending.
-Generated furniture rearrangements and minor UI shifts are not copied: native
-saved coordinates and the existing UI govern those details.
+- design/approved/rectangular-right-v1.png
+- design/approved/rectangular-left-v1.png
+- design/approved/rectangular-rear-v2.png
 
-## Domain and projection contract
+The chosen wall moves entirely to the new exterior. There is one larger room,
+with no wing, neck, doorway, internal wall, post or threshold. The exact image
+approval and the owner's explicit authorization to adapt saved maps resolved
+both earlier approval gates. Generated furniture rearrangements and minor UI
+shifts are excluded: native saved coordinates and the existing UI govern them.
 
 | Direction | Final layout | Starter origin | Added strip |
 | --- | --- | --- | --- |
-| Left | 16x11 | (5,0) | origin(0,0), footprint5x11 |
-| Right | 16x11 | (0,0) | origin(11,0), footprint5x11 |
-| Rear | 11x16 | (0,0) | origin(0,11), footprint11x5 |
+| Left | 16 x 11 | (5,0) | origin (0,0), footprint 5 x 11 |
+| Right | 16 x 11 | (0,0) | origin (11,0), footprint 5 x 11 |
+| Rear | 11 x 16 | (0,0) | origin (0,11), footprint 11 x 5 |
 
-All 176 cells are interior. Core owns schema 6, the 30 newly filled former-void
-cells, wall-fixture relocation, route repair, columns and saved data. World uses
-`expansion.layout` and final metadata and does not migrate or relocate anything.
+All 176 cells are interior. Core owns schema 6, filling the 30 former-void cells,
+wall-fixture relocation, route repair, columns and saved data. World consumes
+expansion.layout and final metadata; it does not migrate or relocate anything.
 The calibrated starter project()/inverse remain unchanged. Left's existing
-starterOrigin offset is applied once in projection, not written into the save.
-Stock IDs, fixture IDs, floor overrides, dirt and visitor paths stay domain-owned.
+starterOrigin offset is used once in projection, never written into the save.
 
-## Renderer delivered
+## Environment and painted surfaces
 
-`rebuildEnvironment` has two explicit paths. Unexpanded shops retain the exact
-original Starter/Repaired background sprite and partial repair overlays. An
-expanded shop renders a complete rectangular composition and returns before the
-original room sprite is added. Consequently the previous wall cannot survive
-under a floor patch. The former opening mask, addAnnex, narrow floor join,
-threshold, endpoint jambs and rear-opening decoration clamp are removed.
+Unexpanded shops retain the exact original Starter/Repaired background sprite
+and partial repair overlays. Expanded shops render a complete rectangular
+composition and return before adding the original room sprite. The old wall
+cannot survive under a floor patch. All former opening masks, addAnnex logic,
+floor joins, thresholds, endpoint jambs and rear-opening decoration clamps are
+removed.
 
-### Floor
+The floor covers the entire layout with one clipped painted mosaic, independent
+of the former boundary. A clean two-by-two source block from the repaired plate
+(x374...480, y785...909) repeats at 1.9 x 2.5 logical cells. Last partial blocks
+are clipped to the exact floor footprint. A broad static ambient shader adds
+edge and rear shading. Persisted floor overrides and dirt remain above the base
+at their actual saved coordinates. No permanent gameplay grid is drawn.
 
-`addRectangularFloor` covers the full layout with a clipped, continuous painted
-mosaic, independent of the old boundary. A clean two-by-two source block from
-RepairedShopBackground (x374...480,y785...909) repeats at 1.9x2.5 logical cells,
-maintaining painted tile scale instead of stretching eleven cells across sixteen.
-The same footprint mask clips the last partial blocks exactly. A static broad
-ambient shader shades the room's edges/rear; no separate extension lighting field
-is pasted on. Persisted floor overrides render above the base in their actual
-cells. Dirt, placement and preview layers remain unchanged.
+The rear wall is a single surface sampling the original continuous source span
+x143...701, y446...629. Its horizontal UV mapping has three connected spans:
+x143...295, x295...549, x549...701. Both joins sample the exact same source
+coordinate, so no lighting discontinuity can be introduced there. The lamp's
+central span stays five cells wide at starterOrigin.x + 5.5; the empty side
+plaster gains the remaining length. Rear expansion moves this entire wall to
+y=16. This intentionally favors continuous original painted lighting over
+repeating wall panels with mismatched light at their edges.
 
-### Rear wall and lamp
+Each side wall samples one uninterrupted original side-wall quadrilateral:
+floor-near (106,1172), floor-far (143,629), cap-far (115,461), cap-near (61,1141).
+The right side mirrors the same source. Rear-wall wainscot is never repeated
+along the side. The source's narrow green inner rail and continuous plaster
+therefore follow the complete floor edge without the former dark zigzags.
+These two source remaps use static SpriteKit texture shaders; no bitmap or asset
+file is rewritten and no animation is added.
 
-Plain wall sections reuse x148...393,y446...629 from the original plate, preserving
-warm plaster, shaded rail and teal wainscot. Bounded sections repeat rather than
-stretching the entire room. The lamp occupies its own five-cell source section
-(x295...549,y446...629) at starterOrigin.x+5.5. Its chain and painted body retain
-their scale while the remaining wall gains length. Rear expansion translates the
-entire wall to y=16; side expansions extend it to width16.
+The upright rear face is 186 authored pixels high, with a painted 38-pixel cap.
+Side caps are 30 authored pixels wide, matching the original side moulding.
+Their near endpoint sits 45 pixels outside and 31 pixels above the floor; their
+far endpoint sits 28 pixels outside and 15 pixels below the rear face's top.
+The rear curved source elbow stays anchored to the horizontal rear cap, so the
+side cap enters the curve instead of leaving a detached corner outside it.
+Rounded source masks preserve both front and rear painted corners.
 
-The upright face is 186 authored pixels; the painted cap adds38 pixels for the
-original224-pixel total height. Floor depth never scales wall height.
+The facade retains the original x105...749, y1172...1428 span with its door and
+windows. A lateral expansion adds one window span and a narrow framed facade
+column below the floor edge; exterior posts move to the outer corners. No post
+blocks an interior tile. The door stays at the saved starter entrance, so it is
+off-center after a side expansion. Rear expansion preserves the front span.
 
-### Side walls, corners and facade
+Wall decorations follow the final adjacentWalls metadata and the actual side
+face height. Their unexpanded positions are unchanged. Furniture/product art,
+customer depth, AX identities, pause behavior and gesture callbacks are intact.
 
-Both side walls exist only at x=0 and x=layout.width. Their cutaway profile rises
-from the near edge to the full rear wall, with the original outward near plaster
-face. Textured sections keep detail scale as the wall grows in depth. Caps reuse
-x148...694,y406...446, including bevel, highlight and dark fascia. Curved source
-corner masks retain the original rounded front and back moulding; no flat
-substitute outline is used. Contact shadows are stationary and respect pause and
-Reduce Motion without new animation.
+## Native rejection and corrective pass
 
-The facade preserves the original inner x105...749,y1172...1428 source span,
-including door and windows. A lateral extension adds one painted window section
-and a narrow framed facade column, below the floor edge. Original exterior
-corner/post art moves to the new left/right endpoint. There are no walk-blocking
-posts inside the floor. The door stays at the persisted starter entrance and is
-therefore off-center after a lateral expansion. Rear expansion preserves the
-whole front span.
+Root and art reviewed all nine regular/large-text images from source 67eb7da,
+run 35666931133. Release compilation succeeded; visual acceptance failed:
 
-Wall decorations follow final adjacentWalls metadata. Their expanded mounting
-uses the actual perimeter wall face; no old doorway/jamb clamp remains. The
-unexpanded decoration positions are unchanged. All furniture/product art,
-customer depth, AX identities and gesture callbacks are preserved.
+1. Rear-wall crops created strong vertical light seams on both sides of the
+   lamp. Replaced with the single continuous source/UV surface described above.
+2. Repeated rear-wall material created dark zigzags on the side walls. Replaced
+   with the original continuous side face, preserving its own painted shading.
+3. Rear elbows protruded beyond and detached from the straight side caps.
+   Corrected cap width and endpoints to enter the original curved source.
+4. The rear facade and front floor were hidden behind the preparation panel.
+   Expanded bounds now include the complete facade, down to source y1428 plus
+   ten pixels of margin, rather than stopping just beyond the floor edge.
+
+The source mosaic has no reported blocking hole or boundary, but its repeated
+joints and the new shaders still require the next native visual comparison.
+The rejected first-pass captures are evidence, not the accepted final result.
 
 ## Camera and interaction
 
-Expanded fitting uses the full rectangular floor/perimeter, including curved
-corner and facade lateral extents, with extra source margin and12 screen points
-reserved before scaling. The lower facade can continue behind preparation UI,
-while the complete interactive floor is framed below the HUD. Unexpanded fitting
-is unchanged. Manual pan and zoom remain available.
+The entire rectangular architecture, including rounded lateral extrema and the
+complete facade, is uniformly fitted between the HUD and preparation card.
+The conservative band covers both normal and accessibility text without relying
+on a SwiftUI text-size override becoming a UIKit trait:
 
-The existing Stock automatic correction and matching persisted-fixture preview
-condition are retained. A drag begun from Stock keeps its automatic camera anchor
-throughout the gesture; the user's camera pan is applied afterwards. Paused
-scenes still permit direct framebuffer updates through the running SKView while
-actions/time remain paused.
+- 402 x 874: bounds fit within screen Y 204.52...512.16 points.
+- 375 x 667: bounds fit within screen Y 138.07...380.86 points.
+- 430 x 932: proportional band Y 218.09...546.15 points.
 
-## Verification at World handoff
+These bands follow measured regular AX Calendar/panel edges (196/520 points)
+and the compact reference (129.5/389 points). Uniform fitting preserves the
+calibrated projection and relative furniture/cell scale; the deeper rear room
+necessarily appears smaller when its entire facade is shown. User pan and zoom
+remain available. Unexpanded fitting is unchanged.
 
-- Required Windows static script: PASS (version0.5/build1 configured by root).
-- 1,056 cell-center round trips across all three rectangles at two scales:
-  maximum projection/inverse error5.33e-15 cells; all176 cells per layout have
-  positive projected area.
-- Conservative painted perimeter/corner extrema have minimum lateral margins
-  of18.07pt on402x874 and17.64pt on375x667 for side expansions, exceeding8pt.
-  Rear margins are56.34pt/77.11pt at those viewports.
-- Rear cap screen Y is approximately204pt regular/156pt compact. Side cap Y is
-  approximately258pt/176pt. Native captures must verify the actual HUD spacing.
-- Static source search finds no annex, jamb, threshold, opening-mask or roomOrigin
-  use in ShopScene. Game state mutation and domain/persistence calls were not added.
+The existing Stock correction retains a selected persisted fixture's anchor
+while its matching drag preview exists. This keeps finger-to-cell mapping stable
+when a drag begins from Stock. User pan is applied afterwards. No drag, hitmap,
+transaction or persistence logic changed in the corrective pass. Paused scenes
+still render direct UI changes through a running SKView while scene actions and
+simulation time remain paused.
 
-Root's expanded-* fixtures should show stockable tables and floor overrides in
-newly filled cells and across the former boundary. Verify all three normal,
-compact and large-text captures, native restock and existing-fixture drag, then
-compare painted wall/floor/facade continuity against the approved full images.
-Passing model tests alone is not visual acceptance. Source mosaic joints and
-repeated wall panels in particular require the native image check.
+## Verification and remaining acceptance
+
+- Required Windows static script: PASS; root configured version 0.5/build 1.
+- Initial rectangular Release compiled natively. Its visual rejection is
+  recorded above; it does not validate the corrective shaders.
+- Independent Core review of the unchanged projection verified 14,256 centers
+  across directions, viewports, zooms and pans: no incorrect cell; maximum
+  inverse error 1.07e-14 cells. Stock preview preserved its persisted anchor.
+- Corrective fit calculation: actual painted rear cap is approximately screen
+  Y209.5 for sides /208.5 for rear on 402 x 874; full facade base Y509.2/509.8.
+  On 375 x 667, cap Y142.0/141.2; facade base Y378.6/379.0.
+- Conservative lateral margins after this fit are at least 35.16 points on
+  402 x 874 and 56.62 points on 375 x 667, exceeding the required eight points.
+- Both rear UV joins have zero source-coordinate discontinuity. All side source
+  coordinates are inside the preserved 853 x 1844 plate.
+- No annex, jamb, threshold, opening-mask or roomOrigin use remains in ShopScene.
+  World adds no game-state mutation or domain/persistence calls.
+
+Root must capture all three directions in normal, compact and large text, check
+continuous plaster/side rails/corner silhouette against the approved references,
+and verify that the full facade is visible. Repeat native stock and existing
+fixture drag after the fit change. Passing model tests is not visual acceptance.

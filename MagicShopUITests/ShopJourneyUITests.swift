@@ -257,9 +257,14 @@ final class ShopJourneyUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["--visual-state", "expanded-right"]
         app.launch()
-        XCTAssertTrue(app.buttons["Care"].waitForExistence(timeout: 10))
-        app.buttons["Care"].tap()
-        app.buttons["care-floor"].tap()
+        let care = app.buttons["Care"]
+        XCTAssertTrue(care.waitForExistence(timeout: 10))
+        XCTAssertGreaterThanOrEqual(care.frame.height, 44)
+        XCTAssertTrue(care.isHittable)
+        care.tap()
+        let floor = app.buttons["care-floor"]
+        XCTAssertTrue(floor.waitForExistence(timeout: 5))
+        floor.tap()
         let original = app.descendants(matching: .any)["world-cell-10-7"].firstMatch
         let added = app.descendants(matching: .any)["world-cell-11-7"].firstMatch
         XCTAssertTrue(original.waitForExistence(timeout: 5))

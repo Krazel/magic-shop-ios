@@ -135,7 +135,7 @@ final class ShopScene: SKScene {
     }
 
     /// Bounds cover the complete rectangular perimeter, including curved
-    /// corners. The lower facade may continue behind the preparation controls.
+    /// corners and the complete facade. Nothing depends on the old inner wall.
     private var expandedArchitectureBounds: CGRect? {
         guard let expansion = renderedState.restoration.expansion else { return nil }
         func floorPoint(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
@@ -148,18 +148,26 @@ final class ShopScene: SKScene {
         let x1 = x0 + CGFloat(expansion.layout.width), depth = CGFloat(expansion.layout.depth)
         let nearLeft = floorPoint(x0, 0), nearRight = floorPoint(x1, 0)
         let farLeft = floorPoint(x0, depth), farRight = floorPoint(x1, depth)
-        return bounds(of: [CGPoint(x: nearLeft.x - 100, y: nearLeft.y - 14),
-                           CGPoint(x: nearRight.x + 100, y: nearRight.y - 14),
+        return bounds(of: [CGPoint(x: nearLeft.x - 100, y: nearLeft.y - 266),
+                           CGPoint(x: nearRight.x + 100, y: nearRight.y - 266),
                            CGPoint(x: farLeft.x - 80, y: farLeft.y + 244),
                            CGPoint(x: farRight.x + 80, y: farRight.y + 244)])
     }
+    /// Measured clear intervals between the capped HUD and preparation card,
+    /// including the accessibility text fixture. The same fit avoids a camera
+    /// jump when text size changes; user zoom/pan remain independent.
+    private var expandedPresentationBand: ClosedRange<CGFloat> {
+        if size.height < 700 { return (size.height * 0.207)...(size.height * 0.571) }
+        return (size.height * 0.234)...(size.height * 0.586)
+    }
+
     private var backgroundSize: CGSize {
         let original = texture("StarterShopBackground").size()
         guard original.width > 0, original.height > 0, size.width > 0, size.height > 0 else { return size }
         var scale = max(size.width / original.width, size.height / original.height)
         if let architecture = expandedArchitectureBounds {
             scale = min(scale, min(max(1, size.width - 24) / architecture.width,
-                            max(1, size.height * 0.43) / architecture.height))
+                            max(1, expandedPresentationBand.upperBound - expandedPresentationBand.lowerBound) / architecture.height))
         }
         return CGSize(width: original.width * scale, height: original.height * scale)
     }
@@ -179,7 +187,7 @@ final class ShopScene: SKScene {
         // Reserve the upper HUD and the lower preparation card. In particular,
         // the rear room's cap must not be framed beneath the calendar.
         return CGPoint(x: architecture.midX * scale,
-                       y: architecture.midY * scale - size.height * 0.06)
+                       y: architecture.midY * scale + (expandedPresentationBand.lowerBound + expandedPresentationBand.upperBound - size.height) * 0.5)
     }
 
     var horizontalPanLimit: CGFloat { max(70, backgroundSize.width * 0.46) }
@@ -580,15 +588,16 @@ final class ShopScene: SKScene {
     }
 
     private func rectangularSideHeight(at depth: CGFloat) -> CGFloat {
-        wallFaceHeight * min(1, max(0, depth / CGFloat(renderedState.world.hitMap.layout.depth)))
+        let fraction = min(1, max(0, depth / CGFloat(renderedState.world.hitMap.layout.depth)))
+        return paintedScale * (31 + 140 * fraction)
     }
 
     private func sideWallTop(x: CGFloat, y: CGFloat, right: Bool) -> CGPoint {
         let floor = project(x: x, y: y)
         let fraction = min(1, max(0, y / CGFloat(renderedState.world.hitMap.layout.depth)))
-        // Match the original cutaway: the near plaster face leans outward,
-        // while the far end meets the upright rear wall at full height.
-        return CGPoint(x: floor.x + (right ? 1 : -1) * 44 * paintedScale * (1 - fraction),
+        // Follow the actual inner edge of the source cutaway cap. Its rear end
+        // meets the rounded elbow below and outside the straight rear cap.
+        return CGPoint(x: floor.x + (right ? 1 : -1) * (45 - 17 * fraction) * paintedScale,
                        y: floor.y + rectangularSideHeight(at: y))
     }
 
@@ -597,35 +606,41 @@ final class ShopScene: SKScene {
         addRectangularFloor(width: width, depth: depth)
         addRectangularFacade(expansion)
         addRectangularRearWall(width: width, depth: depth)
-        let material = paintedTexture(CGRect(x: 148, y: 446, width: 245, height: 183))
         for right in [false, true] {
             let x: CGFloat = right ? width : 0
-            let parts = Int(ceil(depth / 4))
-            for index in 0..<parts {
-                let from = depth * CGFloat(index) / CGFloat(parts)
-                let to = depth * CGFloat(index + 1) / CGFloat(parts)
-                let corners = [project(x: x, y: from), project(x: x, y: to),
-                               sideWallTop(x: x, y: to, right: right),
-                               sideWallTop(x: x, y: from, right: right)]
-                let face = texturedQuad(material, corners: corners, shade: 0.07)
-                face.zPosition = -91
-                environmentRoot.addChild(face)
-            }
+            let nearFloor = project(x: x, y: 0), farFloor = project(x: x, y: depth)
             let nearTop = sideWallTop(x: x, y: 0, right: right)
             let farTop = sideWallTop(x: x, y: depth, right: right)
+            let face = texturedQuad(texture("RepairedShopBackground"),
+                                    corners: [nearFloor, farFloor, farTop, nearTop])
+            // One uninterrupted source side wall. Rear-wall wainscot is never
+            // restarted along the depth, which previously made dark zigzags.
+            face.shader = SKShader(source: """
+                void main() {
+                    vec2 p = v_tex_coord;
+                    vec2 floorUV = mix(vec2(106.0 / 853.0, 1.0 - 1172.0 / 1844.0),
+                                       vec2(143.0 / 853.0, 1.0 - 629.0 / 1844.0), p.x);
+                    vec2 capUV = mix(vec2(61.0 / 853.0, 1.0 - 1141.0 / 1844.0),
+                                     vec2(115.0 / 853.0, 1.0 - 461.0 / 1844.0), p.x);
+                    gl_FragColor = texture2D(u_paintedPlate, mix(floorUV, capUV, p.y));
+                }
+                """, uniforms: [SKUniform(name: "u_paintedPlate", texture: texture("RepairedShopBackground"))])
+            face.zPosition = -91
+            environmentRoot.addChild(face)
             addWallCap(innerStart: nearTop, innerEnd: farTop,
                        outerStart: CGPoint(x: nearTop.x + (right ? 1 : -1), y: nearTop.y),
-                       outerEnd: CGPoint(x: farTop.x + (right ? 1 : -1), y: farTop.y))
-            addPaintedCorner(at: farTop, right: right, front: false)
-            addPaintedCorner(at: project(x: x, y: 0), right: right, front: true)
-            addContactShadow(from: project(x: x, y: 0), to: project(x: x, y: depth))
+                       outerEnd: CGPoint(x: farTop.x + (right ? 1 : -1), y: farTop.y),
+                       authoredThickness: 30)
+            let rearCorner = CGPoint(x: farFloor.x, y: farFloor.y + wallFaceHeight)
+            addPaintedCorner(at: rearCorner, right: right, front: false)
+            addPaintedCorner(at: nearFloor, right: right, front: true)
+            addContactShadow(from: nearFloor, to: farFloor)
         }
         let frontLeft = project(x: 0, y: 0), frontRight = project(x: width, y: 0)
         addWallCap(innerStart: frontLeft, innerEnd: frontRight,
                    outerStart: CGPoint(x: frontLeft.x, y: frontLeft.y - 1),
                    outerEnd: CGPoint(x: frontRight.x, y: frontRight.y - 1))
     }
-
     private func addRectangularFloor(width: CGFloat, depth: CGFloat) {
         // Two clean painted tiles in each axis. Decorative tile frequency is
         // independent of gameplay cells, and continuous across the former wall.
@@ -653,8 +668,8 @@ final class ShopScene: SKScene {
         shade.shader = SKShader(source: """
             void main() {
                 vec2 p = v_tex_coord;
-                float edge = pow(abs(p.x - 0.5) * 2.0, 1.6) * 0.15;
-                float rear = smoothstep(0.66, 1.0, p.y) * 0.10;
+                float edge = pow(abs(p.x - 0.5) * 2.0, 1.6) * 0.22;
+                float rear = smoothstep(0.66, 1.0, p.y) * 0.16;
                 float a = edge + rear;
                 gl_FragColor = vec4(vec3(0.12, 0.075, 0.035) * a, a);
             }
@@ -666,39 +681,38 @@ final class ShopScene: SKScene {
     }
 
     private func addRectangularRearWall(width: CGFloat, depth: CGFloat) {
-        func wallCorners(_ from: CGFloat, _ to: CGFloat) -> [CGPoint] {
-            let left = project(x: from, y: depth), right = project(x: to, y: depth)
-            return [left, right, CGPoint(x: right.x, y: right.y + wallFaceHeight),
-                    CGPoint(x: left.x, y: left.y + wallFaceHeight)]
-        }
+        let left = project(x: 0, y: depth), right = project(x: width, y: depth)
+        let topLeft = CGPoint(x: left.x, y: left.y + wallFaceHeight)
+        let topRight = CGPoint(x: right.x, y: right.y + wallFaceHeight)
         let lampCenter = CGFloat(starterOrigin.x) + 5.5
-        let lampStart = lampCenter - 2.5, lampEnd = lampCenter + 2.5
-        let plain = paintedTexture(CGRect(x: 148, y: 446, width: 245, height: 183))
-        for (start, end) in [(CGFloat.zero, lampStart), (lampEnd, width)] {
-            let count = max(1, Int(ceil((end - start) / 4)))
-            for index in 0..<count {
-                let from = start + (end - start) * CGFloat(index) / CGFloat(count)
-                let to = start + (end - start) * CGFloat(index + 1) / CGFloat(count)
-                var corners = wallCorners(from, to)
-                if index % 2 == 1 { corners = [corners[1], corners[0], corners[3], corners[2]] }
-                let panel = texturedQuad(plain, corners: corners)
-                panel.zPosition = -92
-                environmentRoot.addChild(panel)
+        let lampStart = (lampCenter - 2.5) / width
+        let lampEnd = (lampCenter + 2.5) / width
+        let face = texturedQuad(texture("RepairedShopBackground"), corners: [left, right, topRight, topLeft])
+        // A single continuous source span preserves the original light field.
+        // Only empty plaster at each side gains length; the lamp keeps its
+        // five-cell width. Adjacent UV spans meet at the exact same texel.
+        face.shader = SKShader(source: """
+            void main() {
+                vec2 p = v_tex_coord;
+                float x;
+                if (p.x < \(lampStart)) {
+                    x = mix(143.0, 295.0, p.x / \(lampStart));
+                } else if (p.x < \(lampEnd)) {
+                    x = mix(295.0, 549.0, (p.x - \(lampStart)) / \(lampEnd - lampStart));
+                } else {
+                    x = mix(549.0, 701.0, (p.x - \(lampEnd)) / \(1 - lampEnd));
+                }
+                vec2 uv = vec2(x / 853.0, 1.0 - mix(629.0, 446.0, p.y) / 1844.0);
+                gl_FragColor = texture2D(u_paintedPlate, uv);
             }
-        }
-        // The lamp and its chain remain their original painted size. Only
-        // plain wall sections repeat when the room becomes wider.
-        let lamp = texturedQuad(paintedTexture(CGRect(x: 295, y: 446, width: 254, height: 183)),
-                                corners: wallCorners(lampStart, lampEnd))
-        lamp.zPosition = -92
-        environmentRoot.addChild(lamp)
-        let topLeft = wallCorners(0, width)[3], topRight = wallCorners(0, width)[2]
+            """, uniforms: [SKUniform(name: "u_paintedPlate", texture: texture("RepairedShopBackground"))])
+        face.zPosition = -92
+        environmentRoot.addChild(face)
         addWallCap(innerStart: topLeft, innerEnd: topRight,
                    outerStart: CGPoint(x: topLeft.x, y: topLeft.y + 1),
                    outerEnd: CGPoint(x: topRight.x, y: topRight.y + 1))
-        addContactShadow(from: project(x: 0, y: depth), to: project(x: width, y: depth))
+        addContactShadow(from: left, to: right)
     }
-
     private func addRectangularFacade(_ expansion: ExpansionState) {
         func addPanel(_ source: CGRect, left: CGFloat, right: CGFloat) {
             let upperY = imagePoint(x: 0, y: 1172).y
@@ -734,13 +748,14 @@ final class ShopScene: SKScene {
         addPanel(CGRect(x: 749, y: 1172, width: 78, height: 256),
                  left: rightFoot, right: rightFoot + 78 * paintedScale)
     }
-    private func addWallCap(innerStart: CGPoint, innerEnd: CGPoint, outerStart: CGPoint, outerEnd: CGPoint) {
+    private func addWallCap(innerStart: CGPoint, innerEnd: CGPoint, outerStart: CGPoint, outerEnd: CGPoint,
+                            authoredThickness: CGFloat = 38) {
         let dx = innerEnd.x - innerStart.x, dy = innerEnd.y - innerStart.y
         let length = max(0.001, hypot(dx, dy))
         var normal = CGPoint(x: -dy / length, y: dx / length)
         let expected = CGPoint(x: outerStart.x - innerStart.x, y: outerStart.y - innerStart.y)
         if normal.x * expected.x + normal.y * expected.y < 0 { normal.x *= -1; normal.y *= -1 }
-        let thickness = paintedScale * 38
+        let thickness = paintedScale * authoredThickness
         let farStart = CGPoint(x: innerStart.x + normal.x * thickness, y: innerStart.y + normal.y * thickness)
         let farEnd = CGPoint(x: innerEnd.x + normal.x * thickness, y: innerEnd.y + normal.y * thickness)
         let cap = texturedQuad(paintedTexture(CGRect(x: 148, y: 406, width: 546, height: 40)),

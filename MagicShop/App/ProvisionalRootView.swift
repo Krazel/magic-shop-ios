@@ -653,16 +653,23 @@ private struct PreparationHint: View {
             Button(model.nextStepActionTitle, action: model.followNextStep)
                 .buttonStyle(GoldButtonStyle()).accessibilityIdentifier("next-step-action")
             HStack(spacing: 8) {
-                Button("Improve") { model.showPanel(.improvements) }.frame(maxWidth: .infinity, minHeight: 44)
+                shortcut("Improve", panel: .improvements)
                 if !model.state.fixtures.isEmpty {
-                    Button("Arrange") { model.showPanel(.fixture) }.frame(maxWidth: .infinity, minHeight: 44)
+                    shortcut("Arrange", panel: .fixture)
                 }
-                Button("Prices") { model.showPanel(.pricing) }.frame(maxWidth: .infinity, minHeight: 44)
-                Button("Care") { model.showPanel(.care) }.frame(maxWidth: .infinity, minHeight: 44)
+                shortcut("Prices", panel: .pricing)
+                shortcut("Care", panel: .care)
             }.font(.caption.bold()).foregroundStyle(MagicPalette.gold)
                 .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
             InlineMessage()
         }.foregroundStyle(MagicPalette.parchment).padding(.horizontal, 14).padding(.top, 12).magicPanel(corner: 20)
+    }
+
+    private func shortcut(_ title: String, panel: ShopPanel) -> some View {
+        Button { model.showPanel(panel) } label: {
+            Text(title).frame(maxWidth: .infinity, minHeight: 44)
+                .contentShape(Rectangle())
+        }.buttonStyle(.plain)
     }
 }
 
