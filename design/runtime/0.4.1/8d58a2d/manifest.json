@@ -1,0 +1,199 @@
+{
+  "images": [
+    {
+      "file": "annex-left-compact-runtime.png",
+      "size": [
+        750,
+        1334
+      ],
+      "sha256": "3ce0d8072292019966c555c78d9e61410bfe23dc1598406a11698004eabfc072",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone SE (3rd generation)",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "annex-left-large-text-runtime.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "356b17f81545151231ad8f491cd4ac47b2840bc775171f0db3950bde7374f1e6",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone 16 Pro",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "annex-left-runtime.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "095adaab10d32c07042802ace21221305034cea96ccd6f8180e3160ebfadb09d",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone 16 Pro",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "annex-rear-compact-runtime.png",
+      "size": [
+        750,
+        1334
+      ],
+      "sha256": "e345766dd5ab571a89a6654beb971ccefa39a863df7c406471c1d475578fe0dd",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone SE (3rd generation)",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "annex-rear-large-text-runtime.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "d01b4b16e2521e4643034aa87852128848814c753f12e66173e6b5934daad5a9",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone 16 Pro",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "annex-rear-runtime.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "3b3244a39ce88184fef661bcb385ea7e0979c986967e37066e308c9ade724143",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone 16 Pro",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "annex-right-compact-runtime.png",
+      "size": [
+        750,
+        1334
+      ],
+      "sha256": "950b554f8d802829e1347b6934abe21dc113d85024361e934d7e671235c3e324",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone SE (3rd generation)",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "annex-right-large-text-runtime.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "8d3322ad65c42866bf7a89ab1f9a911908dcfaf72366e34de1520202cf55494e",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone 16 Pro",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "annex-right-runtime.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "adb5bb1be9eaa01f185f8af50262a74eed42fb4657a42d93eaf2e58515524a43",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone 16 Pro",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "restored-compact-runtime.png",
+      "size": [
+        750,
+        1334
+      ],
+      "sha256": "4830b2898c7fcec0ccab3c0eaa6e33bb977fddaa56d9855b5f387983704331e3",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone SE (3rd generation)",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "restored-rear-compact-runtime.png",
+      "size": [
+        750,
+        1334
+      ],
+      "sha256": "242b4f8c13d914940cf75db5a6045d6ff7a91907d8a4100999d4836ae5599fe7",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone SE (3rd generation)",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "restored-rear-runtime.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "0d9255851cb70ab14ba60764eb07b2a1aa71bb5c6b0a5cfd389b95adf05b9460",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone 16 Pro",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "restored-right-compact-runtime.png",
+      "size": [
+        750,
+        1334
+      ],
+      "sha256": "fd217c7dc6679822077aa2edb5a82d583f3e095ff827778b29ca00f33e96a5ce",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone SE (3rd generation)",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "restored-right-runtime.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "13e79b1bec8b68e12ef2829d170e1be0a0d45ad6690d2537a33d638729f065e4",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone 16 Pro",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    },
+    {
+      "file": "restored-runtime.png",
+      "size": [
+        1206,
+        2622
+      ],
+      "sha256": "da7a6b9a9afb1bf3f568d04ad2c69d0e34d440ce8e084bee0b9b0a4c06f32f85",
+      "source": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+      "run": "35661013271",
+      "device": "iPhone 16 Pro",
+      "provenance": "Real Release simulator capture; isolated deterministic visual fixture",
+      "review": "PASS: root inspected all 15; independent art review passed the nine occupied normal/compact/large-text states. Tight lateral margin accepted without visible floor/post clipping."
+    }
+  ]
+}

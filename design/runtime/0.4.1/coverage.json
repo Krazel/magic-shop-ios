@@ -1,0 +1,20 @@
+{
+  "version": "0.4.1",
+  "build": "1",
+  "functionalSource": "1cac2194d640986ae0c7ac113c1207f42cd063c0",
+  "functionalRun": "35657369361",
+  "functionalResult": "PASS",
+  "domainAndModelTests": 118,
+  "uiTests": 13,
+  "totalDistinctTests": 131,
+  "failedTests": 0,
+  "skippedTests": 0,
+  "summary": "1cac219-rejected/test-summary.json",
+  "paintedFinishSource": "8d58a2d0e969ba6b69c20c4e454dd56f367e751f",
+  "paintedFinishRun": "35661013271",
+  "paintedFinishResult": "Release build and 15 runtime captures PASS; visual review PASS",
+  "changedProductionFilesAfterTests": ["MagicShop/World/ShopScene.swift"],
+  "changeBoundary": "Painted annex surface/trim assembly and wall decoration visual mount only. Domain, persistence, camera, gestures, controls and tests unchanged.",
+  "xctestRepeatedAfterPaintOnlyChange": false,
+  "physicalDeviceInstall": "not performed"
+}

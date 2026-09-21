@@ -199,8 +199,9 @@ crops, with no overwritten image or new bitmap generation:
   opening without changing its saved cell, identity or interaction target.
 
 Camera fit and its drag continuity correction are unchanged. Independent
-pixel-space checks include the larger painted corners: minimum side margin is
-3.99 points on 402x874 and 4.56 points on 375x667; the rear cap is below the HUD
+pixel-space checks include the larger painted corners. Core's final review of
+the full curved front corner corrects the initial margin estimate: approximately
+0.15 points on 402x874 and 1 point on 375x667; the rear cap is below the HUD
 at approximately screen y201 and y154. Native frames are still required to
 validate curved masks, cap overlap and light/color continuity. Static validation
 passes; root owns the next focused capture run and final visual acceptance.

@@ -44,7 +44,20 @@ loans, crafting, accounts, ads, tracking, purchases or network calls.
 - Journal: restoration goals, calendar rules and recent trading results.
 - Dynamic Type and Reduce Motion use the device's accessibility preferences.
 
-## Current candidate 0.4 (build 1) — verified
+## Current candidate 0.4.1 (build 1) — verified
+
+Annexes now join the shop through a full-width, level opening, with upright
+painted walls, matching rounded caps and endpoint posts. The expanded camera
+keeps annex stock controls usable without jumping when a drag begins. Saved
+rooms, furniture, stock, floors, dirt and schema 5 remain intact.
+
+All 131 native regression cases passed (118 domain/model plus 13 UI), including
+stocking and holding a display in each annex direction. The subsequent painted
+finish passed a Release build and review of 15 real normal/compact/large-text
+captures; the exact-source unsigned arm64 IPA is verified. Physical installation
+remains separate. See `docs/EXPANSION-VERIFICATION.md` for evidence and limits.
+
+## Previous candidate 0.4 (build 1) — verified
 
 Adds contextual restoration guidance and a product-by-product closing report;
 protects trading capital during permanent improvements; fixes outside drops,

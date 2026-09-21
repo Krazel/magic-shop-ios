@@ -64,3 +64,18 @@ regression coverage for dirt and the whole opening. Final evidence pending.
 - The finish correction reuses painted source crops and the existing corner
   post while preserving the tested map, camera and interactions. No new raster
   generation, dependency or save migration is needed.
+
+## Verified correction delivered — 2026-09-22
+
+Final app source: `8d58a2d0e969ba6b69c20c4e454dd56f367e751f`. The focused Release
+build/capture run `35661013271` succeeded; root inspected all 15 PNGs and the
+independent art review passed the nine occupied annex states. The narrow lateral
+outer margin is a recorded nonblocking framing limitation; no floor or post is
+clipped. No further app changes followed those captures.
+
+Device run `35661029804` succeeded and its exact-source unsigned 0.4.1 (1) IPA
+passed checksum, manifest, version, arm64 and minimum-iOS verification. See
+`EXPANSION-VERIFICATION.md` and `design/runtime/0.4.1/` for the complete record.
+The 131-test coverage remains attributed to the integrated functional source;
+only painted rendering/mount placement changed afterward. Physical re-signing
+and installation remain separate; no TestFlight or App Store operation occurred.

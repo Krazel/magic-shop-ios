@@ -23,7 +23,15 @@ retained as rejected history in `design/proposals/expansion-v2/`.
   Minor generated resynthesis of unchanged starter artwork is not a requested
   replacement of the original preserved plate.
 - Materials: `design/assets/expansion-v2/`; provenance in
-  `docs/EXPANSION-ART.md`. Comparable runtime captures pending.
+  `docs/EXPANSION-ART.md`. The first native finish was rejected; real comparison
+  captures are preserved in `design/runtime/0.4.1/1cac219-rejected/` and the review
+  is in `docs/EXPANSION-VISUAL-QA.md`. The corrected finish samples the preserved
+  original painted room and corner posts; only the new stone threshold material
+  remains active. Final comparable runtime captures passed review on 2026-09-22:
+  `design/runtime/0.4.1/8d58a2d/annex-left-runtime.png`,
+  `annex-right-runtime.png` and `annex-rear-runtime.png`, plus compact/large-text
+  variants in the same directory. `manifest.json` records exact hashes, source
+  and dimensions. See `docs/EXPANSION-VISUAL-QA.md` for fidelity and framing limits.
 
 The right orientation uses the same architectural contract, independently
 reviewed before implementation: `design/approved/expansion-right-v2.png`,
