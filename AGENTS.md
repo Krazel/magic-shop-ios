@@ -61,3 +61,14 @@ coherent architectural planes and a wide flush opening. The director-selected
 references are recorded in design/APPROVALS.md; do not invent individual owner
 approval of them. Root integrates App/QA/CI; World and art lanes remain disjoint.
 Native captures of all directions and the verified IPA are required for closure.
+
+## Current owner correction — 0.5, 2026-09-22
+
+The owner explicitly rejects the annex itself: remove the complete chosen wall
+and move the building perimeter outward, producing one larger rectangular room.
+Execute docs/RECTANGULAR-EXPANSION.md. This supersedes the 0.4.1 requirement to
+retain a 5×5 annex and schema 5; use a safe compatible save migration as needed.
+Preserve historical files/artifacts and all player value. One $250 expansion adds
+five complete columns or rows, without internal jambs, threshold or a second room.
+The existing delegated visual authority remains in effect; prepare references
+before final rendering and verify against actual native captures.

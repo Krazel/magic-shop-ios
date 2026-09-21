@@ -157,7 +157,7 @@ final class AppModel: ObservableObject {
         case .repair: return "Restore the room · \(progress.repairedGroups)/3"
         case .decorate: return "Make it yours · \(min(progress.decorationVariety, 3))/3"
         case .trade: return "Grow your trade · \(min(progress.successfulTradingDays, 3))/3"
-        case .expand: return "A cozy room to grow"
+        case .expand: return "More space for your shop"
         case .enjoy: return "Your next great day"
         }
     }
@@ -168,7 +168,7 @@ final class AppModel: ObservableObject {
         case .repair: return "Clear another worn area to make space for displays. Three sweeps, no cost."
         case .decorate: return "Choose three different decorations to give your shop its own character."
         case .trade: return "Complete three days with sales. Refill displays while visitors browse."
-        case .expand: return "Add a $250 room when you are ready. Keep enough working capital to trade."
+        case .expand: return "Expand your shop for $250. Move a whole wall outward and keep enough working capital to trade."
         case .enjoy:
             let sales = state.dayHistory.map(\.customersServed).max() ?? 0
             let profit = state.dayHistory.map(\.profit).max() ?? 0
@@ -182,7 +182,7 @@ final class AppModel: ObservableObject {
         case .repair: return "Care for the shop"
         case .decorate: return "Choose decorations"
         case .trade: return "Open for visitors"
-        case .expand: return "Plan your new room"
+        case .expand: return "Plan your expansion"
         case .enjoy: return "Try a new mix"
         }
     }
@@ -496,9 +496,9 @@ final class AppModel: ObservableObject {
         case CommerceError.incompatibleProduct: return "Choose a compatible table or shelf for this item."
         case CommerceError.fixtureContainsStock: return "Return the stock before selling this fixture."
         case CommerceError.noReachableStock: return "Stock a display that customers can reach from the entrance. Move anything blocking the way."
-        case RestorationError.repairsRequired: return "Complete all three repairs before adding a room."
-        case RestorationError.alreadyExpanded: return "Your new room is already part of the shop."
-        case RestorationError.expansionConnectionBlocked: return "Move fixtures away from this wall to open the passage."
+        case RestorationError.repairsRequired: return "Complete all three repairs before expanding the shop."
+        case RestorationError.alreadyExpanded: return "Your shop is already expanded."
+        case RestorationError.expansionConnectionBlocked: return "Make space along the outside wall for your wall-mounted furniture."
         case RestorationError.repairAlreadyCompleted: return "This repair is already complete."
         default: return "The change could not be saved. Please try again."
         }

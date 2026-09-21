@@ -364,34 +364,49 @@ extension GameEngine {
             throw RestorationError.unsupportedStarterLayout
         }
         try validateIrreversibleSpending(ExpansionState.price)
-        let connection = ExpansionState(direction: direction).starterConnectionCells
-        let occupied = state.world.hitMap.dynamicOccupancy(fixtures: state.fixtures)
-        guard connection.allSatisfy({ occupied[$0] == nil }),
-              !connection.isDisjoint(with: ShopAccess.reachableCells(in: state)) else {
-            throw RestorationError.expansionConnectionBlocked
-        }
+        let candidate = try expandedState(toward: direction)
+        let expansion = ExpansionState(direction: direction)
+        let room = expansion.roomOrigin, footprint = expansion.roomFootprint
+        guard ShopAccess.reachableCells(in: candidate).contains(where: {
+            $0.x >= room.x && $0.x < room.x + footprint.width &&
+            $0.y >= room.y && $0.y < room.y + footprint.depth
+        }) else { throw RestorationError.expansionConnectionBlocked }
     }
 
     @discardableResult
     public mutating func expandShop(toward direction: ExpansionDirection) throws -> ExpansionState {
         try validateExpansion(toward: direction)
+        state = try expandedState(toward: direction)
+        refreshRestorationCompletion()
+        return ExpansionState(direction: direction)
+    }
+
+    private func expandedState(toward direction: ExpansionDirection) throws -> GameState {
         let expansion = ExpansionState(direction: direction)
+        let shift = expansion.starterOrigin
         var candidate = state
+        let oldMap = WorldHitMap(layout: expansion.layout, cells: state.world.hitMap.cells.map { cell in
+            WorldCellMetadata(point: GridPoint(x: cell.point.x + shift.x, y: cell.point.y),
+                zone: cell.zone, staticBlocker: cell.staticBlocker, adjacentWalls: cell.adjacentWalls)
+        })
         candidate.world = RestorationWorld.expanded(state.world, using: expansion)
-        if expansion.starterOrigin.x != 0 {
-            for index in candidate.fixtures.indices {
-                candidate.fixtures[index].origin.x += expansion.starterOrigin.x
-            }
+        if shift.x != 0 {
+            for index in candidate.fixtures.indices { candidate.fixtures[index].origin.x += shift.x }
             candidate.dirt = Dictionary(uniqueKeysWithValues: candidate.dirt.map {
-                (GridPoint(x: $0.key.x + expansion.starterOrigin.x, y: $0.key.y), $0.value)
+                (GridPoint(x: $0.key.x + shift.x, y: $0.key.y), $0.value)
             })
+        }
+        do {
+            _ = try RestorationWorld.relocateWallFixtures(in: &candidate, from: oldMap)
+        } catch {
+            // A purchase preview needs a recoverable space error, not a load
+            // corruption message. The original engine is still untouched.
+            throw RestorationError.expansionConnectionBlocked
         }
         candidate.restoration.expansion = expansion
         candidate.balance -= ExpansionState.price
         try candidate.validateIntegrity()
-        state = candidate
-        refreshRestorationCompletion()
-        return expansion
+        return candidate
     }
 
     private mutating func refreshRestorationCompletion() {

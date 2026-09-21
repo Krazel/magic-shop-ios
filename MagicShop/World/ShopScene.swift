@@ -86,13 +86,6 @@ final class ShopScene: SKScene {
 
     }
 
-    private let plateEdgeShader = SKShader(source: """
-        void main() {
-            vec2 distanceToEdge = min(v_tex_coord, vec2(1.0) - v_tex_coord);
-            vec2 feather = smoothstep(vec2(0.0), vec2(0.025, 0.09), distanceToEdge);
-            gl_FragColor = texture2D(u_texture, v_tex_coord) * feather.x * feather.y;
-        }
-        """)
     private let environmentRoot = SKNode()
     private let floorRoot = SKNode()
     private let floorPreviewRoot = SKNode()
@@ -141,8 +134,8 @@ final class ShopScene: SKScene {
         renderedState.restoration.expansion?.starterOrigin ?? GridPoint(x: 0, y: 0)
     }
 
-    /// Pixel-space bounds use the same authored floor landmarks as project().
-    /// They include the wall height independently of the five floor rows.
+    /// Bounds cover the complete rectangular perimeter, including curved
+    /// corners. The lower facade may continue behind the preparation controls.
     private var expandedArchitectureBounds: CGRect? {
         guard let expansion = renderedState.restoration.expansion else { return nil }
         func floorPoint(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
@@ -151,19 +144,15 @@ final class ShopScene: SKScene {
             return CGPoint(x: left + (right - left) * x / 11 - 426.5,
                            y: 922 - (1172 - 543 * depth))
         }
-        let x = CGFloat(expansion.roomOrigin.x - expansion.starterOrigin.x)
-        let y = CGFloat(expansion.roomOrigin.y)
-        let nearLeft = floorPoint(x, y), nearRight = floorPoint(x + 5, y)
-        let farLeft = floorPoint(x, y + 5), farRight = floorPoint(x + 5, y + 5)
-        // Original exterior, then annex wall thickness/caps. The facade below
-        // the floor may continue beneath the controls, as in the starter view.
-        return bounds(of: [CGPoint(x: -405, y: -264), CGPoint(x: 405, y: 535),
-                           CGPoint(x: nearLeft.x - 18, y: nearLeft.y - 14),
-                           CGPoint(x: nearRight.x + 18, y: nearRight.y - 14),
-                           CGPoint(x: farLeft.x - 46, y: farLeft.y + 240),
-                           CGPoint(x: farRight.x + 46, y: farRight.y + 240)])
+        let x0 = -CGFloat(expansion.starterOrigin.x)
+        let x1 = x0 + CGFloat(expansion.layout.width), depth = CGFloat(expansion.layout.depth)
+        let nearLeft = floorPoint(x0, 0), nearRight = floorPoint(x1, 0)
+        let farLeft = floorPoint(x0, depth), farRight = floorPoint(x1, depth)
+        return bounds(of: [CGPoint(x: nearLeft.x - 100, y: nearLeft.y - 14),
+                           CGPoint(x: nearRight.x + 100, y: nearRight.y - 14),
+                           CGPoint(x: farLeft.x - 80, y: farLeft.y + 244),
+                           CGPoint(x: farRight.x + 80, y: farRight.y + 244)])
     }
-
     private var backgroundSize: CGSize {
         let original = texture("StarterShopBackground").size()
         guard original.width > 0, original.height > 0, size.width > 0, size.height > 0 else { return size }
@@ -497,30 +486,23 @@ final class ShopScene: SKScene {
     private func rebuildEnvironment() {
         environmentRoot.removeAllChildren()
         addGroundBackdrop()
+        if let expansion = renderedState.restoration.expansion {
+            // The old wall is absent, not hidden behind another floor patch.
+            // Expanded saves use one floor and only the outer perimeter.
+            addRectangularShop(expansion)
+            return
+        }
         let fullyRepaired = renderedState.restoration.repairedGroups.count == RestorationGroupID.allCases.count
         let background = SKSpriteNode(texture: texture(fullyRepaired ? "RepairedShopBackground" : "StarterShopBackground"))
         background.size = backgroundSize
         background.zPosition = -100
-        background.shader = renderedState.restoration.expansion == nil ? nil : plateEdgeShader
-        if let expansion = renderedState.restoration.expansion {
-            let openedPlate = SKCropNode()
-            background.zPosition = 0
-            openedPlate.addChild(background)
-            openedPlate.maskNode = makeOpenedPlateMask(expansion)
-            openedPlate.zPosition = -100
-            environmentRoot.addChild(openedPlate)
-        } else {
-            environmentRoot.addChild(background)
-        }
-
+        environmentRoot.addChild(background)
         if !fullyRepaired {
             for group in RestorationGroupID.allCases where renderedState.repairProgress(for: group) > 0 {
                 addRepairPatch(group)
             }
         }
-        if let expansion = renderedState.restoration.expansion { addAnnex(expansion) }
     }
-
     private func addGroundBackdrop() {
         let earth = SKTexture(rect: CGRect(x: 0.05, y: 0.80, width: 0.9, height: 0.18),
                               in: texture("StarterShopBackground"))
@@ -569,48 +551,6 @@ final class ShopScene: SKScene {
                 y: (0.5 - y / 1844) * backgroundSize.height)
     }
 
-    private func makeOpenedPlateMask(_ expansion: ExpansionState) -> SKShapeNode {
-        let opening: [CGPoint]
-        switch expansion.direction {
-        case .left, .right:
-            let leftSide = expansion.direction == .left
-            func edge(_ depth: CGFloat, outer: Bool) -> CGPoint {
-                let t = depth / 11
-                let x: CGFloat
-                if leftSide { x = outer ? 32 + 56 * t : 106 + 37 * t }
-                else { x = outer ? 822 - 57 * t : 749 - 48 * t }
-                let y = 1172 - (outer ? 767 : 543) * t
-                return imagePoint(x: x, y: y)
-            }
-            opening = [edge(3, outer: false), edge(8, outer: false),
-                       edge(8, outer: true), edge(3, outer: true)]
-        case .rear:
-            // The full painted rear wall, including its cap and baked lamp,
-            // is removed across the same five cells as the persisted opening.
-            opening = [imagePoint(x: 143 + 558 * 3 / 11, y: 629),
-                       imagePoint(x: 143 + 558 * 8 / 11, y: 629),
-                       imagePoint(x: 105 + 620 * 8 / 11, y: 402),
-                       imagePoint(x: 105 + 620 * 3 / 11, y: 402)]
-        }
-        let path = CGMutablePath()
-        let width = backgroundSize.width * 0.5, height = backgroundSize.height * 0.5
-        path.addPath(polygon([CGPoint(x: -width, y: -height), CGPoint(x: width, y: -height),
-                              CGPoint(x: width, y: height), CGPoint(x: -width, y: height)]))
-        var hole = opening
-        let area = hole.indices.reduce(CGFloat.zero) { value, index in
-            let next = hole[(index + 1) % hole.count]
-            return value + hole[index].x * next.y - next.x * hole[index].y
-        }
-        if area > 0 { hole.reverse() }
-        // Opposite winding cuts an actual alpha hole, rather than painting
-        // another floor strip over an upright wall.
-        path.addPath(polygon(hole))
-        let mask = SKShapeNode(path: path)
-        mask.fillColor = .white
-        mask.strokeColor = .clear
-        return mask
-    }
-
     /// Corners are bottom-left, bottom-right, top-right, top-left in the source
     /// material. World projection is independent for each horizontal/vertical plane.
     private func texturedQuad(_ image: SKTexture, corners: [CGPoint], shade: CGFloat = 0) -> SKSpriteNode {
@@ -630,9 +570,8 @@ final class ShopScene: SKScene {
         return sprite
     }
 
-    private var annexWallHeight: CGFloat { backgroundSize.height * 224 / 1844 }
     private var paintedScale: CGFloat { backgroundSize.width / 853 }
-    private var annexFaceHeight: CGFloat { annexWallHeight - paintedScale * 38 }
+    private var wallFaceHeight: CGFloat { paintedScale * 186 }
 
     private func paintedTexture(_ rect: CGRect) -> SKTexture {
         SKTexture(rect: CGRect(x: rect.minX / 853, y: 1 - rect.maxY / 1844,
@@ -640,108 +579,161 @@ final class ShopScene: SKScene {
                   in: texture("RepairedShopBackground"))
     }
 
-    private func annexSideHeight(at depth: CGFloat, expansion: ExpansionState) -> CGFloat {
-        if expansion.direction == .rear { return annexFaceHeight }
-        let t = min(1, max(0, (depth - CGFloat(expansion.roomOrigin.y)) / 5))
-        return tileHeight * 0.22 + (annexFaceHeight - tileHeight * 0.22) * t
+    private func rectangularSideHeight(at depth: CGFloat) -> CGFloat {
+        wallFaceHeight * min(1, max(0, depth / CGFloat(renderedState.world.hitMap.layout.depth)))
     }
 
-    private func makePaintedAnnexFloor(_ expansion: ExpansionState) -> SKCropNode {
-        // The authored plate contains about six painted tiles per five domain
-        // cells. Preserve that decorative frequency and its rounded tile edges.
-        let sourceRect = CGRect(x: 284, y: 776, width: 284, height: 249)
-        let divisions = 8
-        var source: [SIMD2<Float>] = []
-        var projected: [CGPoint] = []
-        for row in 0...divisions {
-            for column in 0...divisions {
-                let u = CGFloat(column) / CGFloat(divisions), v = CGFloat(row) / CGFloat(divisions)
-                let imageX = (sourceRect.minX + u * sourceRect.width) / 853
-                let imageY = (sourceRect.maxY - v * sourceRect.height) / 1844
-                let depth = (imageY - FloorCalibration.nearY) / (FloorCalibration.farY - FloorCalibration.nearY)
-                let left = FloorCalibration.nearLeft + (FloorCalibration.farLeft - FloorCalibration.nearLeft) * depth
-                let right = FloorCalibration.nearRight + (FloorCalibration.farRight - FloorCalibration.nearRight) * depth
-                let floorX = (imageX - left) / (right - left) * 11
-                source.append(SIMD2(Float(u), Float(v)))
-                projected.append(project(x: CGFloat(expansion.roomOrigin.x) + floorX - 3,
-                                         y: CGFloat(expansion.roomOrigin.y) + depth * 11 - 3))
+    private func sideWallTop(x: CGFloat, y: CGFloat, right: Bool) -> CGPoint {
+        let floor = project(x: x, y: y)
+        let fraction = min(1, max(0, y / CGFloat(renderedState.world.hitMap.layout.depth)))
+        // Match the original cutaway: the near plaster face leans outward,
+        // while the far end meets the upright rear wall at full height.
+        return CGPoint(x: floor.x + (right ? 1 : -1) * 44 * paintedScale * (1 - fraction),
+                       y: floor.y + rectangularSideHeight(at: y))
+    }
+
+    private func addRectangularShop(_ expansion: ExpansionState) {
+        let width = CGFloat(expansion.layout.width), depth = CGFloat(expansion.layout.depth)
+        addRectangularFloor(width: width, depth: depth)
+        addRectangularFacade(expansion)
+        addRectangularRearWall(width: width, depth: depth)
+        let material = paintedTexture(CGRect(x: 148, y: 446, width: 245, height: 183))
+        for right in [false, true] {
+            let x: CGFloat = right ? width : 0
+            let parts = Int(ceil(depth / 4))
+            for index in 0..<parts {
+                let from = depth * CGFloat(index) / CGFloat(parts)
+                let to = depth * CGFloat(index + 1) / CGFloat(parts)
+                let corners = [project(x: x, y: from), project(x: x, y: to),
+                               sideWallTop(x: x, y: to, right: right),
+                               sideWallTop(x: x, y: from, right: right)]
+                let face = texturedQuad(material, corners: corners, shade: 0.07)
+                face.zPosition = -91
+                environmentRoot.addChild(face)
+            }
+            let nearTop = sideWallTop(x: x, y: 0, right: right)
+            let farTop = sideWallTop(x: x, y: depth, right: right)
+            addWallCap(innerStart: nearTop, innerEnd: farTop,
+                       outerStart: CGPoint(x: nearTop.x + (right ? 1 : -1), y: nearTop.y),
+                       outerEnd: CGPoint(x: farTop.x + (right ? 1 : -1), y: farTop.y))
+            addPaintedCorner(at: farTop, right: right, front: false)
+            addPaintedCorner(at: project(x: x, y: 0), right: right, front: true)
+            addContactShadow(from: project(x: x, y: 0), to: project(x: x, y: depth))
+        }
+        let frontLeft = project(x: 0, y: 0), frontRight = project(x: width, y: 0)
+        addWallCap(innerStart: frontLeft, innerEnd: frontRight,
+                   outerStart: CGPoint(x: frontLeft.x, y: frontLeft.y - 1),
+                   outerEnd: CGPoint(x: frontRight.x, y: frontRight.y - 1))
+    }
+
+    private func addRectangularFloor(width: CGFloat, depth: CGFloat) {
+        // Two clean painted tiles in each axis. Decorative tile frequency is
+        // independent of gameplay cells, and continuous across the former wall.
+        let tileBlock = paintedTexture(CGRect(x: 374, y: 785, width: 106, height: 124))
+        let blockWidth: CGFloat = 1.9, blockDepth: CGFloat = 2.5
+        let floor = SKCropNode()
+        let corners = [project(x: 0, y: 0), project(x: width, y: 0),
+                       project(x: width, y: depth), project(x: 0, y: depth)]
+        let mask = SKShapeNode(path: polygon(corners))
+        mask.fillColor = .white; mask.strokeColor = .clear
+        floor.maskNode = mask
+        for row in 0..<Int(ceil(depth / blockDepth)) {
+            for column in 0..<Int(ceil(width / blockWidth)) {
+                let x = CGFloat(column) * blockWidth, y = CGFloat(row) * blockDepth
+                let quad = [project(x: x, y: y), project(x: x + blockWidth, y: y),
+                            project(x: x + blockWidth, y: y + blockDepth), project(x: x, y: y + blockDepth)]
+                floor.addChild(texturedQuad(tileBlock, corners: quad, shade: 0.035))
             }
         }
-        let rect = bounds(of: projected)
-        let destination = projected.map {
-            SIMD2<Float>(Float(($0.x - rect.minX) / rect.width), Float(($0.y - rect.minY) / rect.height))
-        }
-        let sprite = SKSpriteNode(texture: paintedTexture(sourceRect))
-        sprite.size = rect.size
-        sprite.position = CGPoint(x: rect.midX, y: rect.midY)
-        sprite.warpGeometry = SKWarpGeometryGrid(columns: divisions, rows: divisions,
-                                                 sourcePositions: source, destinationPositions: destination)
-        sprite.color = SKColor(red: 0.36, green: 0.26, blue: 0.16, alpha: 1)
-        sprite.colorBlendFactor = 0.06
-        let crop = SKCropNode()
-        crop.addChild(sprite)
-        let mask = SKShapeNode(path: polygon(footprintCorners(origin: expansion.roomOrigin,
-                                                            footprint: GridFootprint(width: 5, depth: 5))))
-        mask.fillColor = .white
-        mask.strokeColor = .clear
-        crop.maskNode = mask
-        return crop
+        // Broad room lighting, rather than a separate lighting field pasted
+        // into the extension. The clip is the same exact floor footprint.
+        let rect = bounds(of: corners)
+        let shade = SKSpriteNode(color: .black, size: rect.size)
+        shade.position = CGPoint(x: rect.midX, y: rect.midY)
+        shade.shader = SKShader(source: """
+            void main() {
+                vec2 p = v_tex_coord;
+                float edge = pow(abs(p.x - 0.5) * 2.0, 1.6) * 0.15;
+                float rear = smoothstep(0.66, 1.0, p.y) * 0.10;
+                float a = edge + rear;
+                gl_FragColor = vec4(vec3(0.12, 0.075, 0.035) * a, a);
+            }
+            """)
+        shade.zPosition = 1
+        floor.addChild(shade)
+        floor.zPosition = -96
+        environmentRoot.addChild(floor)
     }
 
-    private func addAnnex(_ expansion: ExpansionState) {
-        let x = CGFloat(expansion.roomOrigin.x), y = CGFloat(expansion.roomOrigin.y)
-        let leftOpen = expansion.direction == .right
-        let rightOpen = expansion.direction == .left
-        let floor = makePaintedAnnexFloor(expansion)
-        floor.zPosition = -92
-        environmentRoot.addChild(floor)
-
-        // The crop retains the original warm plaster, top contact shadow,
-        // shaded rail and wainscot. It deliberately excludes the baked lamp.
-        let wallMaterial = paintedTexture(CGRect(x: 148, y: 446, width: 245, height: 183))
-        let backLeft = project(x: x, y: y + 5), backRight = project(x: x + 5, y: y + 5)
-        let topLeft = CGPoint(x: backLeft.x - (leftOpen ? 0 : annexFaceHeight * 0.14),
-                              y: backLeft.y + annexFaceHeight)
-        let topRight = CGPoint(x: backRight.x + (rightOpen ? 0 : annexFaceHeight * 0.14),
-                               y: backRight.y + annexFaceHeight)
-        let wall = texturedQuad(wallMaterial, corners: [backLeft, backRight, topRight, topLeft])
-        wall.zPosition = -91
-        environmentRoot.addChild(wall)
+    private func addRectangularRearWall(width: CGFloat, depth: CGFloat) {
+        func wallCorners(_ from: CGFloat, _ to: CGFloat) -> [CGPoint] {
+            let left = project(x: from, y: depth), right = project(x: to, y: depth)
+            return [left, right, CGPoint(x: right.x, y: right.y + wallFaceHeight),
+                    CGPoint(x: left.x, y: left.y + wallFaceHeight)]
+        }
+        let lampCenter = CGFloat(starterOrigin.x) + 5.5
+        let lampStart = lampCenter - 2.5, lampEnd = lampCenter + 2.5
+        let plain = paintedTexture(CGRect(x: 148, y: 446, width: 245, height: 183))
+        for (start, end) in [(CGFloat.zero, lampStart), (lampEnd, width)] {
+            let count = max(1, Int(ceil((end - start) / 4)))
+            for index in 0..<count {
+                let from = start + (end - start) * CGFloat(index) / CGFloat(count)
+                let to = start + (end - start) * CGFloat(index + 1) / CGFloat(count)
+                var corners = wallCorners(from, to)
+                if index % 2 == 1 { corners = [corners[1], corners[0], corners[3], corners[2]] }
+                let panel = texturedQuad(plain, corners: corners)
+                panel.zPosition = -92
+                environmentRoot.addChild(panel)
+            }
+        }
+        // The lamp and its chain remain their original painted size. Only
+        // plain wall sections repeat when the room becomes wider.
+        let lamp = texturedQuad(paintedTexture(CGRect(x: 295, y: 446, width: 254, height: 183)),
+                                corners: wallCorners(lampStart, lampEnd))
+        lamp.zPosition = -92
+        environmentRoot.addChild(lamp)
+        let topLeft = wallCorners(0, width)[3], topRight = wallCorners(0, width)[2]
         addWallCap(innerStart: topLeft, innerEnd: topRight,
                    outerStart: CGPoint(x: topLeft.x, y: topLeft.y + 1),
                    outerEnd: CGPoint(x: topRight.x, y: topRight.y + 1))
-        addContactShadow(from: backLeft, to: backRight)
-
-        for side in [WallSide.left, .right] {
-            guard !(side == .left && leftOpen), !(side == .right && rightOpen) else { continue }
-            let edgeX = side == .left ? x : x + 5
-            let sign: CGFloat = side == .left ? -1 : 1
-            let near = project(x: edgeX, y: y), far = project(x: edgeX, y: y + 5)
-            let nearHeight = annexSideHeight(at: y, expansion: expansion)
-            let nearTop = CGPoint(x: near.x + sign * nearHeight * 0.14, y: near.y + nearHeight)
-            let farTop = side == .left ? topLeft : topRight
-            let face = texturedQuad(wallMaterial, corners: [near, far, farTop, nearTop], shade: 0.07)
-            face.zPosition = -90
-            environmentRoot.addChild(face)
-            addWallCap(innerStart: nearTop, innerEnd: farTop,
-                       outerStart: CGPoint(x: nearTop.x + sign, y: nearTop.y),
-                       outerEnd: CGPoint(x: farTop.x + sign, y: farTop.y))
-            addPaintedCorner(at: farTop, right: side == .right, front: false)
-            addContactShadow(from: near, to: far)
-        }
-        if expansion.direction != .rear {
-            let nearLeft = project(x: x, y: y), nearRight = project(x: x + 5, y: y)
-            let capLeft = CGPoint(x: nearLeft.x, y: nearLeft.y + tileHeight * 0.22)
-            let capRight = CGPoint(x: nearRight.x, y: nearRight.y + tileHeight * 0.22)
-            addWallCap(innerStart: capLeft, innerEnd: capRight,
-                       outerStart: CGPoint(x: capLeft.x, y: capLeft.y - 1),
-                       outerEnd: CGPoint(x: capRight.x, y: capRight.y - 1))
-            addPaintedCorner(at: leftOpen ? capRight : capLeft, right: leftOpen, front: true)
-        }
-        addAnnexThreshold(expansion)
-        addAnnexJambs(expansion)
+        addContactShadow(from: project(x: 0, y: depth), to: project(x: width, y: depth))
     }
 
+    private func addRectangularFacade(_ expansion: ExpansionState) {
+        func addPanel(_ source: CGRect, left: CGFloat, right: CGFloat) {
+            let upperY = imagePoint(x: 0, y: 1172).y
+            let lowerY = imagePoint(x: 0, y: 1428).y
+            let panel = texturedQuad(paintedTexture(source), corners: [CGPoint(x: left, y: lowerY),
+                CGPoint(x: right, y: lowerY), CGPoint(x: right, y: upperY), CGPoint(x: left, y: upperY)])
+            panel.zPosition = -93
+            environmentRoot.addChild(panel)
+        }
+        // The original door/window span stays in the starter coordinates.
+        addPanel(CGRect(x: 105, y: 1172, width: 644, height: 256),
+                 left: imagePoint(x: 105, y: 1172).x, right: imagePoint(x: 749, y: 1172).x)
+        if expansion.direction != .rear {
+            let leftSide = expansion.direction == .left
+            let from: CGFloat = leftSide ? 0 : 11
+            let to: CGFloat = leftSide ? 5 : 16
+            let a = project(x: from, y: 0).x, b = project(x: to, y: 0).x
+            let postWidth = paintedScale * 49
+            let window = CGRect(x: 498, y: 1172, width: 244, height: 256)
+            let post = CGRect(x: 312, y: 1172, width: 49, height: 256)
+            if leftSide {
+                addPanel(window, left: a, right: b - postWidth)
+                addPanel(post, left: b - postWidth, right: b)
+            } else {
+                addPanel(post, left: a, right: a + postWidth)
+                addPanel(window, left: a + postWidth, right: b)
+            }
+        }
+        let leftFoot = project(x: 0, y: 0).x
+        let rightFoot = project(x: CGFloat(expansion.layout.width), y: 0).x
+        addPanel(CGRect(x: 30, y: 1172, width: 76, height: 256),
+                 left: leftFoot - 76 * paintedScale, right: leftFoot)
+        addPanel(CGRect(x: 749, y: 1172, width: 78, height: 256),
+                 left: rightFoot, right: rightFoot + 78 * paintedScale)
+    }
     private func addWallCap(innerStart: CGPoint, innerEnd: CGPoint, outerStart: CGPoint, outerEnd: CGPoint) {
         let dx = innerEnd.x - innerStart.x, dy = innerEnd.y - innerStart.y
         let length = max(0.001, hypot(dx, dy))
@@ -764,7 +756,7 @@ final class ShopScene: SKScene {
                          : CGRect(x: 83, y: 405, width: 70, height: 78)
         let anchor = front ? CGPoint(x: 104, y: 1172) : CGPoint(x: 145, y: 446)
         let sign: CGFloat = right ? -1 : 1
-        let shift: CGFloat = front ? 24 : 22
+        let shift: CGFloat = 0
         func convert(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
             CGPoint(x: point.x + sign * (x - anchor.x + shift) * paintedScale,
                     y: point.y - (y - anchor.y) * paintedScale)
@@ -807,50 +799,6 @@ final class ShopScene: SKScene {
         shadow.glowWidth = tileHeight * 0.12
         shadow.zPosition = -84
         environmentRoot.addChild(shadow)
-    }
-    private func addAnnexThreshold(_ expansion: ExpansionState) {
-        let corners: [CGPoint]
-        switch expansion.direction {
-        case .left:
-            let x = CGFloat(expansion.starterOrigin.x)
-            corners = [project(x: x - 0.12, y: 3), project(x: x + 0.12, y: 3),
-                       project(x: x + 0.12, y: 8), project(x: x - 0.12, y: 8)]
-        case .right:
-            corners = [project(x: 10.88, y: 3), project(x: 11.12, y: 3),
-                       project(x: 11.12, y: 8), project(x: 10.88, y: 8)]
-        case .rear:
-            corners = [project(x: 3, y: 10.88), project(x: 8, y: 10.88),
-                       project(x: 8, y: 11.12), project(x: 3, y: 11.12)]
-        }
-        let threshold = texturedQuad(texture("AnnexThresholdStone"), corners: corners, shade: 0.12)
-        // Architectural trim sits above floor overrides but below dirt/fixtures.
-        threshold.zPosition = -82
-        environmentRoot.addChild(threshold)
-    }
-
-    private func addAnnexJambs(_ expansion: ExpansionState) {
-        // Painted posts stay wholly outside the five-cell opening. Their alpha
-        // already includes the shaped cap, inset plaster panel and teal foot.
-        let posts: [(CGPoint, Bool, Bool)]
-        switch expansion.direction {
-        case .left:
-            let x = CGFloat(expansion.starterOrigin.x)
-            posts = [(project(x: x, y: 8), true, false), (project(x: x, y: 3), true, true)]
-        case .right:
-            posts = [(project(x: 11, y: 8), false, false), (project(x: 11, y: 3), false, true)]
-        case .rear:
-            posts = [(project(x: 3, y: 11), true, false), (project(x: 8, y: 11), false, false)]
-        }
-        for (position, onLeft, low) in posts {
-            let image = low ? SKTexture(rect: CGRect(x: 0, y: 0.79, width: 1, height: 0.21),
-                                       in: texture("FacadeCornerPost")) : texture("FacadeCornerPost")
-            let post = SKSpriteNode(texture: image)
-            setUniformHeight(low ? paintedScale * 38 : annexWallHeight, on: post)
-            post.anchorPoint = CGPoint(x: onLeft ? 1 : 0, y: 0)
-            post.position = position
-            post.zPosition = -83
-            environmentRoot.addChild(post)
-        }
     }
     // MARK: - Persisted floor care
 
@@ -1062,48 +1010,24 @@ final class ShopScene: SKScene {
         guard let wall = walls.contains(preferred) ? preferred
             : [WallSide.rear, .left, .right, .front].first(where: walls.contains) else { return }
         let x = CGFloat(origin.x), y = CGFloat(origin.y)
-        let annex = renderedState.restoration.expansion.flatMap { expansion -> ExpansionState? in
-            let start = expansion.roomOrigin
-            return origin.x >= start.x && origin.x < start.x + ExpansionState.roomSize
-                && origin.y >= start.y && origin.y < start.y + ExpansionState.roomSize ? expansion : nil
-        }
+        let expanded = renderedState.restoration.expansion != nil
         var position: CGPoint
         sprite.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         switch wall {
         case .rear:
             position = project(x: x + 0.5, y: y + 1)
-            position.y += annex == nil ? tileHeight * 2.25 : annexFaceHeight * 0.56
-            if annex == nil, renderedState.restoration.expansion?.direction == .rear {
-                // The saved cell stays put, but its artwork must fit the wall
-                // segment remaining beside the new opening and painted jamb.
-                let postSize = texture("FacadeCornerPost").size()
-                let postWidth = annexWallHeight * postSize.width / max(1, postSize.height)
-                let inset = postWidth * 0.92 + sprite.size.width * 0.5 + tileWidth * 0.04
-                let outerInset = sprite.size.width * 0.5 + tileWidth * 0.08
-                if origin.x >= 8 {
-                    position.x = min(max(position.x, project(x: 8, y: 11).x + inset),
-                                     project(x: 11, y: 11).x - outerInset)
-                } else if origin.x < 3 {
-                    position.x = max(min(position.x, project(x: 3, y: 11).x - inset),
-                                     project(x: 0, y: 11).x + outerInset)
-                }
-            }
+            position.y += expanded ? wallFaceHeight * 0.56 : tileHeight * 2.25
         case .front:
             position = project(x: x + 0.5, y: y)
-            if annex != nil {
-                // Front walls stay cut away. Mount on their real low fascia;
-                // a saved decoration must not float above an absent wall.
-                setUniformHeight(tileHeight * 0.18, on: sprite)
-                position.y += tileHeight * 0.10
-            } else {
-                position.y -= tileHeight * 0.83
-            }
+            position.y -= tileHeight * 0.83
         case .left, .right:
-            position = project(x: wall == .left ? x : x + 1, y: y + 0.5)
-            if let annex {
-                let height = annexSideHeight(at: y + 0.5, expansion: annex)
+            let edgeX = wall == .left ? x : x + 1
+            position = project(x: edgeX, y: y + 0.5)
+            if expanded {
+                let top = sideWallTop(x: edgeX, y: y + 0.5, right: wall == .right)
+                let height = rectangularSideHeight(at: y + 0.5)
                 if sprite.size.height > height * 0.65 { setUniformHeight(height * 0.65, on: sprite) }
-                position.x += height * (wall == .left ? -0.077 : 0.077)
+                position.x += (top.x - position.x) * 0.55
                 position.y += height * 0.55
             } else {
                 position.x += tileWidth * (wall == .left ? -0.24 : 0.24)

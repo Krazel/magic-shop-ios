@@ -135,6 +135,56 @@ public struct LivingShopDay: Identifiable, Codable, Equatable, Sendable {
         inventoryCashFlow = total.partialValue
     }
 
+    /// Reuse exact saved paths unless a new obstacle or moved endpoint invalidates
+    /// them. The original day has already passed pre-migration validation.
+    func requiresRerouting(in state: GameState) -> Bool {
+        let walkable = ShopAccess.reachableCells(in: state)
+        for visitor in visitors {
+            for stop in visitor.stops {
+                guard stop.path.allSatisfy({ walkable.contains($0) }), let end = stop.path.last,
+                      let fixture = state.fixtures.first(where: { $0.id == stop.fixtureID }),
+                      PlacementRules.occupiedCells(for: fixture).contains(where: {
+                          abs($0.x - end.x) + abs($0.y - end.y) == 1
+                      }) else { return true }
+            }
+            if !visitor.exitPath.allSatisfy({ walkable.contains($0) }) { return true }
+        }
+        return false
+    }
+
+    /// Geometry migration keeps the profiles, timings, cursor and receipts.
+    /// Only paths change; no visitor generation or decision is replayed.
+    func rerouted(in state: GameState) throws -> LivingShopDay {
+        guard let entrance = state.world.hitMap.cells.first(where: { $0.zone == .entrance })?.point else {
+            throw GameStateValidationError.invalidState("Missing migrated entrance")
+        }
+        var result = self
+        result.visitors = try visitors.map { visitor in
+            var previous = entrance
+            var stops: [LivingBrowseStop] = []
+            for stop in visitor.stops {
+                guard let fixture = state.fixtures.first(where: { $0.id == stop.fixtureID }),
+                      let path = ShopAccess.path(from: previous, to: fixture, in: state),
+                      let end = path.last else {
+                    throw GameStateValidationError.invalidState("Unreachable migrated browse stop")
+                }
+                stops.append(LivingBrowseStop(fixtureID: stop.fixtureID,
+                    arrivalMinute: stop.arrivalMinute, departureMinute: stop.departureMinute, path: path))
+                previous = end
+            }
+            guard let exit = ShopAccess.path(from: previous, to: entrance, in: state) else {
+                throw GameStateValidationError.invalidState("Unreachable migrated exit")
+            }
+            return LivingVisitor(id: visitor.id, arrivalMinute: visitor.arrivalMinute,
+                departureMinute: visitor.departureMinute, decisionMinute: visitor.decisionMinute,
+                preferredProduct: visitor.preferredProduct, secondaryProduct: visitor.secondaryProduct,
+                budget: visitor.budget, interestRoll: visitor.interestRoll,
+                hasBuyingIntent: visitor.hasBuyingIntent, stops: stops, exitPath: exit,
+                outcome: visitor.outcome)
+        }
+        return result
+    }
+
     private static func makeVisitors(id: UUID, seed: UInt64, state: GameState) throws -> [LivingVisitor] {
         let reachable = ShopAccess.reachableCells(in: state)
         guard let entrance = state.world.hitMap.cells.filter({

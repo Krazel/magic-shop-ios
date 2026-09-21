@@ -21,9 +21,10 @@ Sweep worn areas by hand and clean the persistent dust left by visits. Preview
 terracotta, oak or checkered floors by dragging, then apply the whole batch.
 Repairs are free; floor changes cost $1, $2 or $3 per tile. Reinvest in decorations.
 Clear three worn areas, place three different decorations, complete three days
-with sales and add a compact neighboring room to finish the restoration.
+with sales and expand the shop to finish the restoration.
 Afterward the shop stays playable. Six decorations and three expansion
-positions let you make it your own. The room expands once, by a 5×5 module.
+directions let you make it your own. A single $250 expansion moves an entire
+wall outward, adding 55 floor spaces to form one 16×11 or 11×16 room.
 
 Furniture and decoration can be moved for free. Return unsold stock for its
 recorded cost; sell empty furniture at its purchase price. No absence penalties,
@@ -44,7 +45,20 @@ loans, crafting, accounts, ads, tracking, purchases or network calls.
 - Journal: restoration goals, calendar rules and recent trading results.
 - Dynamic Type and Reduce Motion use the device's accessibility preferences.
 
-## Current candidate 0.4.1 (build 1) — verified
+## Current work 0.5 (build 1) — native verification pending
+
+The owner approved three complete rectangular references on 2026-09-22. The
+selected exterior wall moves outward; the floor and building become one larger
+room, with no annex opening, internal posts or threshold. Wall-mounted fixtures
+follow the new perimeter while their stock and identities remain intact.
+
+Schema 6 fills the former outside corners of saved annexes and preserves money,
+floor styles, dirt and trading progress. Active visitor routes are repaired only
+where needed, keeping their schedules and completed purchases. Implementation
+and regression coverage are in progress; this section does not claim a native
+build, successful XCTest run or finished IPA. See `docs/RECTANGULAR-EXPANSION.md`.
+
+## Previous candidate 0.4.1 (build 1) — verified, geometry superseded
 
 Annexes now join the shop through a full-width, level opening, with upright
 painted walls, matching rounded caps and endpoint posts. The expanded camera
@@ -95,7 +109,7 @@ Runtime captures remain separate. New asset provenance is recorded in
 `MagicShop/Core` contains platform-neutral rules, a versioned save model and
 atomic persistence. `GameSession` commits a copied engine only after the save
 succeeds. Sales use visitor tokens; retries and relaunches cannot award the same
-sale twice. Schema 1–4 saves migrate to schema 5 while preserving the shop. A saved legacy
+sale twice. Schema 1–5 saves migrate to schema 6 while preserving the shop. A saved legacy
 trading day finishes under its original rules; the following day uses the living
 simulation. Prices, dirt, manual repair progress, floor choices and visitor routes
 are persisted. Floor batches commit atomically, and the simulation uses exact

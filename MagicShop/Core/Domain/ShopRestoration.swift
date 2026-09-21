@@ -36,15 +36,15 @@ public enum ExpansionDirection: String, CaseIterable, Codable, Hashable, Sendabl
 
     public var displayName: String {
         switch self {
-        case .left: return "Left Wing"
-        case .right: return "Right Wing"
-        case .rear: return "Rear Room"
+        case .left: return "Left"
+        case .right: return "Right"
+        case .rear: return "Back"
         }
     }
 }
 
-/// One compact 5x5 room. Coordinates stay nonnegative; the existing shop moves
-/// right by five cells only for the left wing. IDs and stock references persist.
+/// Move one entire wall outward by five cells, leaving a single rectangle.
+/// A left purchase translates the starter by +5 x; migrated saves are already shifted.
 public struct ExpansionState: Codable, Equatable, Sendable {
     public static let price = 250
     public static let roomSize = 5
@@ -57,18 +57,21 @@ public struct ExpansionState: Codable, Equatable, Sendable {
     }
     public var roomOrigin: GridPoint {
         switch direction {
-        case .left: return GridPoint(x: 0, y: 3)
-        case .right: return GridPoint(x: 11, y: 3)
-        case .rear: return GridPoint(x: 3, y: 11)
+        case .left: return GridPoint(x: 0, y: 0)
+        case .right: return GridPoint(x: 11, y: 0)
+        case .rear: return GridPoint(x: 0, y: 11)
         }
+    }
+    public var roomFootprint: GridFootprint {
+        direction == .rear ? GridFootprint(width: 11, depth: 5) : GridFootprint(width: 5, depth: 11)
     }
     public var layout: ShopLayout {
         direction == .rear ? ShopLayout(width: 11, depth: 16) : ShopLayout(width: 16, depth: 11)
     }
 
-    /// Doorway cells in the original 11x11 coordinates, before any translation.
+    /// The complete removed wall in starter coordinates, before translation.
     public var starterConnectionCells: Set<GridPoint> {
-        Set((3...7).map { value in
+        Set((0...10).map { value in
             switch direction {
             case .left: return GridPoint(x: 0, y: value)
             case .right: return GridPoint(x: 10, y: value)
@@ -136,37 +139,36 @@ extension GameState {
 /// World mutations are prepared as values and validated before they are committed.
 enum RestorationWorld {
     static func expanded(_ world: ShopWorldState, using expansion: ExpansionState) -> ShopWorldState {
-        let shift = expansion.starterOrigin
-        let room = expansion.roomOrigin
-        let size = ExpansionState.roomSize
+        rectangularized(world, using: expansion, translateStarter: true)
+    }
+
+    /// Migration keeps existing coordinates, including a previously shifted
+    /// left starter. Only a new purchase translates the original 11x11 world.
+    static func rectangularized(_ world: ShopWorldState, using expansion: ExpansionState,
+                                translateStarter: Bool) -> ShopWorldState {
+        let shift = translateStarter ? expansion.starterOrigin : GridPoint(x: 0, y: 0)
         let layout = expansion.layout
-        var oldCells: [GridPoint: WorldCellMetadata] = [:]
+        var supplied: [GridPoint: WorldCellMetadata] = [:]
         for cell in world.hitMap.cells {
             let point = GridPoint(x: cell.point.x + shift.x, y: cell.point.y + shift.y)
-            oldCells[point] = WorldCellMetadata(point: point, zone: cell.zone,
-                                               staticBlocker: cell.staticBlocker,
-                                               adjacentWalls: cell.adjacentWalls)
+            supplied[point] = WorldCellMetadata(point: point, zone: cell.zone,
+                staticBlocker: cell.staticBlocker, adjacentWalls: cell.adjacentWalls)
         }
-        let roomPoints = Set((room.y..<(room.y + size)).flatMap { y in
-            (room.x..<(room.x + size)).map { GridPoint(x: $0, y: y) }
+        // The front corner belongs to the moved perimeter, not the former seam.
+        let oldColumn = expansion.direction == .left ? GridPoint(x: 5, y: 0) : GridPoint(x: 10, y: 0)
+        let newColumn = expansion.direction == .left ? GridPoint(x: 0, y: 0) : GridPoint(x: 15, y: 0)
+        if expansion.direction != .rear { supplied[oldColumn]?.staticBlocker = nil }
+        let interior = Set((0..<layout.depth).flatMap { y in
+            (0..<layout.width).map { GridPoint(x: $0, y: y) }
         })
-        let interior = Set(oldCells.keys).union(roomPoints)
         var cells: [WorldCellMetadata] = []
         for y in 0..<layout.depth {
             for x in 0..<layout.width {
                 let point = GridPoint(x: x, y: y)
-                guard interior.contains(point) else {
-                    cells.append(WorldCellMetadata(point: point, zone: .outside))
-                    continue
-                }
-                var cell = oldCells[point] ?? WorldCellMetadata(point: point)
-                // Exterior edges now follow the union of the two rooms. The
-                // full five-cell shared side is the open passage.
-                cell.adjacentWalls = []
-                if !interior.contains(GridPoint(x: x - 1, y: y)) { cell.adjacentWalls.insert(.left) }
-                if !interior.contains(GridPoint(x: x + 1, y: y)) { cell.adjacentWalls.insert(.right) }
-                if !interior.contains(GridPoint(x: x, y: y - 1)) { cell.adjacentWalls.insert(.front) }
-                if !interior.contains(GridPoint(x: x, y: y + 1)) { cell.adjacentWalls.insert(.rear) }
+                var cell = supplied[point] ?? WorldCellMetadata(point: point)
+                if cell.zone == .outside { cell.zone = .interior }
+                if expansion.direction != .rear && point == newColumn { cell.staticBlocker = .frontColumn }
+                cell.adjacentWalls = wallAdjacency(at: point, interior: interior)
                 cells.append(cell)
             }
         }
@@ -176,6 +178,90 @@ enum RestorationWorld {
         }
         return ShopWorldState(floor: ShopFloorState(layout: layout, tiles: tiles),
                               hitMap: WorldHitMap(layout: layout, cells: cells))
+    }
+
+    static func wallAdjacency(at point: GridPoint, interior: Set<GridPoint>) -> Set<WallSide> {
+        var result = Set<WallSide>()
+        if !interior.contains(GridPoint(x: point.x - 1, y: point.y)) { result.insert(.left) }
+        if !interior.contains(GridPoint(x: point.x + 1, y: point.y)) { result.insert(.right) }
+        if !interior.contains(GridPoint(x: point.x, y: point.y - 1)) { result.insert(.front) }
+        if !interior.contains(GridPoint(x: point.x, y: point.y + 1)) { result.insert(.rear) }
+        return result
+    }
+
+    /// Move only furniture that loses every mounting wall. Reserve all other
+    /// footprints, then pack larger items first and resolve ties by UUID.
+    /// Backtracking prevents a one-cell decoration from stranding a shelf.
+    static func relocateWallFixtures(in state: inout GameState, from oldMap: WorldHitMap) throws -> Bool {
+        let moving = state.fixtures.indices.filter { index in
+            let fixture = state.fixtures[index]
+            return FixtureCatalog.definition(for: fixture.kind).placementConstraint == .adjacentToWall &&
+                state.world.hitMap.commonWallAdjacency(for: PlacementRules.occupiedCells(for: fixture)).isEmpty
+        }.sorted { left, right in
+            let a = PlacementRules.occupiedCells(for: state.fixtures[left]).count
+            let b = PlacementRules.occupiedCells(for: state.fixtures[right]).count
+            return a == b ? state.fixtures[left].id.uuidString < state.fixtures[right].id.uuidString : a > b
+        }
+        guard !moving.isEmpty else { return false }
+        let movingSet = Set(moving)
+        var occupied = Set(state.fixtures.indices.filter { !movingSet.contains($0) }.flatMap {
+            PlacementRules.occupiedCells(for: state.fixtures[$0])
+        })
+        struct Candidate {
+            let point: GridPoint
+            let cells: Set<GridPoint>
+            let sideRank: Int
+            let distance: Int
+        }
+        let map = state.world.hitMap
+        var choices: [[Candidate]] = []
+        for index in moving {
+            let fixture = state.fixtures[index]
+            let oldWalls = oldMap.commonWallAdjacency(for: PlacementRules.occupiedCells(for: fixture))
+            let footprint = FixtureCatalog.definition(for: fixture.kind).footprint.rotated(fixture.rotation)
+            var candidates: [Candidate] = []
+            for y in 0...(map.layout.depth - footprint.depth) {
+                for x in 0...(map.layout.width - footprint.width) {
+                    let point = GridPoint(x: x, y: y)
+                    let cells = PlacementRules.occupiedCells(origin: point, footprint: footprint)
+                    let walls = map.commonWallAdjacency(for: cells)
+                    guard !walls.isEmpty, cells.isDisjoint(with: occupied), cells.allSatisfy({
+                        map.cell(at: $0)?.zone == .interior && map.cell(at: $0)?.staticBlocker == nil
+                    }) else { continue }
+                    candidates.append(Candidate(point: point, cells: cells,
+                        sideRank: walls.isDisjoint(with: oldWalls) ? 1 : 0,
+                        distance: abs(point.x - fixture.origin.x) + abs(point.y - fixture.origin.y)))
+                }
+            }
+            candidates.sort { a, b in
+                if a.sideRank != b.sideRank { return a.sideRank < b.sideRank }
+                if a.distance != b.distance { return a.distance < b.distance }
+                return a.point.y == b.point.y ? a.point.x < b.point.x : a.point.y < b.point.y
+            }
+            choices.append(candidates)
+        }
+        var selected: [Int: GridPoint] = [:]
+        var failed = Set<String>()
+        func place(_ cursor: Int) -> Bool {
+            if cursor == moving.count { return true }
+            let key = String(cursor) + ":" + occupied.map { $0.y * map.layout.width + $0.x }
+                .sorted().map(String.init).joined(separator: ",")
+            guard !failed.contains(key) else { return false }
+            for candidate in choices[cursor] where candidate.cells.isDisjoint(with: occupied) {
+                occupied.formUnion(candidate.cells)
+                selected[moving[cursor]] = candidate.point
+                if place(cursor + 1) { return true }
+                occupied.subtract(candidate.cells)
+            }
+            selected.removeValue(forKey: moving[cursor])
+            failed.insert(key)
+            return false
+        }
+        guard place(0) else {
+            throw GameStateValidationError.invalidState("No safe perimeter placement for saved wall furniture")
+        }
+        for (index, point) in selected { state.fixtures[index].origin = point }
+        return true
     }
 
     /// Versions 1–3 used approximate debris coordinates. Relocate a known

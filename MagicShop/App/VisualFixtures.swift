@@ -33,22 +33,34 @@ extension AppModel {
             if name == "repair-rubble" { _ = try engine.repair(.rubble) }
             if name == "repair-boards" { _ = try engine.repair(.brokenBoards) }
             if name == "repair-papers" { _ = try engine.repair(.discardedPapers) }
-            if name.hasPrefix("restored") || name.hasPrefix("annex-") || name == "freeplay" {
+            if name.hasPrefix("restored") || name.hasPrefix("expanded-") || name == "freeplay" {
                 let direction: ExpansionDirection = name.hasSuffix("right") ? .right : name.hasSuffix("rear") ? .rear : .left
                 engine = try restoredVisualEngine(direction: direction)
             }
-            if name.hasPrefix("annex-"), let expansion = engine.state.restoration.expansion {
-                let origin = expansion.roomOrigin
+            if name.hasPrefix("expanded-"), let expansion = engine.state.restoration.expansion {
+                let displayPoints: [GridPoint]
+                let floorOrigin: GridPoint
+                switch expansion.direction {
+                case .left:
+                    displayPoints = [GridPoint(x: 1, y: 5), GridPoint(x: 3, y: 5)]
+                    floorOrigin = GridPoint(x: 4, y: 5)
+                case .right:
+                    displayPoints = [GridPoint(x: 12, y: 5), GridPoint(x: 14, y: 5)]
+                    floorOrigin = GridPoint(x: 10, y: 5)
+                case .rear:
+                    displayPoints = [GridPoint(x: 4, y: 13), GridPoint(x: 6, y: 13)]
+                    floorOrigin = GridPoint(x: 4, y: 10)
+                }
                 let tables = engine.state.fixtures.filter { $0.kind == .basicDisplayTable }
                 for (index, table) in tables.prefix(2).enumerated() {
-                    try engine.moveFixture(fixtureID: table.id,
-                        origin: GridPoint(x: origin.x + 1 + index * 2, y: origin.y + 2), rotation: .north)
+                    try engine.moveFixture(fixtureID: table.id, origin: displayPoints[index], rotation: .north)
                 }
                 if let table = tables.first {
                     _ = try engine.confirm(engine.makeStockDraft(product: .glowPotion, fixtureID: table.id, slotIndex: 0))
                 }
-                for y in 0..<2 { for x in 1..<3 {
-                    _ = try engine.paintFloor(at: GridPoint(x: origin.x + x, y: origin.y + y), style: .warmOak)
+                // A continuous patch crosses the position of the removed wall.
+                for y in 0..<2 { for x in 0..<2 {
+                    _ = try engine.paintFloor(at: GridPoint(x: floorOrigin.x + x, y: floorOrigin.y + y), style: .warmOak)
                 } }
             }
             if ["living", "pricing", "care", "floors", "floor-laid", "drag", "living-summary", "preparation", "paused-stock"].contains(name) {
@@ -138,9 +150,7 @@ extension AppModel {
         for (kind, point) in [(FixtureKind.pottedFern, GridPoint(x: 2, y: 7)), (.starRug, GridPoint(x: 5, y: 6)), (.crystalDisplay, GridPoint(x: 8, y: 5)), (.wallClock, GridPoint(x: 0, y: 10)), (.moonPainting, GridPoint(x: 8, y: 10)), (.brassLantern, GridPoint(x: 9, y: 7))] {
             _ = try engine.confirm(engine.makePlacementDraft(kind: kind, origin: point))
         }
-        if direction == .rear {
-            try engine.moveFixture(fixtureID: shelf.id, origin: GridPoint(x: 0, y: 7), rotation: .east)
-        }
+        // Expansion itself moves wall-bound items to the new exterior wall.
         _ = try engine.expandShop(toward: direction)
         return engine
     }

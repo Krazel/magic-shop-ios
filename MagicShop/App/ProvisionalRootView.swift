@@ -875,16 +875,16 @@ private struct ImprovementsPanel: View {
                     Button("Choose decorations") { model.openBuild(); model.selectCategory(.decor) }.buttonStyle(GoldButtonStyle(secondary: true))
                     GoldDivider()
                     if let expansion = model.state.restoration.expansion {
-                        Label("\(expansion.direction.displayName) complete", systemImage: "checkmark.seal.fill").foregroundStyle(MagicPalette.mint)
-                        Text("Your new room is ready for furniture and visitors.").font(.caption)
+                        Label("\(expansion.direction.displayName) expansion complete", systemImage: "checkmark.seal.fill").foregroundStyle(MagicPalette.mint)
+                        Text("One bigger shop, ready for furniture and visitors.").font(.caption)
                     } else {
-                        Text("A room to grow").font(.system(.headline, design: .serif))
-                        Text("After repairs, add one cozy room for $250. Choose the side that suits your shop.").font(.callout)
-                        Picker("New room position", selection: $direction) {
+                        Text("Room to grow").font(.system(.headline, design: .serif))
+                        Text("Move a whole wall outward for $250. Gain 55 floor spaces in one continuous shop. Wall-mounted furniture follows the new wall.").font(.callout)
+                        Picker("Expansion direction", selection: $direction) {
                             ForEach(ExpansionDirection.allCases, id: \.self) { Text($0.displayName).tag($0) }
                         }.pickerStyle(.segmented)
                         if let reason = model.expansionFailure(direction) { Text(reason).font(.caption).foregroundStyle(MagicPalette.gold) }
-                        Button("Add \(direction.displayName) · $250") { model.expand(direction) }
+                        Button("Expand \(direction.displayName) · $250") { model.expand(direction) }
                             .buttonStyle(GoldButtonStyle()).disabled(model.expansionFailure(direction) != nil)
                             .accessibilityIdentifier("confirm-expansion")
                     }
@@ -915,7 +915,7 @@ private struct JournalPanel: View {
                     goal("Repair the three worn areas", progress.repairedGroups, 3)
                     goal("Place three different decorations", progress.decorationVariety, 3)
                     goal("Complete three days with sales", progress.successfulTradingDays, 3)
-                    goal("Add a cozy new room", progress.hasExpansion ? 1 : 0, 1)
+                    goal("Expand your shop", progress.hasExpansion ? 1 : 0, 1)
                     GoldDivider()
                     Text("Your rhythm").font(.system(.headline, design: .serif))
                     Text("Prepare for as long as you like. Open from 09:00 to 18:00. Visitors arrive at different times, browse together and compare your prices with their budgets. Pause or use 2× speed whenever you like. Time stops while the app is away. Refill displays, adjust prices or sweep while the shop is open.").font(.callout)

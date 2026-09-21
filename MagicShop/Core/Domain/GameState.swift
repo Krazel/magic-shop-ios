@@ -1,7 +1,7 @@
 import Foundation
 
 public struct GameState: Codable, Equatable, Sendable {
-    public static let currentSchemaVersion = 5
+    public static let currentSchemaVersion = 6
     public static let startingBalance = 500
 
     public var schemaVersion: Int
@@ -123,12 +123,28 @@ public struct GameState: Codable, Equatable, Sendable {
             manualRepairProgress = [:]
             livingDay = nil
         }
+        // Validate the source topology/routes before changing any coordinates.
+        // Otherwise a migration could hide corrupt walls, holes or itineraries.
+        if savedVersion < 6, let expansion = restoration.expansion {
+            try validateIntegrity(legacyExpansion: true)
+            let oldMap = world.hitMap
+            world = RestorationWorld.rectangularized(world, using: expansion, translateStarter: false)
+            _ = try RestorationWorld.relocateWallFixtures(in: &self, from: oldMap)
+            if let day = livingDay, day.requiresRerouting(in: self) {
+                livingDay = try day.rerouted(in: self)
+            }
+        }
         try validateIntegrity()
     }
 
     /// Reject malformed state before it can become a writable game session.
     /// Existing legacy furniture is not rejudged against newer debris metadata.
     public func validateIntegrity() throws {
+        try validateIntegrity(legacyExpansion: false)
+    }
+
+    /// Used only to validate a decoded pre-6 annex before migration.
+    func validateIntegrity(legacyExpansion: Bool) throws {
         guard schemaVersion == Self.currentSchemaVersion else {
             throw GameStateValidationError.unsupportedSchemaVersion(schemaVersion)
         }
@@ -247,14 +263,45 @@ public struct GameState: Codable, Equatable, Sendable {
             guard restoration.repairedGroups.count == RestorationGroupID.allCases.count,
                   layout == expansion.layout else { throw invalid("Invalid expansion") }
             let shift = expansion.starterOrigin
-            let room = expansion.roomOrigin
-            for cell in world.hitMap.cells {
+            let oldRoom: GridPoint
+            switch expansion.direction {
+            case .left: oldRoom = GridPoint(x: 0, y: 3)
+            case .right: oldRoom = GridPoint(x: 11, y: 3)
+            case .rear: oldRoom = GridPoint(x: 3, y: 11)
+            }
+            let interior = Set(world.hitMap.cells.compactMap { cell -> GridPoint? in
                 let p = cell.point
-                let inStarter = p.x >= shift.x && p.x < shift.x + 11 && p.y >= 0 && p.y < 11
-                let inRoom = p.x >= room.x && p.x < room.x + 5 &&
-                    p.y >= room.y && p.y < room.y + 5
-                guard (cell.zone != .outside) == (inStarter || inRoom) else {
-                    throw invalid("Expansion floor shape does not match room")
+                let inStarter = p.x >= shift.x && p.x < shift.x + 11 && p.y < 11
+                let inOldRoom = p.x >= oldRoom.x && p.x < oldRoom.x + 5 &&
+                    p.y >= oldRoom.y && p.y < oldRoom.y + 5
+                return !legacyExpansion || inStarter || inOldRoom ? p : nil
+            })
+            let entrance = GridPoint(x: 5 + shift.x, y: 0)
+            let columns: Set<GridPoint> = legacyExpansion
+                ? [GridPoint(x: shift.x, y: 0), GridPoint(x: shift.x + 10, y: 0)]
+                : [GridPoint(x: 0, y: 0), GridPoint(x: layout.width - 1, y: 0)]
+            for cell in world.hitMap.cells {
+                let expectedZone: WorldCellZone = cell.point == entrance ? .entrance :
+                    (interior.contains(cell.point) ? .interior : .outside)
+                let expectedWalls = interior.contains(cell.point)
+                    ? RestorationWorld.wallAdjacency(at: cell.point, interior: interior) : []
+                let expectedBlocker: StaticBlockerID? = columns.contains(cell.point) ? .frontColumn : nil
+                guard cell.zone == expectedZone, cell.adjacentWalls == expectedWalls,
+                      cell.staticBlocker == expectedBlocker else {
+                    throw invalid("Expansion topology does not match its saved geometry")
+                }
+            }
+            var occupied = Set<GridPoint>()
+            for fixture in fixtures {
+                let cells = PlacementRules.occupiedCells(for: fixture)
+                guard cells.isDisjoint(with: occupied), cells.allSatisfy({ point in
+                    world.hitMap.cell(at: point)?.zone == .interior &&
+                    world.hitMap.cell(at: point)?.staticBlocker == nil
+                }) else { throw invalid("Invalid expanded furniture occupancy") }
+                occupied.formUnion(cells)
+                if FixtureCatalog.definition(for: fixture.kind).placementConstraint == .adjacentToWall,
+                   world.hitMap.commonWallAdjacency(for: cells).isEmpty {
+                    throw invalid("Expanded furniture has no mounting wall")
                 }
             }
         }

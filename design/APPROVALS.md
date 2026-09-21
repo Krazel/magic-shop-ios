@@ -1,6 +1,34 @@
 # Magic Shop — Visual Approvals
 
-## Architectural expansion correction — 2026-09-21
+## One rectangular shop — current, 2026-09-22
+
+The owner approved the three complete images below together, answering
+**“Sí, aplica las tres”** after seeing them and being asked explicitly whether
+to implement their finish. These replace the adjoining-room architecture.
+All are English, iPhone portrait, 851×1848, restored shop in preparation.
+
+| State | Current canonical image | SHA-256 |
+| --- | --- | --- |
+| Right expansion, 16×11 | `design/approved/rectangular-right-v1.png` | `C2085DF038EE4DB7026F4C74D8526F975DEA626BA68301B7C3E23FA1A14649F9` |
+| Left expansion, 16×11 | `design/approved/rectangular-left-v1.png` | `23B6C41E98DFACD2495344498982C4E9C0FD1244E94B9F38DE9F525DAC9B5278` |
+| Rear expansion, 11×16 | `design/approved/rectangular-rear-v2.png` | `228D9F273A7058C0E75836B52FFC1D5430C88E92BCC416A36697178AF7408B84` |
+
+The selected wall moves completely to the outside boundary. The floor, back
+wall and facade form one continuous building: no internal wall, jamb, doorway,
+threshold or post. Preserve the painted materials and the original scale of
+furniture, lamp, windows and entrance. Actual saved coordinates and the existing
+native HUD/accessibility layout remain authoritative; image resynthesis does
+not change the game grid or require moving the preparation panel.
+
+Sources and exact generation prompts are archived in
+`design/proposals/rectangular-v1/`; asset composition is documented in
+`docs/RECTANGULAR-ART.md`. Comparable runtime captures are pending the new
+implementation and native validation. The earlier images and captures below
+remain preserved as superseded history, not the current expansion specification.
+
+## Architectural expansion correction — superseded, 2026-09-21
+
+Status: replaced by the three rectangular references above on 2026-09-22.
 
 The owner explicitly rejected the attached-looking annex and requested a
 different solution. The director selected a contiguous showroom with a wide

@@ -65,7 +65,7 @@ Assert-True (-not $package.Contains('MagicShop/World')) 'Package.swift must not 
 
 $project = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop.xcodeproj\project.pbxproj') -Raw
 Assert-True ($project.Contains('IPHONEOS_DEPLOYMENT_TARGET = 16.0;')) 'iOS deployment target must be 16.0.'
-Assert-True ($project.Contains('MARKETING_VERSION = 0.4.1;')) 'Marketing version must be 0.4.1.'
+Assert-True ($project.Contains('MARKETING_VERSION = 0.5;')) 'Marketing version must be 0.5.'
 Assert-True ($project.Contains('CURRENT_PROJECT_VERSION = 1;')) 'Build number must be 1.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.application";')) 'App target is missing.'
 Assert-True ($project.Contains('productType = "com.apple.product-type.bundle.unit-test";')) 'Unit-test target is missing.'
@@ -83,7 +83,7 @@ Assert-True (-not $sideloadWorkflow.Contains('pull_request:')) 'Sideloadly IPA w
 Assert-True (-not $sideloadWorkflow.Contains('push:')) 'Sideloadly IPA workflow must not run on push.'
 Assert-True ($sideloadWorkflow.Contains('runs-on: macos-15')) 'Sideloadly IPA workflow must use a macOS runner.'
 Assert-True ($sideloadWorkflow.Contains('build-sideloadly-ipa.sh')) 'Sideloadly IPA workflow must use the reviewed build script.'
-Assert-True ($sideloadWorkflow.Contains('MagicShop-0.4.1-build-1-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
+Assert-True ($sideloadWorkflow.Contains('MagicShop-0.5-build-1-unsigned.ipa')) 'Sideloadly IPA artifact name is missing.'
 Assert-True ($sideloadWorkflow.Contains('actions/upload-artifact@v4')) 'Sideloadly IPA artifact is not retained.'
 
 $sideloadScript = Get-Content -LiteralPath (Join-Path $projectRoot 'scripts\build-sideloadly-ipa.sh') -Raw
@@ -156,7 +156,7 @@ Assert-True ($worldMap.Contains('commonWallAdjacency')) 'Wall adjacency metadata
 Assert-True ($worldMap.Contains('CameraViewportTransform')) 'Testable screen/world transform is missing.'
 
 $gameState = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop\Core\Domain\GameState.swift') -Raw
-Assert-True ($gameState.Contains('currentSchemaVersion = 5')) 'GameState schema must include commerce and world persistence.'
+Assert-True ($gameState.Contains('currentSchemaVersion = 6')) 'GameState schema must include commerce and world persistence.'
 Assert-True ($gameState.Contains('public var world: ShopWorldState')) 'GameState must persist ShopWorldState.'
 
 $shopScene = Get-Content -LiteralPath (Join-Path $projectRoot 'MagicShop\World\ShopScene.swift') -Raw
@@ -348,6 +348,9 @@ foreach ($assetName in @('AnnexFloorTerracotta','AnnexWallPlasterTeal','AnnexWal
     }
 }
 $shopkeeperApprovals = @{
+ 'rectangular-right-v1.png'='C2085DF038EE4DB7026F4C74D8526F975DEA626BA68301B7C3E23FA1A14649F9'
+ 'rectangular-left-v1.png'='23B6C41E98DFACD2495344498982C4E9C0FD1244E94B9F38DE9F525DAC9B5278'
+ 'rectangular-rear-v2.png'='228D9F273A7058C0E75836B52FFC1D5430C88E92BCC416A36697178AF7408B84'
  'expansion-left-v2.png'='39FA3296B7EC3164823860153121F7FA58202193A6C08EAE190D3B684D98FA07'
  'expansion-right-v2.png'='1DAB158AE993CEE419FD7A140D4A01577AE1D51C0681EFF186AB0C71673D17B9'
  'expansion-rear-v3.png'='CC55FD083BEDCD9D2D5C3AF4CEE940D381B8291DE7DBA699C15BDFD4A97E7DE8'
@@ -369,11 +372,11 @@ Write-Output "- Required files: $($requiredFiles.Count)"
 Write-Output "- Core Swift files: $($coreSwift.Count)"
 Write-Output "- XCTest methods declared: $testCount"
 Write-Output '- Package.swift excludes SwiftUI/SpriteKit sources'
-Write-Output '- iOS 16.0, version 0.4.1, build 1'
+Write-Output '- iOS 16.0, version 0.5, build 1'
 Write-Output '- Git repository and unsigned macOS iOS CI workflow verified'
 Write-Output '- Manual unsigned iphoneos IPA workflow for Sideloadly verified'
 Write-Output '- Seven owner approval hashes verified; complete-game runtime images have archived sources and real sprite alpha'
 Write-Output '- Approved clean background, 19 preserved modular assets and two furniture assets match pinned hashes and runtime copies'
-Write-Output '- Runtime preserves the starter plate and architectural annex materials without a visible placement grid'
+Write-Output '- Starter plate and historical architectural materials preserved; rectangular references verified'
 Write-Output '- Persistent floor/hitmap structures and declared test coverage verified statically; XCTest execution still requires macOS/Xcode'
 Write-Output '- Basic Display Table is $50 with a 1x1 footprint'

@@ -127,7 +127,7 @@ final class RestorationTests: XCTestCase {
         XCTAssertEqual(engine.state.balance, saved.balance)
     }
 
-    func testAllExpansionDirectionsPreserveWorldStockIdentityAndCreateReachableCompactRoom() throws {
+    func testAllExpansionDirectionsPreserveWorldStockIdentityAndCreateOneRectangle() throws {
         for direction in ExpansionDirection.allCases {
             var engine = freshShop()
             let table = try place(.basicDisplayTable, at: GridPoint(x: 4, y: 4), in: &engine)
@@ -151,8 +151,8 @@ final class RestorationTests: XCTestCase {
             XCTAssertEqual(engine.state.world.floor.styleID(at: GridPoint(x: 7 + shift.x, y: 7)), style)
             XCTAssertEqual(engine.state.dirt, [GridPoint(x: 7 + shift.x, y: 7): 2])
 
-            // The painted architecture must leave all five saved connections
-            // open. A narrow visual doorway would contradict these routes.
+            // The complete wall disappears. Every old wall cell and its
+            // neighbor are interior; the two new front corners stay blocked.
             let outward: WallSide
             let inward: WallSide
             let offset: GridPoint
@@ -165,7 +165,7 @@ final class RestorationTests: XCTestCase {
                 outward = .rear; inward = .front; offset = GridPoint(x: 0, y: 1)
             }
             let reachable = ShopAccess.reachableCells(in: engine.state)
-            XCTAssertEqual(expansion.starterConnectionCells.count, 5)
+            XCTAssertEqual(expansion.starterConnectionCells.count, 11)
             for connection in expansion.starterConnectionCells {
                 let inside = GridPoint(x: connection.x + shift.x, y: connection.y + shift.y)
                 let annex = GridPoint(x: inside.x + offset.x, y: inside.y + offset.y)
@@ -175,13 +175,13 @@ final class RestorationTests: XCTestCase {
                 let outerCell = try XCTUnwrap(engine.state.world.hitMap.cell(at: outsideWall))
                 XCTAssertTrue(reachable.contains(inside))
                 XCTAssertTrue(reachable.contains(annex))
-                XCTAssertTrue(reachable.contains(outsideWall))
+                XCTAssertEqual(reachable.contains(outsideWall), outerCell.staticBlocker == nil)
                 XCTAssertFalse(innerCell.adjacentWalls.contains(outward))
                 XCTAssertFalse(annexCell.adjacentWalls.contains(inward))
                 XCTAssertTrue(outerCell.adjacentWalls.contains(outward))
             }
-            XCTAssertEqual(engine.state.world.hitMap.cells.filter { $0.zone != .outside }.count, 146)
-            XCTAssertEqual(engine.state.world.hitMap.cells.filter { $0.zone == .outside }.count, 30)
+            XCTAssertEqual(engine.state.world.hitMap.cells.filter { $0.zone != .outside }.count, 176)
+            XCTAssertEqual(engine.state.world.hitMap.cells.filter { $0.zone == .outside }.count, 0)
             XCTAssertEqual(engine.state.world.hitMap.cell(at: GridPoint(x: 5 + shift.x, y: 0))?.zone, .entrance)
             let roomCenter = GridPoint(x: expansion.roomOrigin.x + 2, y: expansion.roomOrigin.y + 2)
             XCTAssertTrue(ShopAccess.reachableCells(in: engine.state).contains(roomCenter))
@@ -200,15 +200,13 @@ final class RestorationTests: XCTestCase {
         }
     }
 
-    func testExpansionVoidRejectsPlacementAndSharedWallBecomesOpenPassage() throws {
+    func testExpansionFillsOldVoidsAndOnlyPerimeterAllowsWallMounting() throws {
         var engine = freshShop()
         for group in RestorationGroupID.allCases { try engine.repair(group) }
         try engine.expandShop(toward: .right)
         let map = engine.state.world.hitMap
-        XCTAssertEqual(map.hit(at: GridPoint(x: 12, y: 0), fixtures: []), .outside)
-        let saved = engine.state
-        XCTAssertThrowsError(try place(.basicDisplayTable, at: GridPoint(x: 12, y: 0), in: &engine))
-        XCTAssertEqual(engine.state, saved)
+        XCTAssertEqual(map.hit(at: GridPoint(x: 12, y: 0), fixtures: []), .available)
+        XCTAssertNoThrow(try engine.validate(PlacementDraft(kind: .basicDisplayTable, origin: GridPoint(x: 12, y: 0))))
         XCTAssertFalse(map.cell(at: GridPoint(x: 10, y: 5))!.adjacentWalls.contains(.right))
         XCTAssertFalse(map.cell(at: GridPoint(x: 11, y: 5))!.adjacentWalls.contains(.left))
         XCTAssertTrue(map.cell(at: GridPoint(x: 15, y: 5))!.adjacentWalls.contains(.right))
@@ -218,25 +216,23 @@ final class RestorationTests: XCTestCase {
         XCTAssertNoThrow(try place(.wallClock, at: GridPoint(x: 15, y: 5), in: &engine))
     }
 
-    func testExpansionRequiresRepairsMoneyAndClearReachableConnection() throws {
+    func testExpansionRequiresRepairsMoneyAndKeepsFloorFurnitureAtFormerWall() throws {
         var engine = freshShop()
         let initial = engine.state
         XCTAssertThrowsError(try engine.expandShop(toward: .right))
         XCTAssertEqual(engine.state, initial)
         let obstruction = try place(.basicDisplayTable, at: GridPoint(x: 10, y: 5), in: &engine)
         for group in RestorationGroupID.allCases { try engine.repair(group) }
-        let blocked = engine.state
-        XCTAssertThrowsError(try engine.expandShop(toward: .right)) { error in
-            XCTAssertEqual(error as? RestorationError, .expansionConnectionBlocked)
-        }
-        XCTAssertEqual(engine.state, blocked)
-        try engine.moveFixture(fixtureID: obstruction.id, origin: GridPoint(x: 6, y: 6))
+        let before = engine.state
+        XCTAssertNoThrow(try engine.validateExpansion(toward: .right))
+        XCTAssertEqual(engine.state, before)
         var poorState = engine.state
         poorState.balance = 249
         var poor = GameEngine(state: poorState)
         XCTAssertThrowsError(try poor.expandShop(toward: .right))
         XCTAssertEqual(poor.state, poorState)
         XCTAssertNoThrow(try engine.expandShop(toward: .right))
+        XCTAssertEqual(engine.state.fixtures.first(where: { $0.id == obstruction.id }), obstruction)
     }
 
     func testFullRestorationIsReachableFromFiveHundredAndRemainsSandboxAfterResale() throws {
@@ -342,7 +338,7 @@ final class RestorationTests: XCTestCase {
         for group in RestorationGroupID.allCases { try engine.repair(group) }
         try engine.expandShop(toward: .left)
         var invalid = engine.state
-        invalid.world.hitMap.updateCell(at: GridPoint(x: 0, y: 0)) { $0.zone = .interior }
+        invalid.world.hitMap.updateCell(at: GridPoint(x: 0, y: 1)) { $0.zone = .outside }
         XCTAssertThrowsError(try invalid.validateIntegrity())
     }
 
@@ -489,5 +485,360 @@ final class RestorationTests: XCTestCase {
 
     private func reloaded(_ engine: GameEngine) throws -> GameEngine {
         GameEngine(state: try JSONDecoder().decode(GameState.self, from: JSONEncoder().encode(engine.state)))
+    }
+}
+
+
+extension RestorationTests {
+    func testWholeWallExpansionRelocatesAttachedFurnitureWithoutChargingOrLosingStock() throws {
+        for direction in ExpansionDirection.allCases {
+            var engine = GameEngine(state: GameState(shopName: "Wall Keepers", onboardingCompleted: true, balance: 1500))
+            try manuallyRepairAll(in: &engine)
+            let side = direction != .rear
+            let wallX = direction == .left ? 0 : 10
+            let shelf = try place(.simpleShelf, at: side ? GridPoint(x: wallX, y: 4) : GridPoint(x: 3, y: 10),
+                                  in: &engine, rotation: side ? .east : .north)
+            let clock = try place(.wallClock, at: side ? GridPoint(x: wallX, y: 7) : GridPoint(x: 7, y: 10), in: &engine)
+            let painting = try place(.moonPainting, at: side ? GridPoint(x: wallX, y: 9) : GridPoint(x: 9, y: 10), in: &engine)
+            let table = try place(.basicDisplayTable, at: GridPoint(x: 4, y: 4), in: &engine)
+            try engine.confirm(StockDraft(product: .pocketSpellbook, fixtureID: shelf.id, slotIndex: 1))
+            let before = engine.state
+            try engine.validateExpansion(toward: direction)
+            XCTAssertEqual(engine.state, before)
+            let expansion = try engine.expandShop(toward: direction)
+            XCTAssertEqual(engine.state.balance, before.balance - 250)
+            XCTAssertEqual(engine.state.stock, before.stock)
+            XCTAssertEqual(engine.state.fixtures.map(\.id), before.fixtures.map(\.id))
+            for attached in [shelf, clock, painting] {
+                let current = try XCTUnwrap(engine.state.fixtures.first { $0.id == attached.id })
+                let expected = side ? GridPoint(x: direction == .left ? 0 : 15, y: attached.origin.y)
+                    : GridPoint(x: attached.origin.x, y: 15)
+                XCTAssertEqual(current.origin, expected)
+                XCTAssertEqual(current.rotation, attached.rotation)
+            }
+            XCTAssertEqual(engine.state.fixtures.first { $0.id == table.id }?.origin,
+                           GridPoint(x: table.origin.x + expansion.starterOrigin.x, y: table.origin.y))
+            XCTAssertTrue(ShopAccess.isReachable(engine.state.fixtures[0], in: engine.state))
+            XCTAssertEqual(try reloaded(engine).state, engine.state)
+        }
+    }
+
+    func testSchemaFourAndFiveAnnexesBecomeRectanglesWithoutLosingSavedProgress() throws {
+        for direction in ExpansionDirection.allCases {
+            for version in [4, 5] {
+                var original = try legacyAnnex(direction)
+                if version == 4 { original.dirt = [:] }
+                for number in 1...3 {
+                    var day = ShopDayState(id: fixedID(300 + number), dayNumber: number, openingBalance: 0)
+                    for visit in day.visitors {
+                        let sale = visit.id.index == 0 ? SaleReceipt(stockID: fixedID(400 + number),
+                            product: visit.requestedProduct, fixtureID: original.fixtures[0].id,
+                            slotIndex: 0, revenue: 25, costOfGoods: 10) : nil
+                        day.record(VisitOutcome(visitID: visit.id, requestedProduct: visit.requestedProduct, sale: sale))
+                    }
+                    original.dayHistory.append(try XCTUnwrap(day.summary))
+                }
+                original.restoration.completion = RestorationCompletion(completedOnDay: 3)
+                try original.validateIntegrity(legacyExpansion: true)
+                let result = try migratedAnnex(original, version: version)
+                XCTAssertEqual(result.schemaVersion, GameState.currentSchemaVersion)
+                XCTAssertEqual(result.balance, original.balance)
+                XCTAssertEqual(result.stock, original.stock)
+                XCTAssertEqual(result.fixtures.map(\.id), original.fixtures.map(\.id))
+                XCTAssertEqual(result.fixtures.map(\.rotation), original.fixtures.map(\.rotation))
+                XCTAssertEqual(result.world.floor, original.world.floor)
+                XCTAssertEqual(result.dirt, original.dirt)
+                XCTAssertEqual(result.dayHistory, original.dayHistory)
+                XCTAssertEqual(result.restoration, original.restoration)
+                XCTAssertEqual(result.pricing, original.pricing)
+                XCTAssertEqual(result.world.hitMap.cells.filter { $0.zone != .outside }.count, 176)
+                XCTAssertEqual(result.world.hitMap.cells.filter { $0.staticBlocker == .frontColumn }.map(\.point),
+                               [GridPoint(x: 0, y: 0), GridPoint(x: result.world.hitMap.layout.width - 1, y: 0)])
+                for old in original.fixtures where FixtureCatalog.definition(for: old.kind).placementConstraint == .anywhereOnFloor {
+                    XCTAssertEqual(result.fixtures.first { $0.id == old.id }, old)
+                }
+                XCTAssertEqual(try migratedAnnex(original, version: version), result)
+                XCTAssertEqual(try JSONDecoder().decode(GameState.self, from: JSONEncoder().encode(result)), result)
+            }
+        }
+    }
+
+    func testCrowdedLegacyPerimeterMigratesDeterministicallyWithoutOverlap() throws {
+        for direction in ExpansionDirection.allCases {
+            var original = try legacyAnnex(direction)
+            var occupied = Set(original.fixtures.flatMap { PlacementRules.occupiedCells(for: $0) })
+            var number = 100
+            for cell in original.world.hitMap.cells where cell.zone == .interior && cell.staticBlocker == nil && !cell.adjacentWalls.isEmpty {
+                guard !occupied.contains(cell.point) else { continue }
+                original.fixtures.append(PlacedFixture(id: fixedID(number), kind: .wallClock, origin: cell.point))
+                number += 1
+                occupied.insert(cell.point)
+            }
+            try original.validateIntegrity(legacyExpansion: true)
+            let result = try migratedAnnex(original)
+            XCTAssertEqual(result.fixtures.count, original.fixtures.count)
+            XCTAssertEqual(result.stock, original.stock)
+            XCTAssertEqual(result.balance, original.balance)
+            XCTAssertEqual(result.fixtures.map(\.id), original.fixtures.map(\.id))
+            let allCells = result.fixtures.flatMap { PlacementRules.occupiedCells(for: $0) }
+            XCTAssertEqual(Set(allCells).count, allCells.count)
+            for fixture in result.fixtures where FixtureCatalog.definition(for: fixture.kind).placementConstraint == .adjacentToWall {
+                XCTAssertFalse(result.world.hitMap.commonWallAdjacency(for: PlacementRules.occupiedCells(for: fixture)).isEmpty)
+            }
+            XCTAssertEqual(try migratedAnnex(original), result)
+        }
+    }
+
+    func testMigratedLivingDayKeepsProfilesReceiptsCursorAndResumesExactlyOnce() throws {
+        for direction in ExpansionDirection.allCases {
+            let original = try legacyLivingAnnex(direction)
+            let result = try migratedAnnex(original)
+            let before = try XCTUnwrap(original.livingDay), after = try XCTUnwrap(result.livingDay)
+            XCTAssertEqual(after.id, before.id)
+            XCTAssertEqual(after.seed, before.seed)
+            XCTAssertEqual(after.dayNumber, before.dayNumber)
+            XCTAssertEqual(after.minute, before.minute)
+            XCTAssertEqual(after.openingBalance, before.openingBalance)
+            XCTAssertEqual(after.inventoryCashFlow, before.inventoryCashFlow)
+            XCTAssertEqual(after.outcomes, before.outcomes)
+            XCTAssertEqual(after.sales, before.sales)
+            XCTAssertFalse(after.sales.isEmpty)
+            XCTAssertEqual(result.balance, original.balance)
+            XCTAssertEqual(result.stock, original.stock)
+            XCTAssertEqual(result.dirt, original.dirt)
+            for (old, new) in zip(before.visitors, after.visitors) {
+                XCTAssertEqual(new.id, old.id)
+                XCTAssertEqual(new.arrivalMinute, old.arrivalMinute)
+                XCTAssertEqual(new.departureMinute, old.departureMinute)
+                XCTAssertEqual(new.decisionMinute, old.decisionMinute)
+                XCTAssertEqual(new.preferredProduct, old.preferredProduct)
+                XCTAssertEqual(new.secondaryProduct, old.secondaryProduct)
+                XCTAssertEqual(new.budget, old.budget)
+                XCTAssertEqual(new.interestRoll, old.interestRoll)
+                XCTAssertEqual(new.hasBuyingIntent, old.hasBuyingIntent)
+                XCTAssertEqual(new.stops.map(\.fixtureID), old.stops.map(\.fixtureID))
+                XCTAssertEqual(new.stops.map(\.arrivalMinute), old.stops.map(\.arrivalMinute))
+                XCTAssertEqual(new.stops.map(\.departureMinute), old.stops.map(\.departureMinute))
+            }
+            XCTAssertNotEqual(after.visitors.map { $0.stops.map(\.path) }, before.visitors.map { $0.stops.map(\.path) })
+            XCTAssertNoThrow(try result.validateIntegrity()) // Also checks every route and display endpoint.
+            var uninterrupted = GameEngine(state: result)
+            try uninterrupted.advanceLivingDay(expectedDayID: after.id, expectedMinute: after.minute, toMinute: 1080)
+            var resumed = try reloaded(GameEngine(state: result))
+            let cursor = after.minute + 1
+            try resumed.advanceLivingDay(expectedDayID: after.id, expectedMinute: after.minute, toMinute: cursor)
+            resumed = try reloaded(resumed)
+            let saved = resumed.state
+            XCTAssertThrowsError(try resumed.advanceLivingDay(expectedDayID: after.id, expectedMinute: after.minute, toMinute: cursor))
+            XCTAssertEqual(resumed.state, saved)
+            try resumed.advanceLivingDay(expectedDayID: after.id, expectedMinute: cursor, toMinute: 1080)
+            XCTAssertEqual(resumed.state, uninterrupted.state)
+            XCTAssertEqual(Array(try XCTUnwrap(resumed.state.livingDay).outcomes.prefix(before.outcomes.count)), before.outcomes)
+            try resumed.acknowledgeLivingDaySummary(dayID: after.id)
+            let acknowledged = resumed.state
+            XCTAssertThrowsError(try resumed.acknowledgeLivingDaySummary(dayID: after.id))
+            XCTAssertEqual(resumed.state, acknowledged)
+            XCTAssertEqual(try reloaded(resumed).state, acknowledged)
+        }
+    }
+
+    func testSchemaFourAnnexKeepsLegacyMiddayJournalAndResumesWithoutReplay() throws {
+        var original = try legacyAnnex(.left)
+        original.dirt = [:]
+        var day = ShopDayState(id: fixedID(500), dayNumber: 1, openingBalance: original.balance)
+        let visit = day.visitors[0]
+        let unit = try XCTUnwrap(original.stock.first { $0.product == visit.requestedProduct })
+        let sale = SaleReceipt(stockID: unit.id, product: unit.product, fixtureID: unit.fixtureID,
+                               slotIndex: unit.slotIndex, revenue: 25, costOfGoods: unit.purchaseCost)
+        day.record(VisitOutcome(visitID: visit.id, requestedProduct: visit.requestedProduct, sale: sale))
+        original.stock.removeAll { $0.id == unit.id }
+        original.balance += sale.revenue
+        original.phase = .open
+        original.currentDay = day
+        let result = try migratedAnnex(original, version: 4)
+        XCTAssertEqual(result.currentDay, original.currentDay)
+        XCTAssertEqual(result.balance, original.balance)
+        var engine = GameEngine(state: result)
+        XCTAssertThrowsError(try engine.advanceDay(expectedVisitID: visit.id))
+        XCTAssertEqual(engine.state, result)
+        try finishDay(in: &engine)
+        XCTAssertEqual(engine.state.dayHistory.first?.outcomes.first, day.outcomes.first)
+        XCTAssertEqual(engine.state.balance, day.openingBalance + engine.state.dayHistory[0].revenue)
+        XCTAssertEqual(try reloaded(engine).state, engine.state)
+    }
+
+    func testMigrationRejectsCorruptSourceTopologyOccupancyAndRoutesBeforeRewriting() throws {
+        for direction in ExpansionDirection.allCases {
+            let valid = try legacyAnnex(direction)
+            var bad = valid
+            let outside = try XCTUnwrap(bad.world.hitMap.cells.first { $0.zone == .outside }).point
+            bad.world.hitMap.updateCell(at: outside) { $0.zone = .interior }
+            XCTAssertThrowsError(try migratedAnnex(bad))
+            bad = valid
+            bad.world.hitMap.updateCell(at: valid.fixtures[0].origin) { $0.adjacentWalls = [] }
+            XCTAssertThrowsError(try migratedAnnex(bad))
+            bad = valid
+            bad.fixtures.append(PlacedFixture(id: fixedID(999), kind: .basicDisplayTable, origin: valid.fixtures[0].origin))
+            XCTAssertThrowsError(try migratedAnnex(bad))
+            var object = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(try legacyLivingAnnex(direction))) as? [String: Any])
+            object["schemaVersion"] = 5
+            var living = try XCTUnwrap(object["livingDay"] as? [String: Any])
+            var visitors = try XCTUnwrap(living["visitors"] as? [[String: Any]])
+            var stops = try XCTUnwrap(visitors[0]["stops"] as? [[String: Any]])
+            stops[0]["path"] = [["x": 1000, "y": 1000]]
+            visitors[0]["stops"] = stops
+            living["visitors"] = visitors
+            object["livingDay"] = living
+            XCTAssertThrowsError(try JSONDecoder().decode(GameState.self, from: JSONSerialization.data(withJSONObject: object)))
+        }
+    }
+
+    func testMigrationKeepsExactLivingPathsWhenOnlyNonblockingDecorMoves() throws {
+        for direction in ExpansionDirection.allCases {
+            var original = try legacyAnnex(direction)
+            original.fixtures.removeAll { $0.kind == .simpleShelf }
+            let table = try XCTUnwrap(original.fixtures.first { $0.kind == .basicDisplayTable })
+            original.stock = [StockItem(id: fixedID(700), product: .glowPotion, fixtureID: table.id, slotIndex: 0)]
+            original.livingDay = try LivingShopDay(id: fixedID(701), dayNumber: 1, seed: 42, state: original)
+            original.phase = .open
+            try original.validateIntegrity(legacyExpansion: true)
+            let result = try migratedAnnex(original)
+            XCTAssertEqual(result.livingDay, original.livingDay)
+            XCTAssertEqual(result.balance, original.balance)
+            XCTAssertEqual(result.stock, original.stock)
+            XCTAssertNotEqual(result.fixtures.first { $0.kind == .wallClock }?.origin,
+                              original.fixtures.first { $0.kind == .wallClock }?.origin)
+        }
+    }
+
+    func testFileMigrationPreservesSourceUntilValidatedTransactionAndLeavesCorruptionUntouched() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MagicShopRectangle-" + UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let store = FileGameStateStore(fileURL: directory.appendingPathComponent("state.json"))
+        var legacy = try legacyAnnex(.left)
+        legacy.schemaVersion = 5
+        try store.save(legacy)
+        let originalData = try Data(contentsOf: store.fileURL)
+        let session = try GameSession(store: store)
+        XCTAssertEqual(session.engine.state.schemaVersion, GameState.currentSchemaVersion)
+        XCTAssertEqual(try Data(contentsOf: store.fileURL), originalData)
+        try session.commit { try $0.setPrice(24, for: .glowPotion) }
+        XCTAssertEqual(try store.load(), session.engine.state)
+        XCTAssertEqual(session.engine.state.balance, legacy.balance)
+        XCTAssertEqual(session.engine.state.stock, legacy.stock)
+
+        legacy.world.hitMap.updateCell(at: GridPoint(x: 0, y: 1)) { $0.zone = .interior }
+        try store.save(legacy)
+        let corruptData = try Data(contentsOf: store.fileURL)
+        XCTAssertThrowsError(try GameSession(store: store))
+        XCTAssertEqual(try Data(contentsOf: store.fileURL), corruptData)
+    }
+
+    /// Independent old geometry: do not call the production expansion builder.
+    private func legacyAnnex(_ direction: ExpansionDirection) throws -> GameState {
+        let expansion = ExpansionState(direction: direction)
+        let shift = direction == .left ? 5 : 0
+        let room: GridPoint
+        switch direction {
+        case .left: room = GridPoint(x: 0, y: 3)
+        case .right: room = GridPoint(x: 11, y: 3)
+        case .rear: room = GridPoint(x: 3, y: 11)
+        }
+        let layout = expansion.layout
+        var inside = Set<GridPoint>()
+        for y in 0..<layout.depth { for x in 0..<layout.width {
+            if (x >= shift && x < shift + 11 && y < 11) ||
+                (x >= room.x && x < room.x + 5 && y >= room.y && y < room.y + 5) {
+                inside.insert(GridPoint(x: x, y: y))
+            }
+        } }
+        var cells: [WorldCellMetadata] = []
+        for y in 0..<layout.depth { for x in 0..<layout.width {
+            let point = GridPoint(x: x, y: y)
+            guard inside.contains(point) else {
+                cells.append(WorldCellMetadata(point: point, zone: .outside)); continue
+            }
+            var walls = Set<WallSide>()
+            for (side, dx, dy) in [(WallSide.left, -1, 0), (.right, 1, 0), (.front, 0, -1), (.rear, 0, 1)] {
+                if !inside.contains(GridPoint(x: x + dx, y: y + dy)) { walls.insert(side) }
+            }
+            cells.append(WorldCellMetadata(point: point,
+                zone: point == GridPoint(x: 5 + shift, y: 0) ? .entrance : .interior,
+                staticBlocker: y == 0 && (x == shift || x == shift + 10) ? .frontColumn : nil,
+                adjacentWalls: walls))
+        } }
+        let side = direction != .rear
+        let mainX = direction == .left ? 5 : 10
+        let fixtures = [
+            PlacedFixture(id: fixedID(1), kind: .simpleShelf,
+                origin: side ? GridPoint(x: mainX, y: 1) : GridPoint(x: 0, y: 10), rotation: side ? .east : .north),
+            PlacedFixture(id: fixedID(2), kind: .simpleShelf,
+                origin: side ? GridPoint(x: room.x + 1, y: 3) : GridPoint(x: 3, y: 12), rotation: side ? .north : .east),
+            PlacedFixture(id: fixedID(3), kind: .basicDisplayTable, origin: GridPoint(x: 4 + shift, y: 4)),
+            PlacedFixture(id: fixedID(4), kind: .wallClock,
+                origin: side ? GridPoint(x: mainX, y: 9) : GridPoint(x: 9, y: 10)),
+            PlacedFixture(id: fixedID(5), kind: .moonPainting,
+                origin: side ? GridPoint(x: room.x + 3, y: 7) : GridPoint(x: 7, y: 13)),
+            PlacedFixture(id: fixedID(6), kind: .pottedFern, origin: GridPoint(x: room.x + 2, y: room.y + 2))
+        ]
+        var world = ShopWorldState(floor: ShopFloorState(layout: layout), hitMap: WorldHitMap(layout: layout, cells: cells))
+        world.floor.setStyleID(.warmOak, at: fixtures[2].origin)
+        world.floor.setStyleID(.checkerStone, at: GridPoint(x: room.x + 1, y: room.y + 1))
+        let stock = [
+            StockItem(id: fixedID(11), product: .glowPotion, fixtureID: fixtures[0].id, slotIndex: 0),
+            StockItem(id: fixedID(12), product: .pocketSpellbook, fixtureID: fixtures[0].id, slotIndex: 1),
+            StockItem(id: fixedID(13), product: .glowPotion, fixtureID: fixtures[1].id, slotIndex: 0),
+            StockItem(id: fixedID(14), product: .pocketSpellbook, fixtureID: fixtures[1].id, slotIndex: 1),
+            StockItem(id: fixedID(15), product: .luckyCharm, fixtureID: fixtures[2].id, slotIndex: 0)
+        ]
+        let state = GameState(shopName: "Saved Annex", onboardingCompleted: true, balance: 287,
+            fixtures: fixtures, world: world, stock: stock,
+            restoration: ShopRestorationState(repairedGroups: Set(RestorationGroupID.allCases), expansion: expansion),
+            dirt: [GridPoint(x: room.x + 1, y: room.y + 1): 2])
+        try state.validateIntegrity(legacyExpansion: true)
+        return state
+    }
+
+    private func legacyLivingAnnex(_ direction: ExpansionDirection) throws -> GameState {
+        var state = try legacyAnnex(direction)
+        var day = try LivingShopDay(id: fixedID(600), dayNumber: 1, seed: 42, state: state)
+        let buyer = try XCTUnwrap(day.visitors.first { visitor in
+            visitor.hasBuyingIntent && state.stock.contains { unit in
+                visitor.stops.contains { $0.fixtureID == unit.fixtureID } &&
+                (unit.product == visitor.preferredProduct || unit.product == visitor.secondaryProduct) &&
+                ProductCatalog.definition(for: unit.product).salePrice <= visitor.budget
+            }
+        })
+        let unit = try XCTUnwrap(state.stock.first { unit in
+            buyer.stops.contains { $0.fixtureID == unit.fixtureID } &&
+            (unit.product == buyer.preferredProduct || unit.product == buyer.secondaryProduct) &&
+            ProductCatalog.definition(for: unit.product).salePrice <= buyer.budget
+        })
+        let cursor = buyer.decisionMinute + 1
+        for visitor in day.visitors where visitor.decisionMinute <= cursor {
+            let sale = visitor.id == buyer.id ? SaleReceipt(stockID: unit.id, product: unit.product,
+                fixtureID: unit.fixtureID, slotIndex: unit.slotIndex,
+                revenue: ProductCatalog.definition(for: unit.product).salePrice, costOfGoods: unit.purchaseCost) : nil
+            day.record(VisitOutcome(visitID: visitor.id, requestedProduct: visitor.preferredProduct, sale: sale),
+                       visitorIndex: visitor.id.index)
+        }
+        state.stock.removeAll { $0.id == unit.id }
+        state.balance += ProductCatalog.definition(for: unit.product).salePrice
+        day.setMinute(cursor)
+        state.livingDay = day
+        state.phase = .open
+        try state.validateIntegrity(legacyExpansion: true)
+        return state
+    }
+
+    private func migratedAnnex(_ state: GameState, version: Int = 5) throws -> GameState {
+        var saved = state
+        saved.schemaVersion = version
+        return try JSONDecoder().decode(GameState.self, from: JSONEncoder().encode(saved))
+    }
+
+    private func fixedID(_ value: Int) -> UUID {
+        UUID(uuidString: String(format: "20000000-0000-0000-0000-%012d", value))!
     }
 }

@@ -296,7 +296,7 @@ final class LivingShopTests: XCTestCase {
         json["schemaVersion"] = 4
         for key in ["livingDay", "pricing", "dirt", "manualRepairProgress"] { json.removeValue(forKey: key) }
         let migrated = try JSONDecoder().decode(GameState.self, from: JSONSerialization.data(withJSONObject: json))
-        XCTAssertEqual(migrated.schemaVersion, 5)
+        XCTAssertEqual(migrated.schemaVersion, GameState.currentSchemaVersion)
         XCTAssertNil(migrated.livingDay)
         XCTAssertEqual(migrated.currentDay, original.state.currentDay)
         XCTAssertEqual(migrated.balance, original.state.balance)
@@ -322,7 +322,7 @@ final class LivingShopTests: XCTestCase {
             missing[key] = NSNull()
             XCTAssertThrowsError(try JSONDecoder().decode(GameState.self, from: JSONSerialization.data(withJSONObject: missing)))
         }
-        json["schemaVersion"] = 6
+        json["schemaVersion"] = GameState.currentSchemaVersion + 1
         XCTAssertThrowsError(try JSONDecoder().decode(GameState.self, from: JSONSerialization.data(withJSONObject: json)))
         var corrupt = GameState.initial
         corrupt.dirt[GridPoint(x: 4, y: 4)] = 4
@@ -485,7 +485,7 @@ final class LivingShopTests: XCTestCase {
         XCTAssertEqual(final.balance + fixtureValue + inventoryValue + ExpansionState.price,
                        GameState.startingBalance + earnedProfit)
         XCTAssertEqual(try store.load(), final)
-        XCTAssertEqual(final.schemaVersion, 5)
+        XCTAssertEqual(final.schemaVersion, GameState.currentSchemaVersion)
     }
     func testImportedAcquisitionCostCannotOverflowDuringSecondLivingSale() throws {
         let ready = try saleReadyEngine()
