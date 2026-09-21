@@ -36,7 +36,7 @@ struct ProvisionalRootView: View {
                     }
                     Spacer(minLength: 6)
                     if model.state.onboardingCompleted {
-                        bottomPanel(maxHeight: geometry.size.height * 0.60)
+                        bottomPanel(maxHeight: geometry.size.height * (model.showsSummary ? 0.70 : 0.60))
                         BottomNavigation().dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                     }
                 }
@@ -585,14 +585,14 @@ private struct SummaryPanel: View {
     @EnvironmentObject private var model: AppModel
     var body: some View {
         if let summary = model.daySummary {
-            VStack(spacing: 9) {
+            VStack(spacing: 6) {
                 Image(systemName: "moon.stars.fill").font(.title2).foregroundStyle(MagicPalette.gold).accessibilityHidden(true)
                 Text("Day complete").font(.system(.title, design: .serif, weight: .bold))
                 Text("Day \(summary.dayNumber) · \(summary.customersServed) items sold")
                     .font(.system(.subheadline, design: .serif))
                 GoldDivider()
                 ScrollView {
-                    VStack(spacing: 10) {
+                    VStack(spacing: 6) {
                         VStack(spacing: 5) {
                             summaryRow("Sales", summary.revenue)
                             summaryRow("Stock cost", summary.costOfGoods)
@@ -618,7 +618,7 @@ private struct SummaryPanel: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Tomorrow").font(.system(.headline, design: .serif)).foregroundStyle(MagicPalette.gold)
                             Text(model.tomorrowAdvice).font(.caption)
-                            Text("\(summary.customersWithoutPurchase) visitors left without buying. Interests are not promised sales.")
+                            Text("\(summary.customersWithoutPurchase) visitors left without buying.")
                                 .font(.caption2).foregroundStyle(MagicPalette.parchment.opacity(0.8))
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }.padding(.bottom, 3)

@@ -248,3 +248,9 @@ Selected on 2026-09-21 by the project director under the owner's explicit author
 - Comparable 0.4 runtime captures: pending implementation and simulator verification; this selection does not claim final UI parity or physical-device verification.
 
 - Director-confirmed native preparation adaptation: retain Improve as a fourth secondary access for expansion/planning and add a brief two-line explanation of three sweeping passes. Standard-size actions may share a row; their text ceiling follows the existing navigation policy (xxxLarge), with full accessibility labels and at least 44-point touch areas. This preserves the selected direction and does not claim an additional owner image review.
+- Runtime-driven summary adaptation (2026-09-21): the closed-day panel may use
+  70% of the viewport, with 6-point section spacing, so the third product and
+  Tomorrow advice are visible sooner. The trading world is inactive at this
+  point. Preserve type sizes, the fixed next-day button and scrollable compact/
+  accessibility content. Remove redundant explanatory copy after the factual
+  non-buying visitor count. This corrects the initial capture's two-row view.
