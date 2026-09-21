@@ -1,9 +1,10 @@
 # Architectural annex — World contract
 
 Date: 2026-09-21. Baseline: app 0.4, repository HEAD 2a68541.
-Status: World implementation written after director selection of the full left
-reference; static verification passes. Native compile, interaction tests and
-runtime visual comparison are pending root integration. No saved state changes.
+Status: first native implementation passed 131 tests but failed visual QA.
+The targeted painted finish below is written and passes static verification;
+focused native captures are pending. This is not yet a visual acceptance claim.
+No saved state changes.
 Owner: World lane; reference/material art belongs to commerce_visuals, and
 integration/tests/versioning belong to root.
 
@@ -101,7 +102,7 @@ lighting authored together. Retouching only the current seam cannot achieve it.
 The selected framed-room approach keeps the original plate and state model while
 making the connection an intentional architectural feature.
 
-## Implementation delivered
+## First native implementation — finish superseded after visual QA
 
 Only `MagicShop/World/ShopScene.swift` and this report changed in the World lane.
 The complete-room `makeProjectedAnnex` and copied-lit-floor `makeMatchingFloor`
@@ -160,3 +161,52 @@ automatic correction using the persisted fixture anchor, while its draft moves.
 Otherwise removing that correction at touch-down would shift the camera by about
 107 points and change finger-to-cell mapping mid-gesture. A new purchase draft
 has no persisted matching fixture and receives no such correction.
+## Targeted painted finish — 2026-09-22
+
+Root rejected the first native finish after CI `35657369361`, despite all 131
+native tests passing. The left attachment `C6D60484-1197-4AFC-A9F1-F41A09CDDAB9`
+and rear `2852223E-FF47-4C3B-862D-AE8BC559223D` show sharp thin caps, bright flat
+plaster, plain oversized tiles and visually weak jambs. The geometry, full
+opening, camera and stock interaction worked; those systems remain unchanged.
+
+The correction reuses the original painted source through runtime SKTexture
+crops, with no overwritten image or new bitmap generation:
+
+- Wall surface: `RepairedShopBackground` x148...393, y446...629. This preserves
+  its shaded cream plaster, rail and teal wainscot, while excluding the lamp.
+  The face is 186 authored pixels high; a 38-pixel cap makes the original
+  224-pixel total height, instead of adding a full cap above a full-height face.
+- Cap: x148...694, y406...446, including painted bevel, edge highlight and dark
+  fascia. Its projected width is 38 authored pixels, about three times the
+  rejected thin strip and the same scale as the main cap.
+- Rounded corners: back-left crop x83...153, y405...483 and front-left crop
+  x30...110, y1117...1208. Curved SKCropNode masks preserve the moulding while
+  removing the original earth/floor around it. Right corners mirror the trim.
+- Floor: source patch x284...568, y776...1025 is inverse-projected and remapped
+  onto the unchanged 5x5 annex footprint with an 8x8 warp, then clipped exactly
+  to the real floor. Its roughly six painted tiles per five domain cells match
+  the original decorative frequency. This is a floor-only crop; walls/caps are
+  independent upright planes and the old complete-annex warp remains removed.
+- Jambs: the existing alpha `FacadeCornerPost` supplies painted cap, inset cream
+  panel and teal foot. At a 224-pixel height it is about 44 pixels wide, close to
+  the original 50-pixel post. Anchor points keep the entire jamb on the outside
+  of the five-cell passage. Low near-end joints use only its painted cap.
+- Soft stationary contact shadows meet the floor and wall; no new animation or
+  dependency is introduced. The stone threshold material remains in use; the
+  three replaced flat expansion materials stay archived, not deleted.
+- Rear main-room wall art is visually clamped between its outer wall corner
+  and the painted jamb. This prevents MoonPainting from hanging over the
+  opening without changing its saved cell, identity or interaction target.
+
+Camera fit and its drag continuity correction are unchanged. Independent
+pixel-space checks include the larger painted corners: minimum side margin is
+3.99 points on 402x874 and 4.56 points on 375x667; the rear cap is below the HUD
+at approximately screen y201 and y154. Native frames are still required to
+validate curved masks, cap overlap and light/color continuity. Static validation
+passes; root owns the next focused capture run and final visual acceptance.
+Before the focused capture, independent Core review found the source floor's
+(8,3) corner at authored x566.8678, beyond the first crop's x566 edge. The crop
+was expanded to (284,776,284,249), leaving sampling margin around all four
+corners. The unchanged exact footprint mask still limits visible floor to the
+same 25 cells; this closes the subpixel untextured wedge without changing maps,
+projection, camera or saved styles.

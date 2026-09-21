@@ -32,11 +32,35 @@ Direction selected: a contiguous exhibition alcove, with full-height cream/teal
 walls, jambs only at the opening endpoints and a thin pale stone threshold at
 floor level. The five-cell connection stays completely traversable. Separate
 horizontal floor and vertically extruded walls replace the old all-in-one
-warped room. A new full-screen reference and four material sources are being
-prepared; final visual implementation follows reference review.
+warped room. Three complete references were reviewed and selected before final
+implementation: left v2, right v2 and rear v3. Four original material sources
+are archived with exact runtime copies and prompts. See design/APPROVALS.md and
+docs/EXPANSION-ART.md for scope, provenance and native adaptations.
 
 QA fixtures `annex-left`, `annex-right` and `annex-rear` use the actual restored
 engine, move two existing displays into the annex, stock a potion and paint four
 oak tiles. Native UI coverage taps the occupied display and returns/restocks its
 item in each orientation. Domain audit extends existing three-direction
 regression coverage for dirt and the whole opening. Final evidence pending.
+
+## Integrated native-validation snapshot
+
+- Source: `1cac2194d640986ae0c7ac113c1207f42cd063c0`, main/origin.
+- Version: 0.4.1 (1), one correction delivery after 0.4.
+- Windows static verification PASS; three selected masters and four new material
+  source/runtime pairs preserved and checked. Independent read-only review found
+  and resolved a camera jump when starting an annex Stock drag. The native UI
+  test additionally holds the stocked display and verifies its overview position
+  stays fixed after returning to preparation.
+- CI run `35657369361`: Release simulator build PASS; all 131 XCTest cases PASS
+  (118 domain/model and 13 UI, no failures or skips). The complete run succeeded,
+  including all 15 requested normal, compact and large-text captures.
+- Native visual review REJECTED the first snapshot: thin flat caps, bright flat
+  walls and paper-like jambs do not match the original painted room; the rear
+  painting also overlaps a jamb. See `docs/EXPANSION-VISUAL-QA.md`.
+- The first unsigned 0.4.1 IPA built successfully in run `35659391617` and passed
+  the package verifier, but is an intermediate rejected visual build, not the
+  final deliverable. Last accepted delivered IPA remains 0.4.
+- The finish correction reuses painted source crops and the existing corner
+  post while preserving the tested map, camera and interactions. No new raster
+  generation, dependency or save migration is needed.
