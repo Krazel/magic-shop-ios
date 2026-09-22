@@ -1,0 +1,9 @@
+App: Magic Shop
+Marketing version: 0.5
+Build: 1
+Commit: aed5e1abc3ef67080332a83abf994e8b9277bce0
+CI run: 35669876068
+Purpose: Local-QA
+Platform: physical iPhone (iphoneos)
+Signing: unsigned; Sideloadly must re-sign before installation
+Minimum iOS: 16.0

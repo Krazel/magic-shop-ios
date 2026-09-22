@@ -45,7 +45,7 @@ loans, crafting, accounts, ads, tracking, purchases or network calls.
 - Journal: restoration goals, calendar rules and recent trading results.
 - Dynamic Type and Reduce Motion use the device's accessibility preferences.
 
-## Current work 0.5 (build 1) — native verification pending
+## Current candidate 0.5 (build 1) — verified
 
 The owner approved three complete rectangular references on 2026-09-22. The
 selected exterior wall moves outward; the floor and building become one larger
@@ -54,9 +54,20 @@ follow the new perimeter while their stock and identities remain intact.
 
 Schema 6 fills the former outside corners of saved annexes and preserves money,
 floor styles, dirt and trading progress. Active visitor routes are repaired only
-where needed, keeping their schedules and completed purchases. Implementation
-and regression coverage are in progress; this section does not claim a native
-build, successful XCTest run or finished IPA. See `docs/RECTANGULAR-EXPANSION.md`.
+where needed, keeping their schedules and completed purchases.
+
+Final app source: `aed5e1abc3ef67080332a83abf994e8b9277bce0`. All 126 domain/model
+tests passed on the unchanged Core in run `35666931133`; all fourteen UI tests
+passed on the final app in `35669017850`, including stocked furniture dragging
+and floor painting through the removed wall. Release and fifteen normal,
+compact and large-text captures passed direction review. The first visual pass
+and its failed Care interaction remain archived; the shortcut now has a real
+44-point touch area. Detailed evidence and limits: `docs/RECTANGULAR-VERIFICATION.md`.
+
+The unsigned iPhone IPA passed package verification in run `35669876068`:
+`outputs/ci/35669876068/MagicShop-0.5-build-1-aed5e1abc3ef67080332a83abf994e8b9277bce0-Sideloadly/MagicShop-0.5-build-1-unsigned.ipa`.
+It requires re-signing with Sideloadly. Physical installation is still a separate
+check; no TestFlight or App Store submission was made.
 
 ## Previous candidate 0.4.1 (build 1) — verified, geometry superseded
 

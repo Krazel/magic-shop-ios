@@ -180,6 +180,13 @@ per direction. A separate packing model found collision-free layouts for each
 45-fixture crowded regression (10/10/11 moved fixtures, 11/11/12 search nodes).
 That model is supplementary reasoning, not a substitute for executing Swift.
 
+Native result, 2026-09-22: all 126 domain/model tests passed on source
+`67eb7dacaaee3cd6fedebec919f3a4e8f4d5a7d1`, run `35666931133`, iPhone 16 Pro
+simulator with iOS 18.5. The complete run had one UI failure before opening Care;
+it is not recorded as a passing full suite. Source `aed5e1a` changes only World
+painting/framing, SwiftUI shortcut hit areas and the affected UI test; Core,
+AppModel and their tests are byte-identical to this successful domain run.
+
 Root owns the macOS build/test/capture run. Native verification must cover new
 purchases and legacy migration, all three views, floor painting across former
 seams, attached furniture and active visitors. Do not reuse the previous 131

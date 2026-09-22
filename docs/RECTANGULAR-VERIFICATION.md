@@ -1,8 +1,9 @@
 # Rectangular shop verification — 0.5 (1)
 
-Date: 2026-09-22. Status: native validation in progress; not yet a verified IPA.
-Integrated source: `67eb7dacaaee3cd6fedebec919f3a4e8f4d5a7d1`.
-Native run: https://github.com/Krazel/magic-shop-ios/actions/runs/35666931133.
+Date: 2026-09-22. Status: verified local candidate; physical installation pending.
+Final candidate source: `aed5e1abc3ef67080332a83abf994e8b9277bce0`.
+Domain run: https://github.com/Krazel/magic-shop-ios/actions/runs/35666931133.
+Corrected run: https://github.com/Krazel/magic-shop-ios/actions/runs/35669017850.
 
 Release build passed. All nine initial normal/large-text captures were acquired
 and independently reviewed, but the finish was rejected: abrupt rear-wall light
@@ -19,8 +20,9 @@ The accessible button was only 27.7 by 14.3 points despite its outer 44-point
 layout. State and overlay review found no other blocker. Preparation shortcuts
 now put their full 44-point rectangular hit area inside the plain button label.
 The floor test asserts this size and waits for the actual panel after one tap;
-it does not retry, skip the gesture or bypass controls. Native rerun is needed
-to confirm the repair. The first run is not a passing full suite.
+it does not retry, skip the gesture or bypass controls. The corrected native run
+passed all fourteen UI tests, zero failures/skips, including this single-tap
+opening and the complete floor stroke. The first run remains a failed full suite.
 
 ## Change and authority
 
@@ -55,28 +57,52 @@ The first rendered position after loading an affected save can therefore differ.
 - CI captures normal/large-text views before XCTest for early visual inspection;
   a failed capture/upload cannot silently skip the test suite after a good build.
 
-## Required native evidence
+## Native functional evidence
 
-The full run must compile Release and execute all 140 cases. Coverage includes
+All 140 distinct cases now have passing native evidence across the two runs:
+126 domain/model on `67eb7da` and all fourteen UI repeated on `aed5e1a`. Core,
+AppModel and their test sources are unchanged between them. Coverage includes
 all expansion directions and source schemas 4/5; densely furnished walls;
 round trips; active living-day and legacy-day resume without replay; malformed
 source rejection; and file bytes unchanged until a valid transaction commits.
 
-The expanded-display UI case selects, returns and replaces stock in each
-direction. In the right room it then drags a stocked display from (12,5) through
+The passing expanded-display UI case selects, returns and replaces stock in each
+direction. In the right room it drags a stocked display from (12,5) through
 the removed boundary to (9,5), retaining its product and expected screen position.
-The new floor case previews and applies oak across (10,7) to (11,7), checking
+The passing floor case previews and applies oak across (10,7) to (11,7), checking
 there is no preview charge and exactly two tiles are charged on confirmation.
+Actual attached screenshots show the product after moving and the two-tile
+preview/applied result with balance $27/$23. Nine PNGs and their test identifiers
+are archived in `design/runtime/0.5/aed5e1a/gestures.json`; UI summary is beside it.
 
-Fifteen actual simulator captures are requested: restored and occupied rooms in
+Fifteen actual simulator captures passed direction and independent review: restored and occupied rooms in
 all three directions, normal and compact, plus occupied rooms with large text.
-Review must inspect continuous floor, painted wall/facade joints, external-only
+Review inspected continuous floor, painted wall/facade joints, external-only
 perimeter, furniture scale, wall decor mounting, camera fit and readable controls.
-The new floor shader and repeated painted crops require visual acceptance.
+The rear overview uses a more distant uniform camera to fit its real 11×16
+projection and whole facade. It is not pixel-identical to the generated reference.
+The painted source assets, native UI and saved positions are preserved.
 
 ## Delivery boundary
 
-Build, XCTest, image review and an exact-source device IPA are still pending.
-No new native success, artifact checksum or physical installation is claimed.
+Corrected Release and fourteen UI tests passed. All fifteen normal/large-text/
+compact captures passed direction and independent visual review. The current
+archive contains 24 PNGs: fifteen preparation views and nine gesture captures.
+The rejected first pass retains fifteen separate PNGs and its failed summary.
+The device build passed in run `35669876068`; its exact-source IPA passed
+`scripts/verify-ipa.py` against checksum, manifest, embedded version/build,
+iPhoneOS platform, arm64 executable and iOS 16.0 minimum.
+
+- Version: 0.5, build 1; 45,607,720 bytes.
+- SHA-256: `c8b2c8bd4a80f9a1f9ba39ae56da9eb26656c91e0db51bcb8b17838aaee7b3db`.
+- Artifact: `outputs/ci/35669876068/MagicShop-0.5-build-1-aed5e1abc3ef67080332a83abf994e8b9277bce0-Sideloadly/MagicShop-0.5-build-1-unsigned.ipa`.
+- Permanent package evidence: `design/runtime/0.5/aed5e1a/ipa-verification.json`,
+  `ipa-build-manifest.txt` and `ipa-SHA256SUMS.txt`.
+
+The fourteen UI cases ran on iPhone 16 Pro simulator, iOS 18.5; compact iPhone SE
+evidence is visual only. No physical installation, hardware performance, auditory
+VoiceOver check or compact-device gesture execution is claimed. Tool panels
+retain a lifted camera; panning reaches areas underneath the HUD. Preparation
+overview shows the complete building. Sideloadly must re-sign the unsigned IPA.
 The app remains offline, English, iPhone/iOS 16+, without new dependencies,
 tracking or accounts. TestFlight and App Store are outside this delivery.

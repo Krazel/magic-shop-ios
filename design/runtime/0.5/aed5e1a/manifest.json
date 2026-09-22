@@ -1,0 +1,127 @@
+{
+  "status": "PASS: fifteen native preparation views reviewed by direction and independent art QA",
+  "source": "aed5e1abc3ef67080332a83abf994e8b9277bce0",
+  "run": 35669017850,
+  "captures": [
+    {
+      "file": "expanded-left-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "1f672dee8676ee41e7a0c4cbddf83d3592af79c54021d90d4fe27513a136155d"
+    },
+    {
+      "file": "expanded-left-large-text-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "6c8624172e23621f2ae3d8ee15e100089b18d73b46a609782ffa77d45b8e3ed3"
+    },
+    {
+      "file": "expanded-left-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "fc53b9dde2408ea7c1e542d8eb68b61e7f80248d39d570af3bcb266adcfecf83"
+    },
+    {
+      "file": "expanded-rear-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "3064e691c8e12aeb4438e360ad94d4b063c9c567fc70f4c797b2c19016abcae9"
+    },
+    {
+      "file": "expanded-rear-large-text-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "921b15ee8a8b0a2cac40230d4bd17d5df733d9ebab65699e1f801e3f1a7d618e"
+    },
+    {
+      "file": "expanded-rear-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "5c9b1a5d8b5662f2b54c7ad3ccb7399a4ef754f0acca2483c61a7e7519918193"
+    },
+    {
+      "file": "expanded-right-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "7d78f1d04379ebced6ff3aac05278c49608181d945f0fbbc84e55833012f0e15"
+    },
+    {
+      "file": "expanded-right-large-text-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "f154ce58867c3f0549524fa896b4a539cd790de3478ac7230ef14c891e0fd737"
+    },
+    {
+      "file": "expanded-right-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "4524b6330329509d7ef79a91948a5c8cebad060242ede9037b711a3fa3bf1682"
+    },
+    {
+      "file": "restored-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "69b712c784ac49e3193133be534ece15ad58a703dac432738dfbf6b2cb2112a1"
+    },
+    {
+      "file": "restored-rear-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "d390559ac11b8362640f63954431b4b0956e33ecc72ba60a8f8727a343476d25"
+    },
+    {
+      "file": "restored-rear-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "9726153c376c5280fceaa26eb777941f8f006bf1da9ec08200bf016637bc03c1"
+    },
+    {
+      "file": "restored-right-compact-runtime.png",
+      "pixels": [
+        750,
+        1334
+      ],
+      "sha256": "7a198d3d466f2d98cdc1d172837f762feeacdfee25a5111cf1875f09632a3d99"
+    },
+    {
+      "file": "restored-right-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "a981bf7eff7832aa4d0e3dce99ade9b528792811146e37218ff1cd14b1d5c9f8"
+    },
+    {
+      "file": "restored-runtime.png",
+      "pixels": [
+        1206,
+        2622
+      ],
+      "sha256": "88192158cb485845a202eb4995c0ae61da36d03803f21b833535e23e96e6d9c5"
+    }
+  ]
+}

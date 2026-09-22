@@ -1,0 +1,39 @@
+{
+  "version": "0.5",
+  "build": 1,
+  "app_source": "aed5e1abc3ef67080332a83abf994e8b9277bce0",
+  "domain": {
+    "run": 35666931133,
+    "source": "67eb7dacaaee3cd6fedebec919f3a4e8f4d5a7d1",
+    "passed": 126,
+    "failed": 0,
+    "note": "Core, AppModel and domain tests unchanged in final source; original full run had one UI failure"
+  },
+  "ui": {
+    "run": 35669017850,
+    "passed": 14,
+    "failed": 0,
+    "skipped": 0,
+    "device": "iPhone 16 Pro simulator",
+    "os": "iOS 18.5"
+  },
+  "visual": {
+    "run": 35669017850,
+    "preparation_captures": 15,
+    "gesture_captures": 9,
+    "rejected_historical_captures": 15,
+    "review": "direction and independent art PASS"
+  },
+  "ipa": {
+    "run": 35669876068,
+    "bytes": 45607720,
+    "sha256": "c8b2c8bd4a80f9a1f9ba39ae56da9eb26656c91e0db51bcb8b17838aaee7b3db",
+    "verification": "PASS"
+  },
+  "limits": [
+    "No physical install or hardware performance claim",
+    "Compact visuals inspected, gestures executed only on regular simulator",
+    "No auditory VoiceOver or pixel identity claim",
+    "Unsigned IPA requires Sideloadly re-signing"
+  ]
+}

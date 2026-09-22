@@ -22,8 +22,16 @@ not change the game grid or require moving the preparation panel.
 
 Sources and exact generation prompts are archived in
 `design/proposals/rectangular-v1/`; asset composition is documented in
-`docs/RECTANGULAR-ART.md`. Comparable runtime captures are pending the new
-implementation and native validation. The earlier images and captures below
+`docs/RECTANGULAR-ART.md`. Comparable final native captures are archived in
+`design/runtime/0.5/aed5e1a/`: `expanded-right-runtime.png`,
+`expanded-left-runtime.png`, `expanded-rear-runtime.png`, and their compact and
+large-text variants. All fifteen preparation captures passed direction review;
+`manifest.json` records source, run, dimensions and hashes. See
+`docs/RECTANGULAR-VISUAL-QA.md` for independent review and visible adaptations:
+rear fits farther away to show the full native 11×16 projection and facade;
+native saved positions and UI take precedence over generated resynthesis.
+This is visual acceptance, not pixel identity. Nine additional native gesture
+captures are indexed in `gestures.json`. The earlier images and captures below
 remain preserved as superseded history, not the current expansion specification.
 
 ## Architectural expansion correction — superseded, 2026-09-21

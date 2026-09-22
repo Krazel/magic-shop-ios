@@ -146,7 +146,15 @@ simulation time remain paused.
 - No annex, jamb, threshold, opening-mask or roomOrigin use remains in ShopScene.
   World adds no game-state mutation or domain/persistence calls.
 
-Root must capture all three directions in normal, compact and large text, check
-continuous plaster/side rails/corner silhouette against the approved references,
-and verify that the full facade is visible. Repeat native stock and existing
-fixture drag after the fit change. Passing model tests is not visual acceptance.
+Final native verification: source `aed5e1a`, run `35669017850`, Release and all
+fourteen UI tests PASS without skips. Selection/restock in all three directions,
+stocked dragging through the removed right wall, stable drag anchors and floor
+painting across the former boundary passed after the camera/shader change.
+Direction reviewed all fifteen normal, compact and large-text preparation views:
+continuous plaster, side rails and corner silhouette; complete facade visible.
+Evidence and independent review: `RECTANGULAR-VISUAL-QA.md` and
+`design/runtime/0.5/aed5e1a/`. The rear room appears smaller under uniform fitting.
+Care/Stock tools retain their closer lifted camera and allow panning to reach
+areas under the HUD; the full-building fit applies to preparation overview.
+UI tests ran on iPhone 16 Pro simulator; compact evidence is visual, not a claim
+of physical tapping or performance on an iPhone SE.

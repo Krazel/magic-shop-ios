@@ -29,9 +29,9 @@ persistent project/library state. commerce_core owns Core/model tests and the
 migration; audit_runtime owns World rendering; commerce_visuals owns complete
 references/assets and independent visual review. Files do not overlap.
 
-Prepare complete iPhone references before final visual implementation under the
-owner's standing delegated authority. Selection by direction is not a claim of
-individual owner review. The main acceptance condition is one uninterrupted
+The three complete iPhone references were individually presented and approved
+together by the owner on 2026-09-22; see the explicit authority below and
+`design/APPROVALS.md`. The main acceptance condition is one uninterrupted
 rectangle with its wall at the new outside boundary, not improved annex trim.
 
 Verify fresh expansion and old-save migration in all three directions, wall

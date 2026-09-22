@@ -1,0 +1,105 @@
+{
+  "source": "aed5e1abc3ef67080332a83abf994e8b9277bce0",
+  "run": 35669017850,
+  "captures": [
+    {
+      "file": "gesture-rear-expansion-display-restocked-through-native-controls.png",
+      "title": "rear expansion display restocked through native controls",
+      "test": "ShopJourneyUITests/testDisplaysInEveryExpansionRemainSelectableAndStocked()",
+      "original_attachment": "6B18E9F4-1AD4-49C9-97D2-4D130BFFEBFF.png",
+      "sha256": "b365b00436ec15f7a725e1f2c5e7d05e2f70abc91a43afacad8f3b488a9f426a",
+      "pixels": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "gesture-occupied-rear-expansion-before-interaction.png",
+      "title": "Occupied rear expansion before interaction",
+      "test": "ShopJourneyUITests/testDisplaysInEveryExpansionRemainSelectableAndStocked()",
+      "original_attachment": "D257906C-A84B-485E-A6BF-973361041A76.png",
+      "sha256": "d0ab693f438a067cbb28270df6e2d04868afadefca414c412fc96c4ebac4f8b4",
+      "pixels": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "gesture-stocked-furniture-dragged-through-the-removed-right-wall.png",
+      "title": "Stocked furniture dragged through the removed right wall",
+      "test": "ShopJourneyUITests/testDisplaysInEveryExpansionRemainSelectableAndStocked()",
+      "original_attachment": "92CAEDFE-D7E2-45D3-8F0A-339E6D0EF8AF.png",
+      "sha256": "767906e7e81b7efaf58bd2809ed954d6a6456af9db315b2d542f2b1f14cd2dbf",
+      "pixels": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "gesture-right-expansion-display-restocked-through-native-controls.png",
+      "title": "right expansion display restocked through native controls",
+      "test": "ShopJourneyUITests/testDisplaysInEveryExpansionRemainSelectableAndStocked()",
+      "original_attachment": "15F460D8-8C57-4C7C-B13F-7C7DD4DC94A1.png",
+      "sha256": "f19d2bb2c14f042c8fd81f1e1d509dfb516a5f40642174ccb4dae688ab149a38",
+      "pixels": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "gesture-occupied-right-expansion-before-interaction.png",
+      "title": "Occupied right expansion before interaction",
+      "test": "ShopJourneyUITests/testDisplaysInEveryExpansionRemainSelectableAndStocked()",
+      "original_attachment": "E8B38F9F-DDEE-47E3-A963-188C69D28166.png",
+      "sha256": "a16e4bd91f4300dd843d33da65978f56c33e43747c7492f587b1dbf56985e448",
+      "pixels": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "gesture-left-expansion-display-restocked-through-native-controls.png",
+      "title": "left expansion display restocked through native controls",
+      "test": "ShopJourneyUITests/testDisplaysInEveryExpansionRemainSelectableAndStocked()",
+      "original_attachment": "B09EBE1B-EA8B-48CB-AADC-492AF082874A.png",
+      "sha256": "d6f101a630952089b109932ba8e1bb0f6dfc779d9dcd5b94af7d6f34eac8850a",
+      "pixels": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "gesture-occupied-left-expansion-before-interaction.png",
+      "title": "Occupied left expansion before interaction",
+      "test": "ShopJourneyUITests/testDisplaysInEveryExpansionRemainSelectableAndStocked()",
+      "original_attachment": "1B5A6508-2C86-40F8-AB3C-83579B59A9C8.png",
+      "sha256": "002114bcc147b89b03f7b2502b1b301fde3909b1920e3518232421b3e6d2274d",
+      "pixels": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "gesture-continuous-floor-applied-across-the-old-wall.png",
+      "title": "Continuous floor applied across the old wall",
+      "test": "ShopJourneyUITests/testFloorPaintingCrossesTheRemovedRightWall()",
+      "original_attachment": "602A3597-E994-4699-9369-D41279661E0F.png",
+      "sha256": "9c880748facece815ca6d7845df988b947ff0287ea3f3a05cde393d47c8c5db0",
+      "pixels": [
+        1206,
+        2622
+      ]
+    },
+    {
+      "file": "gesture-floor-preview-crosses-the-removed-wall.png",
+      "title": "Floor preview crosses the removed wall",
+      "test": "ShopJourneyUITests/testFloorPaintingCrossesTheRemovedRightWall()",
+      "original_attachment": "8699D45B-6D8D-4AEE-8CE3-508D97F6E390.png",
+      "sha256": "a7b318c2bdc0346de98ca8c1e870347d6c35030c2ce7e635b9812d59e2d8e7b4",
+      "pixels": [
+        1206,
+        2622
+      ]
+    }
+  ]
+}
