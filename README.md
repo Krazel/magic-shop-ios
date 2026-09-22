@@ -3,6 +3,10 @@
 A small offline iPhone game about bringing a forgotten magic shop back to life.
 English only. SwiftUI, SpriteKit and Foundation; no external dependencies.
 
+To view the verified iPhone screens in a browser, run `python web-preview/server.py`
+and open http://127.0.0.1:8767. This local capture viewer includes expansion
+comparisons and recorded gesture steps; it is not a playable web port.
+
 ## Play
 
 Name your shop and start with $500. Build a display, put one physical item in

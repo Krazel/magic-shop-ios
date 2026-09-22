@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Magic Shop · Explore the shop</title>
+<style>
+  :root{color-scheme:dark;--ink:#f4e6c4;--muted:#b4bdaf;--gold:#e1b664;--line:#ffffff1c;--teal:#123d37}
+  *{box-sizing:border-box}body{margin:0;background:#101e1b;color:var(--ink);font:15px/1.5 system-ui,sans-serif}
+  button,select,a{ -webkit-tap-highlight-color:transparent}button,select{font:inherit;color:inherit}
+  button,select{border:1px solid var(--line);background:#ffffff07;border-radius:12px;padding:12px 16px;cursor:pointer;min-height:46px}
+  button:hover,select:hover{border-color:var(--gold)}button[aria-pressed=true]{background:var(--gold);border-color:var(--gold);color:#243126;font-weight:650}
+  button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:4px}button:disabled{opacity:.4;cursor:default}
+  h1,h2,p{margin:0}h1{font:normal 36px/1.08 Georgia,serif;letter-spacing:-1px;margin:12px 0 16px}h2{font:normal 25px Georgia,serif}
+  .shell{display:grid;grid-template-columns:340px 1fr;min-height:100dvh}.sidebar{padding:24px 32px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:18px;height:100dvh;overflow:auto}
+  .brand{color:var(--gold);font-size:12px;text-transform:uppercase;letter-spacing:3px}.brand span{font-size:22px;margin-right:10px}.intro{color:var(--muted);max-width:28ch}
+  .label{display:block;color:var(--muted);font-size:11px;letter-spacing:1.7px;text-transform:uppercase;margin:0 0 10px}.group{display:flex;gap:6px;flex-wrap:wrap}.group button{flex:1;padding:10px 12px}
+  .scenes{display:grid;gap:8px}.scenes button{text-align:left;display:flex;align-items:center;justify-content:space-between}.scenes small{opacity:.65}.scenes button[aria-pressed=true]{background:#214d43;color:var(--ink);border-color:#bd9b55}
+  .note{border-top:1px solid var(--line);padding-top:20px;color:var(--muted);font-size:12px;margin-top:auto}.note strong{display:block;color:var(--ink);margin-bottom:5px;font-weight:500}
+  .stage{min-width:0;height:100dvh;padding:24px 32px;display:flex;flex-direction:column;gap:18px;background:radial-gradient(ellipse at 50% 45%,#354336,#14231e 65%)}
+  .top{display:flex;justify-content:space-between;gap:20px;align-items:center}.meta{color:var(--muted);font-size:12px;margin-top:5px}.status{font-size:11px;color:var(--gold);border:1px solid #dbb86744;border-radius:99px;padding:7px 12px;white-space:nowrap}
+  .canvas{flex:1;min-height:0;display:flex;justify-content:center;align-items:center;padding:8px 0;position:relative}
+  .phone{margin:0;background:#0c1210;border:7px solid #080e0c;border-radius:32px;box-shadow:0 28px 70px #0008,0 0 0 1px #d9bb7030;overflow:hidden;line-height:0}
+  .phone img{display:block;width:auto;height:min(calc(100dvh - 185px),830px);max-width:100%;object-fit:contain;background:#5e4d31;transition:opacity .16s ease}
+  .phone img.loading{opacity:.4}.phone.zoomed img{height:auto;width:min(620px,100%)}.phone.zoomed{max-width:100%}.stage:has(.zoomed){height:auto;min-height:100dvh}
+  .caption{display:flex;justify-content:space-between;gap:24px;align-items:center;max-width:820px;width:100%;margin:auto}.caption p{max-width:58ch;color:var(--muted);font-size:13px}.caption a{color:var(--gold);font-size:12px;white-space:nowrap}
+  .steps{display:flex;gap:8px}.steps button{flex:1;font-size:13px;padding:10px}.error{color:#ffcbab;margin:12px;text-align:center}
+  @media(max-width:800px){.shell{grid-template-columns:1fr}.sidebar{height:auto;padding:24px;border-right:0;border-bottom:1px solid var(--line);gap:18px}h1{font-size:34px;margin:8px 0}.intro{max-width:none}.scenes{grid-template-columns:repeat(3,1fr)}.scenes button{display:block;text-align:center;padding:9px;font-size:13px}.scenes small{display:none}.note{margin-top:0;padding-top:12px}.stage{height:auto;padding:20px 16px}.phone img{height:auto;width:min(402px,85vw)}.top h2{font-size:21px}.caption{align-items:flex-start}.status{display:none}}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <aside class="sidebar">
+    <header><div class="brand"><span aria-hidden="true">✦</span>Magic Shop · 0.5</div><h1>A little more<br>room for magic.</h1><p class="intro">Explore the expanded shop, its painted details and the space you can make your own.</p></header>
+    <section><span class="label" id="direction-label">Expansion</span><div class="group" id="directions" role="group" aria-labelledby="direction-label"><button data-direction="left">← Left</button><button data-direction="right" aria-pressed="true">Right →</button><button data-direction="rear">Back ↑</button></div></section>
+    <section><span class="label" id="scene-label">Take a closer look</span><div class="scenes" id="scenes" role="group" aria-labelledby="scene-label"><button data-scene="room" aria-pressed="true">The whole shop <small>01</small></button><button data-scene="drag">Move a display <small>02</small></button><button data-scene="floor">Lay a floor <small>03</small></button></div></section>
+    <section id="layout-controls"><label class="label" for="layout">Screen size</label><select id="layout" style="width:100%"><option value="normal">iPhone · Standard text</option><option value="compact">Compact iPhone</option><option value="large-text">iPhone · Large text</option></select></section>
+    <section id="step-controls" hidden><span class="label">Captured interaction</span><div class="steps" id="steps"></div></section>
+    <button id="zoom" aria-pressed="false">Enlarge image ↗</button>
+    <p class="note"><strong>Real iPhone captures</strong>This is a visual walkthrough of the finished iOS version. The game controls inside each image are not playable in this web viewer.</p>
+  </aside>
+  <section class="stage" aria-label="Shop preview">
+    <header class="top"><div><h2 id="title">Right expansion</h2><p class="meta" id="meta">One continuous room · 16 × 11 spaces</p></div><span class="status">Captured in the app</span></header>
+    <div class="canvas"><figure class="phone" id="phone"><img id="capture" alt="Magic Shop with a continuous right expansion" width="1206" height="2622"></figure></div>
+    <p id="error" class="error" hidden>Unable to load this capture. Try selecting another view.</p>
+    <footer class="caption"><p id="caption" aria-live="polite"></p><a id="original" target="_blank" rel="noopener">Open full image ↗</a></footer>
+  </section>
+</main>
+<script>
+const root='/captures/';
+const state={direction:'right',scene:'room',layout:'normal',step:0};
+const directions={left:'Left expansion',right:'Right expansion',rear:'Back expansion'};
+const examples={
+ drag:[
+  ['Before','gesture-occupied-right-expansion-before-interaction.png','The stocked display starts on the right side of the expanded shop.'],
+  ['After moving','gesture-stocked-furniture-dragged-through-the-removed-right-wall.png','The display has moved across the old wall boundary. Its potion and the $27 balance are preserved.']
+ ],
+ floor:[
+  ['Preview','gesture-floor-preview-crosses-the-removed-wall.png','A stroke selects two oak tiles across the former wall. The preview costs $4; the balance is still $27.'],
+  ['Applied','gesture-continuous-floor-applied-across-the-old-wall.png','Two oak tiles are now laid. The balance changes to $23 only after Apply Floor is pressed.']
+ ]
+};
+const image=document.querySelector('#capture');
+function render(){
+ document.querySelectorAll('[data-direction]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.direction===state.direction));b.disabled=state.scene!=='room';});
+ document.querySelectorAll('[data-scene]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.scene===state.scene)));
+ document.querySelector('#layout-controls').hidden=state.scene!=='room';
+ document.querySelector('#step-controls').hidden=state.scene==='room';
+ const steps=document.querySelector('#steps');steps.replaceChildren();
+ let file,caption,title,meta;
+ if(state.scene==='room'){
+   file=`expanded-${state.direction}${state.layout==='normal'?'':'-'+state.layout}-runtime.png`;
+   title=directions[state.direction];meta=`One continuous room · ${state.direction==='rear'?'11 × 16':'16 × 11'} spaces`;
+   caption='The whole outer wall moves outward. Floor, walls and facade form one continuous building, with 55 additional spaces.';
+ }else{
+   const frames=examples[state.scene];[ ,file,caption]=frames[state.step];
+   title=state.scene==='drag'?'Move a stocked display':'Paint across the old wall';
+   meta='Right expansion · Native touch interaction';
+   frames.forEach((frame,i)=>{const b=document.createElement('button');b.textContent=frame[0];b.setAttribute('aria-pressed',String(i===state.step));b.onclick=()=>{state.step=i;render();};steps.append(b);});
+ }
+ document.querySelector('#title').textContent=title;document.querySelector('#meta').textContent=meta;document.querySelector('#caption').textContent=caption;
+ document.querySelector('#error').hidden=true;image.classList.add('loading');image.alt=title+'. '+caption;image.src=root+file;document.querySelector('#original').href=image.src;
+ image.onload=()=>image.classList.remove('loading');image.onerror=()=>{image.classList.remove('loading');document.querySelector('#error').hidden=false;};
+}
+document.querySelectorAll('[data-direction]').forEach(b=>b.onclick=()=>{state.direction=b.dataset.direction;render();});
+document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>{state.scene=b.dataset.scene;state.step=0;if(state.scene!=='room')state.direction='right';render();});
+document.querySelector('#layout').onchange=e=>{state.layout=e.target.value;render();};
+document.querySelector('#zoom').onclick=e=>{const active=document.querySelector('#phone').classList.toggle('zoomed');e.currentTarget.setAttribute('aria-pressed',String(active));e.currentTarget.textContent=active?'Fit image ↙':'Enlarge image ↗';};
+render();
+</script>
+</body>
+</html>
